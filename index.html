@@ -132,10 +132,19 @@ function detectBarcode(text){
  return hits.find(x=>x.length===13)||hits[0]||'';
 }
 function extractDateCandidates(text){
- // Handles 14/08/26, 14-08-26, 14.08.26 and common OCR spacing/noise around separators.
- let cleaned=(text||'').replace(/[|Il]/g,'1').replace(/[Oo]/g,'0').replace(/[,:;]/g,'.');
- let rx=/(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{2,4})/g,m,out=[];
- while((m=rx.exec(cleaned))){let d=+m[1],mo=+m[2],ys=m[3],y=+ys;if(d<1||d>31||mo<1||mo>12)continue;if(ys.length===2)y=2000+y;if(y<2020||y>2040)continue;let raw=m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+String(y),iso=String(y)+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(!out.some(x=>x.iso===iso))out.push({raw,iso});}
+ let cleaned=(text||'').replace(/[|Il]/g,'1').replace(/[Oo]/g,'0').replace(/[,:;]/g,'.').replace(/[–—]/g,'-'),out=[],add=(y,mo,d,raw,precision='day')=>{
+  y=+y;mo=+mo;d=+d;if(y<100)y+=2000;if(y<2020||y>2045||mo<1||mo>12||d<1||d>31)return;
+  let test=new Date(y,mo-1,d);if(test.getFullYear()!=y||test.getMonth()!=mo-1||test.getDate()!=d)return;
+  let iso=String(y)+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  if(!out.some(x=>x.iso===iso))out.push({raw:raw||String(d).padStart(2,'0')+'/'+String(mo).padStart(2,'0')+'/'+y,iso,precision});
+ };
+ let m,rx1=/(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{2,4})/g;
+ while((m=rx1.exec(cleaned)))add(m[3],m[2],m[1],m[0]);
+ let rx2=/(20\d{2})\s*[\.\/-]\s*(\d{1,2})\s*[\.\/-]\s*(\d{1,2})/g;
+ while((m=rx2.exec(cleaned)))add(m[1],m[2],m[3],m[0]);
+ // Expiry labels sometimes contain only MM/YYYY. Use last day of month, marked month precision.
+ let rx3=/(?:exp|expiry|dlc|ddm|best\s*before|a\s*consommer|à\s*consommer|انتهاء|الصلاحية)[^0-9]{0,30}(\d{1,2})\s*[\.\/-]\s*(20\d{2}|\d{2})/gi;
+ while((m=rx3.exec(cleaned))){let y=+m[2];if(y<100)y+=2000;let mo=+m[1];if(mo>=1&&mo<=12){let d=new Date(y,mo,0).getDate();add(y,mo,d,m[1]+'/'+m[2],'month')}}
  return out;
 }
 function showDateCandidates(cands){
@@ -144,18 +153,30 @@ function showDateCandidates(cands){
  box.innerHTML='<div class="panel" style="margin-top:8px"><b>Date(s) plausible(s) détectée(s)</b><div class="note">Les lectures incohérentes sont maintenant éliminées. Touchez uniquement une date que vous voyez réellement sur l’étiquette.</div>'+cands.map(d=>'<div class="row" style="margin-top:8px"><button type="button" class="btn" onclick="rd.value=\''+d.iso+'\'">DLC : '+d.raw+(d.hits?' · '+d.hits+' lecture(s)':'')+'</button><button type="button" class="btn" onclick="rfab.value=\''+d.iso+'\'">Fabrication : '+d.raw+'</button></div>').join('')+'</div>';
 }
 function autoFillReceptionDates(texts){
- let all=(texts||[]).join('\n'),joined=all.replace(/\s+/g,' '),cands=mergeDateCandidates(texts||[]);
- let dlcMatch=joined.match(/(?:\bdlc\b|ddm|date\s*limite|a\s*consommer|à\s*consommer|exp(?:iry|iration)?|use\s*by|best\s*before|انتهاء|الصلاحية)[^0-9]{0,80}(\d{1,2}\s*[\.\/-]\s*\d{1,2}\s*[\.\/-]\s*\d{2,4})/i);
- let fabMatch=joined.match(/(?:date\s*(?:de\s*)?(?:fabrication|production|conditionnement)|fab(?:rique|rication)?|mfg|prod(?:uction)?\s*date|conditionne|الإنتاج|الصنع)[^0-9]{0,80}(\d{1,2}\s*[\.\/-]\s*\d{1,2}\s*[\.\/-]\s*\d{2,4})/i);
- let dlc=dlcMatch?isoDate(dlcMatch[1]):'',fab=fabMatch?isoDate(fabMatch[1]):'';
- // If exactly two plausible dates are repeatedly detected but labels are unreadable,
- // use chronology only when unambiguous: earlier = fabrication, later = expiry.
- if(!fab&&!dlc&&cands.length===2){
+ let raw=(texts||[]).join('\n'),lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean),cands=mergeDateCandidates(texts||[]);
+ const expRx=/(\bdlc\b|\bddm\b|date\s*(?:limite|d['’]?expiration)|a\s*consommer|à\s*consommer|consommer\s*avant|exp(?:iry|iration)?|use\s*by|best\s*before|valid(?:ity|ite|ité)|انتهاء|الصلاحية|صالح)/i;
+ const fabRx=/(date\s*(?:de\s*)?(?:fabrication|production|conditionnement)|fab(?:rique|rication)?|mfg|mfd|prod(?:uction)?\s*date|conditionne|conditionné|الإنتاج|الصنع|تاريخ\s*الإنتاج)/i;
+ let scores={};
+ cands.forEach(x=>scores[x.iso]={dlc:0,fab:0,item:x});
+ lines.forEach((line,idx)=>{
+   let local=[lines[idx-1]||'',line,lines[idx+1]||''].join(' ');
+   extractDateCandidates(line).forEach(d=>{if(!scores[d.iso])scores[d.iso]={dlc:0,fab:0,item:d};if(expRx.test(local))scores[d.iso].dlc+=5;if(fabRx.test(local))scores[d.iso].fab+=5});
+ });
+ // Also score labels and dates that OCR split onto nearby text in the combined stream.
+ let joined=raw.replace(/\s+/g,' ');
+ Object.keys(scores).forEach(iso=>{let d=scores[iso].item,parts=d.iso.split('-'),variants=[d.raw,parts[2]+'/'+parts[1]+'/'+parts[0],parts[2]+'-'+parts[1]+'-'+parts[0]];variants.forEach(v=>{let at=joined.indexOf(v);if(at>=0){let ctx=joined.slice(Math.max(0,at-100),at+100);if(expRx.test(ctx))scores[iso].dlc+=3;if(fabRx.test(ctx))scores[iso].fab+=3}})});
+ let fab='',dlc='',entries=Object.values(scores);
+ let bestFab=entries.slice().sort((a,b)=>b.fab-a.fab)[0],bestDlc=entries.slice().sort((a,b)=>b.dlc-a.dlc)[0];
+ if(bestFab&&bestFab.fab>=3)fab=bestFab.item.iso;if(bestDlc&&bestDlc.dlc>=3)dlc=bestDlc.item.iso;
+ if(fab&&dlc&&fab===dlc){if((bestFab.fab||0)>(bestDlc.dlc||0))dlc='';else fab=''}
+ // Safe fallback when two distinct dates are strongly repeated: earlier fabrication, later expiry.
+ if((!fab||!dlc)&&cands.length===2&&cands.every(x=>(x.hits||0)>=2)){
    let sorted=cands.slice().sort((a,b)=>a.iso.localeCompare(b.iso));
-   if(sorted[0].iso!==sorted[1].iso){fab=sorted[0].iso;dlc=sorted[1].iso}
+   if(!fab)fab=sorted[0].iso;if(!dlc)dlc=sorted[1].iso;
  }
- let filled=[];
- let fabEl=document.getElementById('rfab'),dlcEl=document.getElementById('rd');
+ // Never accept an expiry earlier than fabrication.
+ if(fab&&dlc&&dlc<fab){let tmp=fab;fab=dlc;dlc=tmp}
+ let filled=[],fabEl=document.getElementById('rfab'),dlcEl=document.getElementById('rd');
  if(fab&&fabEl){fabEl.value=fab;let na=document.getElementById('rfabNA');if(na){na.checked=false;fabEl.disabled=false}filled.push('Date de fabrication')}
  if(dlc&&dlcEl){dlcEl.value=dlc;let na=document.getElementById('rdNA');if(na){na.checked=false;dlcEl.disabled=false}filled.push('DLC / DDM')}
  return {filled,cands,fab,dlc};
@@ -200,6 +221,9 @@ async function preprocessOCRImage(file){
   };img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url;
  });
 }
+async function makeRotatedOCRVariants(file){
+ return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let arr=[];[90,-90].forEach(deg=>{let cv=document.createElement('canvas'),swap=Math.abs(deg)===90;cv.width=swap?img.height:img.width;cv.height=swap?img.width:img.height;let x=cv.getContext('2d');x.translate(cv.width/2,cv.height/2);x.rotate(deg*Math.PI/180);x.drawImage(img,-img.width/2,-img.height/2);arr.push(cv)});URL.revokeObjectURL(url);resolve(arr)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url})
+}
 async function makeDateOCRVariants(file){
  return new Promise((resolve,reject)=>{
   const img=new Image(),url=URL.createObjectURL(file);
@@ -236,6 +260,9 @@ async function analyzeLabel(input){
   n.innerHTML='<b>Deuxième lecture optimisée…</b>';
   const result2=await Tesseract.recognize(enhanced,'ara+fra+eng');
   let texts=[result.data.text||'',result2.data.text||''];
+  // Extra rotated readings: expiry stamps are frequently printed vertically or sideways.
+  const rotated=await makeRotatedOCRVariants(input.files[0]);
+  for(let r=0;r<rotated.length;r++){const rr=await Tesseract.recognize(rotated[r],'eng');texts.push(rr.data.text||'')}
   // Dedicated pass for stamped/dot-matrix dates. Multiple thresholds recover faint broken digits.
   n.innerHTML='<b>Recherche renforcée des dates…</b>';
   const variants=await makeDateOCRVariants(input.files[0]);
