@@ -388,32 +388,71 @@ function cleaning(){app.innerHTML=`<h1>Nettoyage</h1><div class="panel"><div cla
 function saveClean(){let x={zone:cz.value,operator:co.value,action:ca.value,note:cn.value,date:new Date().toLocaleString('fr-FR')};S.clean.unshift(x);S.trace.unshift({type:'Nettoyage',product:x.zone,date:x.date});save();cleaning()}
 function trace(){app.innerHTML=`<h1>Traçabilité</h1><div class="cards"><div class="metric"><span>Réceptions</span><b>${S.stock.length}</b></div><div class="metric"><span>Températures</span><b>${S.temps.length}</b></div><div class="metric"><span>Nettoyages</span><b>${S.clean.length}</b></div></div><div class="panel">${S.trace.length?S.trace.map(x=>`<div class="record"><b>${x.type}</b> — ${x.date||''}<br><span class="note">${x.product||x.equipment||''}${x.type==='Modification réception'?'<br>Par : '+esc(x.modifiedBy||'—')+' · Motif : '+esc(x.reason||'—'):''}</span></div>`).join(''):'Aucune opération enregistrée.'}</div>`}
 const LABEL_CAT={
-"Produits préparés en cuisine":{
-"Préparations froides":[["Salade préparée",2],["Tomates préparées",2],["Carottes préparées",2],["Fruits préparés",2]],
-"Préparations cuites":[["Riz cuit",3],["Pâtes cuites",3],["Couscous cuit",2],["Sauce tomate préparée",3]]
-},
 "Viandes préparées / déconditionnées":{
-"Viandes":[["Bœuf préparé",3],["Veau préparé",3],["Agneau préparé",3],["Viande hachée",1],["Merguez",2],["Kefta",1]],
-"Abats":[["Foie préparé",2],["Cœur préparé",2],["Rognons préparés",2],["Tripes préparées",2]]
+"Bœuf & veau":[["Bœuf préparé",0],["Entrecôte portionnée",0],["Faux-filet portionné",0],["Filet portionné",0],["Steak portionné",0],["Veau préparé",0],["Escalope de veau",0]],
+"Agneau & mouton":[["Agneau préparé",0],["Gigot préparé",0],["Épaule préparée",0],["Côtelettes préparées",0],["Mouton préparé",0]],
+"Viandes hachées & préparations":[["Viande hachée",0],["Kefta",0],["Merguez",0],["Viande marinée",0],["Viande portionnée",0]],
+"Abats":[["Foie préparé",0],["Cœur préparé",0],["Rognons préparés",0],["Tripes préparées",0]]
 },
 "Volailles préparées / déconditionnées":{
-"Volailles":[["Poulet préparé",2],["Escalope de poulet",2],["Blanc de poulet",2],["Dinde préparée",2],["Escalope de dinde",2],["Canard préparé",2]]
+"Poulet":[["Poulet entier préparé",0],["Blanc de poulet",0],["Escalope de poulet",0],["Cuisses de poulet",0],["Ailes de poulet",0],["Poulet mariné",0],["Foie de volaille",0]],
+"Autres volailles":[["Dinde préparée",0],["Escalope de dinde",0],["Canard préparé",0],["Caille préparée",0]]
 },
 "Poissons & fruits de mer préparés":{
-"Poissons":[["Daurade préparée",1],["Loup / Bar préparé",1],["Thon préparé",1],["Espadon préparé",1],["Saumon préparé",1],["Poisson préparé",1]],
-"Fruits de mer":[["Crevettes préparées",1],["Calamars préparés",1],["Poulpe préparé",1],["Moules préparées",1]]
+"Poissons":[["Daurade préparée",0],["Loup / Bar préparé",0],["Mérou préparé",0],["Sole préparée",0],["Rouget préparé",0],["Thon préparé",0],["Espadon préparé",0],["Saumon préparé",0],["Sardine préparée",0],["Maquereau préparé",0],["Merlan préparé",0],["Anchois préparé",0],["Poisson du jour préparé / fileté",0]],
+"Fruits de mer":[["Crevettes préparées",0],["Gambas préparées",0],["Calamars préparés",0],["Poulpe préparé",0],["Seiche préparée",0],["Moules préparées",0],["Palourdes préparées",0],["Fruits de mer décortiqués / préparés",0]]
 },
-"Produits ouverts":{
-"Produits laitiers ouverts":[["Lait ouvert",3],["Crème fraîche ouverte",3],["Crème liquide ouverte",3],["Fromage frais ouvert",3],["Mozzarella ouverte",3],["Ricotta ouverte",3]],
-"Épicerie / sauces ouvertes":[["Thon en conserve ouvert",3],["Mayonnaise ouverte",7],["Ketchup ouvert",14],["Moutarde ouverte",14],["Harissa ouverte",14],["Concentré de tomate ouvert",7]],
-"Boissons ouvertes":[["Jus conditionné ouvert",3],["Soda ouvert",3]]
+"Fruits & légumes préparés":{
+"Légumes":[["Salade lavée / préparée",0],["Tomates coupées",0],["Carottes préparées",0],["Concombre préparé",0],["Poivrons préparés",0],["Oignons préparés",0],["Pommes de terre épluchées",0],["Légumes découpés",0],["Herbes préparées",0]],
+"Fruits":[["Fruits coupés",0],["Salade de fruits",0],["Jus frais",0]]
 },
-"Œufs & ovoproduits préparés":{
-"Œufs":[["Œufs durs préparés",2]],
-"Ovoproduits ouverts":[["Blanc d'œuf liquide ouvert",3],["Jaune d'œuf liquide ouvert",3],["Œuf liquide pasteurisé ouvert",3]]
+"Préparations froides":{
+"Salades & entrées":[["Salade composée",0],["Salade tunisienne",0],["Salade méchouia",0],["Tartare",0],["Carpaccio",0],["Ceviche",0],["Garniture froide",0],["Sandwich préparé",0]],
+"Sauces froides":[["Mayonnaise maison",0],["Sauce froide maison",0],["Vinaigrette préparée",0]]
 },
-"Pâtisserie / desserts préparés":{
-"Desserts":[["Gâteau à la crème",2],["Tarte",2],["Mille-feuille",2],["Éclair",2]]
+"Préparations chaudes / cuites":{
+"Féculents & légumes":[["Riz cuit",0],["Pâtes cuites",0],["Couscous cuit",0],["Légumes cuits",0],["Pommes de terre cuites",0]],
+"Produits cuits":[["Viande cuite",0],["Volaille cuite",0],["Poisson cuit",0]],
+"Sauces, soupes & bases":[["Sauce chaude préparée",0],["Sauce tomate préparée",0],["Soupe",0],["Potage",0],["Fond de cuisine",0],["Bouillon",0],["Jus de viande",0]]
+},
+"Produits laitiers ouverts":{
+"Lait & crèmes":[["Lait ouvert",0],["Crème fraîche ouverte",0],["Crème liquide ouverte",0],["Crème à cuisson ouverte",0]],
+"Fromages & autres":[["Fromage frais ouvert",0],["Mozzarella ouverte",0],["Ricotta ouverte",0],["Mascarpone ouvert",0],["Yaourt ouvert",0],["Beurre ouvert",0]]
+},
+"Charcuterie ouverte / tranchée":{
+"Charcuterie":[["Jambon de dinde ouvert / tranché",0],["Jambon de poulet ouvert / tranché",0],["Mortadelle ouverte / tranchée",0],["Salami ouvert / tranché",0],["Saucisson ouvert / tranché",0],["Bacon de bœuf ouvert / tranché",0],["Charcuterie tranchée",0]]
+},
+"Œufs & ovoproduits":{
+"Œufs préparés":[["Œufs durs préparés",0],["Œufs préparés",0]],
+"Ovoproduits ouverts":[["Blanc d'œuf liquide ouvert",0],["Jaune d'œuf liquide ouvert",0],["Œuf liquide pasteurisé ouvert",0]]
+},
+"Conserves après ouverture":{
+"Poissons & légumes":[["Thon en conserve ouvert",0],["Tomates en conserve ouvertes",0],["Maïs en conserve ouvert",0],["Champignons en conserve ouverts",0],["Olives ouvertes",0],["Pois chiches en conserve ouverts",0],["Haricots en conserve ouverts",0],["Petits pois en conserve ouverts",0]],
+"Fruits":[["Fruits au sirop ouverts",0]],
+"Autres":[["Conserve ouverte / transvasée",0]]
+},
+"Sauces & condiments ouverts":{
+"Sauces":[["Mayonnaise ouverte",0],["Ketchup ouvert",0],["Moutarde ouverte",0],["Harissa ouverte",0],["Pesto ouvert",0],["Sauce industrielle ouverte",0],["Sauce asiatique ouverte",0]],
+"Tomate":[["Concentré de tomate ouvert",0]]
+},
+"Pâtisserie & desserts préparés":{
+"Pâtisseries":[["Gâteau à la crème",0],["Tarte",0],["Mille-feuille",0],["Éclair",0],["Tiramisu",0]],
+"Crèmes & desserts":[["Mousse",0],["Crème pâtissière",0],["Crème anglaise",0],["Chantilly",0],["Panna cotta",0],["Flan",0],["Dessert à base d'œufs / lait",0],["Fruits préparés pour dessert",0]]
+},
+"Boulangerie & pâtes préparées":{
+"Pâtes":[["Pâte à pizza",0],["Pâte fraîche",0],["Pâte à pain",0],["Pâte feuilletée ouverte / décongelée",0],["Pâte brisée",0],["Pâte à crêpes",0],["Appareil préparé",0]]
+},
+"Produits décongelés":{
+"Viandes & volailles":[["Viande décongelée",0],["Volaille décongelée",0]],
+"Poissons & fruits de mer":[["Poisson décongelé",0],["Fruits de mer décongelés",0]],
+"Autres":[["Légumes décongelés",0],["Produit semi-fini décongelé",0],["Pâtisserie décongelée",0]]
+},
+"Produits sous vide / conditionnés en cuisine":{
+"Sous vide":[["Viande préparée sous vide",0],["Poisson préparé sous vide",0]],
+"Conditionnés":[["Sauce conditionnée",0],["Préparation portionnée / conditionnée",0],["Produit cuit conditionné",0]]
+},
+"Production conservée / restes maîtrisés":{
+"Production cuisine":[["Sauce conservée",0],["Garniture conservée",0],["Plat cuisiné conservé",0],["Composant de buffet conservé",0],["Préparation refroidie conservée",0],["Autre production conservée",0]]
 }
 };
 let C='',SUB='',P='',DAYS=0,outDate='';
