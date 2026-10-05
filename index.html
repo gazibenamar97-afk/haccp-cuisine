@@ -184,7 +184,7 @@ function extractDateCandidates(text){
   let iso=String(y)+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   if(!out.some(x=>x.iso===iso))out.push({raw:raw||String(d).padStart(2,'0')+'/'+String(mo).padStart(2,'0')+'/'+y,iso,precision});
  };
- let m,rx1=/(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{2,4})/g;
+ let m,rx1=/(\d{1,2})\s*[\.\/-]\s*(\d{1,2})\s*[\.\/-]\s*(\d{2,4})/g;
  while((m=rx1.exec(cleaned)))add(m[3],m[2],m[1],m[0]);
  let rx2=/(20\d{2})\s*[\.\/-]\s*(\d{1,2})\s*[\.\/-]\s*(\d{1,2})/g;
  while((m=rx2.exec(cleaned)))add(m[1],m[2],m[3],m[0]);
@@ -193,14 +193,20 @@ function extractDateCandidates(text){
  while((m=rx3.exec(cleaned))){let y=+m[2];if(y<100)y+=2000;let mo=+m[1];if(mo>=1&&mo<=12){let d=new Date(y,mo,0).getDate();add(y,mo,d,m[1]+'/'+m[2],'month')}}
  return out;
 }
-function showDateCandidates(cands){
+function showDateCandidates(cands,classified){
  let box=document.getElementById('dateCandidates');if(!box)return;
- if(!cands.length){box.innerHTML='';return}
- box.innerHTML='<div class="panel" style="margin-top:8px"><b>Date(s) plausible(s) détectée(s)</b><div class="note">Les lectures incohérentes sont maintenant éliminées. Touchez uniquement une date que vous voyez réellement sur l’étiquette.</div>'+cands.map(d=>'<div class="row" style="margin-top:8px"><button type="button" class="btn" onclick="rd.value=\''+d.iso+'\'">DLC : '+d.raw+(d.hits?' · '+d.hits+' lecture(s)':'')+'</button><button type="button" class="btn" onclick="rfab.value=\''+d.iso+'\'">Fabrication : '+d.raw+'</button></div>').join('')+'</div>';
+ if(!cands||!cands.length){box.innerHTML='';return}
+ let fab=classified&&classified.fab||'',dlc=classified&&classified.dlc||'';
+ let rows=[];
+ if(fab){let d=cands.find(x=>x.iso===fab);rows.push('<div class="record"><b>Fabrication détectée :</b> '+esc(d?d.raw:fab)+'</div>')}
+ if(dlc){let d=cands.find(x=>x.iso===dlc);rows.push('<div class="record"><b>DLC / DDM détectée :</b> '+esc(d?d.raw:dlc)+'</div>')}
+ let amb=cands.filter(x=>x.iso!==fab&&x.iso!==dlc);
+ if(amb.length)rows.push('<div class="note" style="margin-top:8px">Autre(s) lecture(s) OCR non attribuée(s) : '+amb.map(x=>esc(x.raw)).join(' · ')+'. Elles ne sont pas utilisées automatiquement.</div>');
+ box.innerHTML='<div class="panel" style="margin-top:8px"><b>Résultat de lecture des dates</b>'+rows.join('')+'</div>';
 }
 function autoFillReceptionDates(texts){
  let cands=mergeDateCandidates(texts||[]);
- const expRx=/(\bdlc\b|\bddm\b|date\s*(?:limite|d['’]?expiration)|a\s*consommer|à\s*consommer|consommer\s*avant|exp(?:iry|iration)?|use\s*by|best\s*before|valid(?:ity|ite|ité)|انتهاء|الصلاحية|صالح)/i;
+ const expRx=/(\bdlc\b|\bddm\b|date\s*(?:limite|d['’]?expiration)|(?:a|à)\s*consommer\s*avant(?:\s*le)?|consommer\s*avant|exp(?:iry|iration)?|use\s*by|best\s*before|valid(?:ity|ite|ité)|انتهاء|الصلاحية|صالح)/i;
  const fabRx=/(date\s*(?:de\s*)?(?:fabrication|production|conditionnement)|\b(?:fab|mfg|mfd|prod|lf)\b|fab(?:rique|rication)?|prod(?:uction)?\s*date|conditionne|conditionné|الإنتاج|الصنع|تاريخ\s*الإنتاج)/i;
  let evidence={};cands.forEach(x=>evidence[x.iso]={item:x,dlc:0,fab:0});
  (texts||[]).forEach(t=>{
@@ -257,11 +263,7 @@ function fillFromOCR(text){
  let lot=joined.match(/(?:\blot\b|batch|n[°ºo]?\s*lot|رقم\s*(?:الدفعة|التشغيلة))\s*[:#.-]?\s*([A-Z0-9][A-Z0-9\-\/\.]{2,})/i);
  if(lot&&!rl.value){rl.value=lot[1];found.push('Lot')}
  let qty=detectQuantity(joined);if(qty&&!rqty.value){rqty.value=qty;found.push('Contenance / quantité')}
- let cands=extractDateCandidates(text);showDateCandidates(cands);
- let dlc=joined.match(/(?:\bdlc\b|date\s*limite|a\s*consommer|exp(?:iry)?|use\s*by|انتهاء|الصلاحية)[\s\S]{0,60}?(\d{1,2}\s*[\.\/-]\s*\d{1,2}\s*[\.\/-]\s*\d{2,4})/i);
- if(dlc&&!rd.value&&cands.length===1){rd.value=isoDate(dlc[1]);found.push('DLC')}
- let fab=joined.match(/(?:fab(?:rique|rication)?|production|conditionne|prod(?:uction)?\s*date|الإنتاج|الصنع)[\s\S]{0,60}?(\d{1,2}\s*[\.\/-]\s*\d{1,2}\s*[\.\/-]\s*\d{2,4})/i);
- if(fab&&!rfab.value&&cands.length===1){rfab.value=isoDate(fab[1]);found.push('Fabrication')}
+ let cands=extractDateCandidates(text);
  if(cands.length)found.push(cands.length+' date(s) à confirmer')
 
  return found;
@@ -316,6 +318,7 @@ async function analyzeLabels(input){
  let combined=receptionScanTexts.join('\n');
  let found=fillFromOCR(combined);
  let autoDates=autoFillReceptionDates(receptionScanTexts);
+ showDateCandidates(autoDates.cands,autoDates);
  autoDates.filled.forEach(x=>{if(!found.includes(x))found.push(x)});
  let info=document.getElementById('detectedInfo');
  if(info)info.innerHTML='<b>Analyse globale de '+receptionPhotoCount+' photo(s) :</b> '+(found.length?found.join(', '):'aucune donnée suffisamment certaine')+'.<br><b>Vérifiez les champs préremplis avant validation.</b>';
@@ -350,6 +353,7 @@ async function analyzeLabelFile(file,index,total){
   const text=texts.join('\n');receptionScanTexts.push(text);
   let found=fillFromOCR(text);
   const allReceptionTexts=receptionScanTexts.flatMap(t=>[t]),autoDates=autoFillReceptionDates(allReceptionTexts),dc=autoDates.cands;
+  showDateCandidates(dc,autoDates);
   autoDates.filled.forEach(x=>{if(!found.includes(x))found.push(x+' remplie automatiquement')});
   // Only ask for manual confirmation when the OCR could not safely assign all detected dates.
   if((!autoDates.fab||!autoDates.dlc)&&dc.length){showDateCandidates(dc);if(!found.some(x=>x.includes('date(s)')))found.push(dc.length+' date(s) à confirmer')}
