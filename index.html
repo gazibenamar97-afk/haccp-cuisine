@@ -177,7 +177,8 @@ function autoFillReceptionDates(texts){
  // If expiry is known, a distinct repeated earlier date is a plausible fabrication date.
  if(!fab&&dlc){
    let before=cands.filter(x=>x.iso<dlc&&x.iso<=new Date().toISOString().slice(0,10)).sort((a,b)=>(b.hits||0)-(a.hits||0)||b.iso.localeCompare(a.iso));
-   if(before.length&&(before[0].hits||0)>=2)fab=before[0].iso;
+   if(before.length===1)fab=before[0].iso;
+   else if(before.length>1&&(before[0].hits||0)>=2&&(before[0].hits||0)>(before[1].hits||0))fab=before[0].iso;
  }
  // If fabrication is known, a distinct repeated later date is a plausible expiry date.
  if(!dlc&&fab){
@@ -261,15 +262,8 @@ async function makeDateOCRVariants(file){
 }
 function mergeDateCandidates(texts){
  let map={},now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),min=new Date(today);min.setFullYear(min.getFullYear()-5);let max=new Date(today);max.setFullYear(max.getFullYear()+5);
- texts.forEach(t=>extractDateCandidates(t).forEach(d=>{let dt=new Date(d.iso+'T12:00:00');if(isNaN(dt))return;
-   // Reject OCR noise and dates implausible for a current food reception.
-   if(dt<min||dt>max)return;
-   map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++;
- }));
- let arr=Object.values(map);
- // Prefer dates confirmed by multiple OCR passes; keep a single-read candidate only if there are very few alternatives.
- let repeated=arr.filter(d=>d.hits>=2);if(repeated.length)arr=repeated;
- return arr.sort((a,b)=>b.hits-a.hits||a.iso.localeCompare(b.iso));
+ texts.forEach(t=>extractDateCandidates(t).forEach(d=>{let dt=new Date(d.iso+'T12:00:00');if(isNaN(dt)||dt<min||dt>max)return;map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++}));
+ return Object.values(map).map(d=>({...d,confidence:d.hits>=2?'forte':'à confirmer'})).sort((a,b)=>b.hits-a.hits||a.iso.localeCompare(b.iso));
 }
 async function analyzeLabel(input){
  let n=document.getElementById('scanStatus');if(!input.files||!input.files[0])return;
@@ -303,6 +297,8 @@ async function analyzeLabel(input){
   // Only ask for manual confirmation when the OCR could not safely assign all detected dates.
   if((!autoDates.fab||!autoDates.dlc)&&dc.length){showDateCandidates(dc);if(!found.some(x=>x.includes('date(s)')))found.push(dc.length+' date(s) à confirmer')}
   else{let box=document.getElementById('dateCandidates');if(box)box.innerHTML='<div class="note"><b>Dates placées automatiquement.</b> Vérifiez-les avec la photo avant validation.</div>'}
+  if(!autoDates.fab&&autoDates.dlc){detectedInfo.innerHTML='<b>DLC détectée, mais date de fabrication non reconnue.</b> Photographiez de plus près la zone FAB / MFG / production.'}
+  if(autoDates.fab&&!autoDates.dlc){detectedInfo.innerHTML='<b>Date de fabrication détectée, mais DLC non reconnue.</b> Photographiez de plus près la zone DLC / EXP.'}
   rocr.value=Math.round(Math.max(result.data.confidence||0,result2.data.confidence||0))+' %';
   detectedInfo.innerHTML='<b>Photo '+receptionPhotoCount+' :</b> '+(found.length?'détecté : '+found.join(', '):'aucune donnée HACCP suffisamment certaine. Les cases restent vides.')+'<br>Vous pouvez scanner une autre face du même emballage.';
   n.innerHTML='<b>Lecture terminée.</b> Vérifiez toutes les données avant validation. <button class="btn" type="button" style="padding:8px 12px;margin-top:8px" onclick="document.getElementById(\'labelPhoto\').click()">📷 Photographier une autre zone</button>';
