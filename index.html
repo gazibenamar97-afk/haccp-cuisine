@@ -205,54 +205,10 @@ function showDateCandidates(cands,classified){
  box.innerHTML='<div class="panel" style="margin-top:8px"><b>Résultat de lecture des dates</b>'+rows.join('')+'</div>';
 }
 function autoFillReceptionDates(texts){
- let cands=mergeDateCandidates(texts||[]);
- const expRx=/(\bdlc\b|\bddm\b|date\s*(?:limite|d['’]?expiration)|(?:a|à)\s*consommer\s*avant(?:\s*le)?|consommer\s*avant|exp(?:iry|iration)?|use\s*by|best\s*before|valid(?:ity|ite|ité)|انتهاء|الصلاحية|صالح)/i;
- const fabRx=/(date\s*(?:de\s*)?(?:fabrication|production|conditionnement)|\b(?:fab|mfg|mfd|prod|lf)\b|fab(?:rique|rication)?|prod(?:uction)?\s*date|conditionne|conditionné|الإنتاج|الصنع|تاريخ\s*الإنتاج)/i;
- let evidence={};cands.forEach(x=>evidence[x.iso]={item:x,dlc:0,fab:0});
- (texts||[]).forEach(t=>{
-   let lines=(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
-   lines.forEach((line,i)=>{
-     let local=[lines[i-2]||'',lines[i-1]||'',line,lines[i+1]||'',lines[i+2]||''].join(' ');
-     extractDateCandidates(local).forEach(d=>{
-       if(!evidence[d.iso])evidence[d.iso]={item:d,dlc:0,fab:0};
-       if(expRx.test(local))evidence[d.iso].dlc+=6;
-       if(fabRx.test(local))evidence[d.iso].fab+=6;
-     });
-   });
- });
- let entries=Object.values(evidence),fab='',dlc='';
- let bf=entries.slice().sort((a,b)=>b.fab-a.fab||(b.item.hits||0)-(a.item.hits||0))[0];
- let bd=entries.slice().sort((a,b)=>b.dlc-a.dlc||(b.item.hits||0)-(a.item.hits||0))[0];
- if(bf&&bf.fab>=6)fab=bf.item.iso;
- if(bd&&bd.dlc>=6)dlc=bd.item.iso;
- // Resolve a missing field independently from the other field.
- // If expiry is known, a distinct repeated earlier date is a plausible fabrication date.
- if(!fab&&dlc){
-   let before=cands.filter(x=>x.iso<dlc&&x.iso<=new Date().toISOString().slice(0,10)).sort((a,b)=>(b.hits||0)-(a.hits||0)||b.iso.localeCompare(a.iso));
-   if(before.length===1)fab=before[0].iso;
-   else if(before.length>1&&(before[0].hits||0)>=2&&(before[0].hits||0)>(before[1].hits||0))fab=before[0].iso;
- }
- // If fabrication is known, a distinct repeated later date is a plausible expiry date.
- if(!dlc&&fab){
-   let after=cands.filter(x=>x.iso>fab).sort((a,b)=>(b.hits||0)-(a.hits||0)||a.iso.localeCompare(b.iso));
-   if(after.length&&(after[0].hits||0)>=2)dlc=after[0].iso;
- }
- // With exactly two strongly repeated dates, resolve chronology only for still-missing fields.
- if(cands.length===2&&cands.every(x=>(x.hits||0)>=2)){
-   let sorted=cands.slice().sort((a,b)=>a.iso.localeCompare(b.iso));
-   if(!fab)fab=sorted[0].iso;if(!dlc)dlc=sorted[1].iso;
- }
- let tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
- if(fab&&fab>tomorrow.toISOString().slice(0,10))fab='';
- let oldFab=new Date();oldFab.setFullYear(oldFab.getFullYear()-2);if(fab&&fab<oldFab.toISOString().slice(0,10))fab='';
- let oldExpiry=new Date();oldExpiry.setFullYear(oldExpiry.getFullYear()-2);
- if(dlc&&dlc<oldExpiry.toISOString().slice(0,10))dlc='';
- if(fab&&dlc&&dlc<fab){fab='';dlc=''}
- if(fab&&dlc){let gap=(new Date(dlc+'T12:00:00')-new Date(fab+'T12:00:00'))/86400000;if(gap<0||gap>1826){fab='';dlc=''}}
- let filled=[],fabEl=document.getElementById('rfab'),dlcEl=document.getElementById('rd');
- if(fab&&fabEl){fabEl.value=fab;let na=document.getElementById('rfabNA');if(na){na.checked=false;fabEl.disabled=false}filled.push('Date de fabrication')}
- if(dlc&&dlcEl){dlcEl.value=dlc;let na=document.getElementById('rdNA');if(na){na.checked=false;dlcEl.disabled=false}filled.push('DLC / DDM')}
- return {filled,cands,fab,dlc};
+ // Dates de fabrication et DLC/DDM : saisie manuelle uniquement.
+ // L'OCR est volontairement désactivé pour éviter les faux chiffres.
+ let box=document.getElementById('dateCandidates');if(box)box.innerHTML='';
+ return {fab:'',dlc:'',cands:[],filled:[]};
 }
 function fillFromOCR(text){
  let lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean),joined=lines.join(' ');
@@ -315,7 +271,7 @@ async function analyzeLabels(input){
  let n=document.getElementById('scanStatus');n.innerHTML='<b>Tesseract OCR :</b> '+files.length+' photo(s) à analyser…';
  for(let i=0;i<files.length;i++){n.innerHTML='<b>Tesseract OCR :</b> photo '+(i+1)+' / '+files.length+'…';await analyzeLabelFile(files[i],i+1,files.length)}
  let combined=receptionScanTexts.join('\n'),found=fillFromOCR(combined),autoDates=autoFillReceptionDates(receptionScanTexts);
- showDateCandidates(autoDates.cands,autoDates);autoDates.filled.forEach(x=>{if(!found.includes(x))found.push(x)});
+ autoDates.filled.forEach(x=>{if(!found.includes(x))found.push(x)});
  let info=document.getElementById('detectedInfo');
  if(info)info.innerHTML='<b>Moteur actuel : Tesseract OCR.</b><br><b>Analyse globale de '+receptionPhotoCount+' photo(s) :</b> '+(found.length?found.join(', '):'aucune donnée suffisamment certaine')+'.';
  n.innerHTML='<b>Analyse terminée.</b> <button class="btn" type="button" style="padding:8px 12px;margin-top:8px" onclick="document.getElementById(\'cameraPhoto\').click()">📷 Prendre une autre photo</button>';
