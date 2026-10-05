@@ -176,20 +176,32 @@ function foodIcon(cat,p){
 const PHOTO_CATEGORY={
  "Viandes":"viandes","Volailles":"volailles","Poissons & fruits de mer":"poissons","Produits laitiers":"laitiers","Fruits & légumes":"fruits-legumes","Œufs & ovoproduits":"oeufs","Charcuterie":"charcuterie","Épicerie":"epicerie","Surgelés":"surgeles","Boulangerie & pâtisserie":"boulangerie","Boissons":"boissons"
 };
-const PHOTO_PRODUCT={
- "Bœuf frais":"assets/products/tile_0_0.webp",
- "Faux-filet de bœuf":"assets/products/tile_0_2.webp",
- "Jarret de bœuf":"assets/products/tile_0_4.webp"
+const PHOTO_ROW0={
+ "Bœuf frais":0,
+ "Entrecôte de bœuf":1,
+ "Faux-filet de bœuf":2,
+ "Filet de bœuf":3,
+ "Jarret de bœuf":4,
+ "Foie de bœuf":5,
+ "Veau frais":6,
+ "Escalope de veau":7,
+ "Foie de veau":8,
+ "Agneau frais":9,
+ "Gigot d'agneau":10,
+ "Épaule d'agneau":11,
+ "Côtelettes d'agneau":12,
+ "Mouton":13
 };
-function productPhoto(cat,p){
- const key=(p||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
- return PHOTO_PRODUCT[p]||('assets/products/'+key+'.webp');
-}
-function categoryPhoto(cat){return 'assets/categories/'+(PHOTO_CATEGORY[cat]||'produit')+'.webp'}
 function foodThumb(cat,p,size=42){
- const src=p?productPhoto(cat,p):categoryPhoto(cat);
- return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'" alt="" loading="lazy" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'photo-missing\')"></span>';
+ if(p&&Object.prototype.hasOwnProperty.call(PHOTO_ROW0,p)){
+  const col=PHOTO_ROW0[p],x=(col/13*100).toFixed(4)+'%';
+  return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px;background-image:url(assets/products/food-row-0.webp);background-size:1400% 100%;background-position:'+x+' 0;background-repeat:no-repeat"></span>';
+ }
+ const src=p?productPhotoLegacy(p):categoryPhoto(cat);
+ return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'" alt="" loading="lazy" onerror="this.style.display=\\'none\\';this.parentNode.classList.add(\\'photo-missing\\')"></span>';
 }
+function productPhotoLegacy(p){const key=(p||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');return 'assets/products/'+key+'.webp'}
+function categoryPhoto(cat){return 'assets/categories/'+(PHOTO_CATEGORY[cat]||'produit')+'.webp'}
 
 const BRANDS=["Délice","Vitalait","Land'Or","Président","El Mazraa","Mliha","Jadida","Randa","Warda","Spiga","L'Épi d'Or","La Rose Blanche","Saïda","Moulin d'Or","Boga","Safia","Marwa","Melliti","Garci","Oktor","Cristalline","Stil","Beldi","Matinel","El Maraa","Natilait","Montrégal","Majesté","Poulina"];
 const OCR_PRODUCT_ALIASES=[
