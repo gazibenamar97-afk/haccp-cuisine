@@ -108,8 +108,8 @@ function detectBarcode(text){
 function extractDateCandidates(text){
  // Handles 14/08/26, 14-08-26, 14.08.26 and common OCR spacing/noise around separators.
  let cleaned=(text||'').replace(/[|Il]/g,'1').replace(/[Oo]/g,'0').replace(/[,:;]/g,'.');
- let rx=/(\d{1,2})\s*[\.\/-]\s*(\d{1,2})\s*[\.\/-]\s*(\d{2,4})/g,m,out=[];
- while((m=rx.exec(cleaned))){let iso=isoDate(m[0]);if(iso&&!out.some(x=>x.iso===iso))out.push({raw:m[0],iso});}
+ let rx=/(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{2,4})/g,m,out=[];
+ while((m=rx.exec(cleaned))){let d=+m[1],mo=+m[2],y=+m[3];if(d<1||d>31||mo<1||mo>12)continue;let raw=m[1]+'/'+m[2]+'/'+m[3],iso=isoDate(raw);if(iso&&!out.some(x=>x.iso===iso))out.push({raw,iso});}
  return out;
 }
 function showDateCandidates(cands){
@@ -157,6 +157,23 @@ async function preprocessOCRImage(file){
   };img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url;
  });
 }
+async function makeDateOCRVariants(file){
+ return new Promise((resolve,reject)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+   const scale=Math.min(2,2200/Math.max(img.width,img.height)),w=Math.round(img.width*scale),h=Math.round(img.height*scale);
+   const base=document.createElement('canvas');base.width=w;base.height=h;let b=base.getContext('2d');b.drawImage(img,0,0,w,h);
+   let src=b.getImageData(0,0,w,h),arr=[];
+   [105,135,165,195].forEach(th=>{
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;let x=cv.getContext('2d'),d=x.createImageData(w,h);
+    for(let i=0;i<src.data.length;i+=4){let g=.299*src.data[i]+.587*src.data[i+1]+.114*src.data[i+2],v=g<th?0:255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}
+    x.putImageData(d,0,0);arr.push(cv);
+   });
+   URL.revokeObjectURL(url);resolve(arr);
+  };img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url;
+ });
+}
+function mergeDateCandidates(texts){let all=[];texts.forEach(t=>extractDateCandidates(t).forEach(d=>{if(!all.some(x=>x.iso===d.iso))all.push(d)}));return all}
 async function analyzeLabel(input){
  let n=document.getElementById('scanStatus');if(!input.files||!input.files[0])return;
  window.currentReceptionLabel=input.files[0];
@@ -171,8 +188,18 @@ async function analyzeLabel(input){
   const result=await Tesseract.recognize(input.files[0],'ara+fra+eng',opts);
   n.innerHTML='<b>Deuxième lecture optimisée…</b>';
   const result2=await Tesseract.recognize(enhanced,'ara+fra+eng');
-  const text=(result.data.text||'')+'\n'+(result2.data.text||'');receptionScanTexts.push(text);
+  let texts=[result.data.text||'',result2.data.text||''];
+  // Dedicated pass for stamped/dot-matrix dates. Multiple thresholds recover faint broken digits.
+  n.innerHTML='<b>Recherche renforcée des dates…</b>';
+  const variants=await makeDateOCRVariants(input.files[0]);
+  for(let k=0;k<variants.length;k++){
+    const dr=await Tesseract.recognize(variants[k],'eng');
+    texts.push(dr.data.text||'');
+  }
+  const text=texts.join('\n');receptionScanTexts.push(text);
   let found=fillFromOCR(text);
+  const dc=mergeDateCandidates(texts);showDateCandidates(dc);
+  if(dc.length&&!found.some(x=>x.includes('date(s)')))found.push(dc.length+' date(s) à confirmer');
   rocr.value=Math.round(Math.max(result.data.confidence||0,result2.data.confidence||0))+' %';
   detectedInfo.innerHTML='<b>Photo '+receptionPhotoCount+' :</b> '+(found.length?'détecté : '+found.join(', '):'aucune donnée HACCP suffisamment certaine. Les cases restent vides.')+'<br>Vous pouvez scanner une autre face du même emballage.';
   n.innerHTML='<b>Lecture terminée.</b> Vérifiez toutes les données avant validation. <button class="btn" type="button" style="padding:8px 12px;margin-top:8px" onclick="document.getElementById(\'labelPhoto\').click()">📷 Ajouter une autre photo</button>';
