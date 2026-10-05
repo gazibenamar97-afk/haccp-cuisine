@@ -176,7 +176,11 @@ function foodIcon(cat,p){
 const PHOTO_CATEGORY={
  "Viandes":"viandes","Volailles":"volailles","Poissons & fruits de mer":"poissons","Produits laitiers":"laitiers","Fruits & légumes":"fruits-legumes","Œufs & ovoproduits":"oeufs","Charcuterie":"charcuterie","Épicerie":"epicerie","Surgelés":"surgeles","Boulangerie & pâtisserie":"boulangerie","Boissons":"boissons"
 };
-const PHOTO_PRODUCT={};
+const PHOTO_PRODUCT={
+ "Bœuf frais":"assets/products/tile_0_0.webp",
+ "Faux-filet de bœuf":"assets/products/tile_0_2.webp",
+ "Jarret de bœuf":"assets/products/tile_0_4.webp"
+};
 function productPhoto(cat,p){
  const key=(p||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
  return PHOTO_PRODUCT[p]||('assets/products/'+key+'.webp');
