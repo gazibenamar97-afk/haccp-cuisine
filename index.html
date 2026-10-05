@@ -153,34 +153,47 @@ function showDateCandidates(cands){
  box.innerHTML='<div class="panel" style="margin-top:8px"><b>Date(s) plausible(s) détectée(s)</b><div class="note">Les lectures incohérentes sont maintenant éliminées. Touchez uniquement une date que vous voyez réellement sur l’étiquette.</div>'+cands.map(d=>'<div class="row" style="margin-top:8px"><button type="button" class="btn" onclick="rd.value=\''+d.iso+'\'">DLC : '+d.raw+(d.hits?' · '+d.hits+' lecture(s)':'')+'</button><button type="button" class="btn" onclick="rfab.value=\''+d.iso+'\'">Fabrication : '+d.raw+'</button></div>').join('')+'</div>';
 }
 function autoFillReceptionDates(texts){
- let raw=(texts||[]).join('\n'),lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean),cands=mergeDateCandidates(texts||[]);
+ let cands=mergeDateCandidates(texts||[]);
  const expRx=/(\bdlc\b|\bddm\b|date\s*(?:limite|d['’]?expiration)|a\s*consommer|à\s*consommer|consommer\s*avant|exp(?:iry|iration)?|use\s*by|best\s*before|valid(?:ity|ite|ité)|انتهاء|الصلاحية|صالح)/i;
  const fabRx=/(date\s*(?:de\s*)?(?:fabrication|production|conditionnement)|fab(?:rique|rication)?|mfg|mfd|prod(?:uction)?\s*date|conditionne|conditionné|الإنتاج|الصنع|تاريخ\s*الإنتاج)/i;
- let scores={};
- cands.forEach(x=>scores[x.iso]={dlc:0,fab:0,item:x});
- lines.forEach((line,idx)=>{
-   let local=[lines[idx-1]||'',line,lines[idx+1]||''].join(' ');
-   extractDateCandidates(line).forEach(d=>{if(!scores[d.iso])scores[d.iso]={dlc:0,fab:0,item:d};if(expRx.test(local))scores[d.iso].dlc+=5;if(fabRx.test(local))scores[d.iso].fab+=5});
+ let evidence={};cands.forEach(x=>evidence[x.iso]={item:x,dlc:0,fab:0});
+ (texts||[]).forEach(t=>{
+   let lines=(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+   lines.forEach((line,i)=>{
+     let local=[lines[i-2]||'',lines[i-1]||'',line,lines[i+1]||'',lines[i+2]||''].join(' ');
+     extractDateCandidates(local).forEach(d=>{
+       if(!evidence[d.iso])evidence[d.iso]={item:d,dlc:0,fab:0};
+       if(expRx.test(local))evidence[d.iso].dlc+=6;
+       if(fabRx.test(local))evidence[d.iso].fab+=6;
+     });
+   });
  });
- // Also score labels and dates that OCR split onto nearby text in the combined stream.
- let joined=raw.replace(/\s+/g,' ');
- Object.keys(scores).forEach(iso=>{let d=scores[iso].item,parts=d.iso.split('-'),variants=[d.raw,parts[2]+'/'+parts[1]+'/'+parts[0],parts[2]+'-'+parts[1]+'-'+parts[0]];variants.forEach(v=>{let at=joined.indexOf(v);if(at>=0){let ctx=joined.slice(Math.max(0,at-100),at+100);if(expRx.test(ctx))scores[iso].dlc+=3;if(fabRx.test(ctx))scores[iso].fab+=3}})});
- let fab='',dlc='',entries=Object.values(scores);
- let bestFab=entries.slice().sort((a,b)=>b.fab-a.fab)[0],bestDlc=entries.slice().sort((a,b)=>b.dlc-a.dlc)[0];
- if(bestFab&&bestFab.fab>=3)fab=bestFab.item.iso;if(bestDlc&&bestDlc.dlc>=3)dlc=bestDlc.item.iso;
- if(fab&&dlc&&fab===dlc){if((bestFab.fab||0)>(bestDlc.dlc||0))dlc='';else fab=''}
- // Safe fallback when two distinct dates are strongly repeated: earlier fabrication, later expiry.
- if((!fab||!dlc)&&cands.length===2&&cands.every(x=>(x.hits||0)>=2)){
+ let entries=Object.values(evidence),fab='',dlc='';
+ let bf=entries.slice().sort((a,b)=>b.fab-a.fab||(b.item.hits||0)-(a.item.hits||0))[0];
+ let bd=entries.slice().sort((a,b)=>b.dlc-a.dlc||(b.item.hits||0)-(a.item.hits||0))[0];
+ if(bf&&bf.fab>=6)fab=bf.item.iso;
+ if(bd&&bd.dlc>=6)dlc=bd.item.iso;
+ // Resolve a missing field independently from the other field.
+ // If expiry is known, a distinct repeated earlier date is a plausible fabrication date.
+ if(!fab&&dlc){
+   let before=cands.filter(x=>x.iso<dlc&&x.iso<=new Date().toISOString().slice(0,10)).sort((a,b)=>(b.hits||0)-(a.hits||0)||b.iso.localeCompare(a.iso));
+   if(before.length&&(before[0].hits||0)>=2)fab=before[0].iso;
+ }
+ // If fabrication is known, a distinct repeated later date is a plausible expiry date.
+ if(!dlc&&fab){
+   let after=cands.filter(x=>x.iso>fab).sort((a,b)=>(b.hits||0)-(a.hits||0)||a.iso.localeCompare(b.iso));
+   if(after.length&&(after[0].hits||0)>=2)dlc=after[0].iso;
+ }
+ // With exactly two strongly repeated dates, resolve chronology only for still-missing fields.
+ if(cands.length===2&&cands.every(x=>(x.hits||0)>=2)){
    let sorted=cands.slice().sort((a,b)=>a.iso.localeCompare(b.iso));
    if(!fab)fab=sorted[0].iso;if(!dlc)dlc=sorted[1].iso;
  }
- // HACCP plausibility filters: do not auto-fill incoherent dates.
- let todayIso=new Date().toISOString().slice(0,10),futureFab=new Date();futureFab.setDate(futureFab.getDate()+1);
- if(fab&&fab>futureFab.toISOString().slice(0,10))fab='';
+ let tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+ if(fab&&fab>tomorrow.toISOString().slice(0,10))fab='';
  let oldExpiry=new Date();oldExpiry.setFullYear(oldExpiry.getFullYear()-2);
  if(dlc&&dlc<oldExpiry.toISOString().slice(0,10))dlc='';
  if(fab&&dlc&&dlc<fab){fab='';dlc=''}
- // Reject an excessive shelf-life pairing (> 5 years), usually an OCR digit error.
  if(fab&&dlc){let gap=(new Date(dlc+'T12:00:00')-new Date(fab+'T12:00:00'))/86400000;if(gap<0||gap>1826){fab='';dlc=''}}
  let filled=[],fabEl=document.getElementById('rfab'),dlcEl=document.getElementById('rd');
  if(fab&&fabEl){fabEl.value=fab;let na=document.getElementById('rfabNA');if(na){na.checked=false;fabEl.disabled=false}filled.push('Date de fabrication')}
@@ -285,7 +298,7 @@ async function analyzeLabel(input){
   }
   const text=texts.join('\n');receptionScanTexts.push(text);
   let found=fillFromOCR(text);
-  const autoDates=autoFillReceptionDates(texts),dc=autoDates.cands;
+  const allReceptionTexts=receptionScanTexts.flatMap(t=>[t]),autoDates=autoFillReceptionDates(allReceptionTexts),dc=autoDates.cands;
   autoDates.filled.forEach(x=>{if(!found.includes(x))found.push(x+' remplie automatiquement')});
   // Only ask for manual confirmation when the OCR could not safely assign all detected dates.
   if((!autoDates.fab||!autoDates.dlc)&&dc.length){showDateCandidates(dc);if(!found.some(x=>x.includes('date(s)')))found.push(dc.length+' date(s) à confirmer')}
