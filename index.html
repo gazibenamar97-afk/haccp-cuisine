@@ -109,13 +109,13 @@ function extractDateCandidates(text){
  // Handles 14/08/26, 14-08-26, 14.08.26 and common OCR spacing/noise around separators.
  let cleaned=(text||'').replace(/[|Il]/g,'1').replace(/[Oo]/g,'0').replace(/[,:;]/g,'.');
  let rx=/(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{1,2})\s*(?:[\.\/-]|\s)\s*(\d{2,4})/g,m,out=[];
- while((m=rx.exec(cleaned))){let d=+m[1],mo=+m[2],y=+m[3];if(d<1||d>31||mo<1||mo>12)continue;let raw=m[1]+'/'+m[2]+'/'+m[3],iso=isoDate(raw);if(iso&&!out.some(x=>x.iso===iso))out.push({raw,iso});}
+ while((m=rx.exec(cleaned))){let d=+m[1],mo=+m[2],ys=m[3],y=+ys;if(d<1||d>31||mo<1||mo>12)continue;if(ys.length===2)y=2000+y;if(y<2020||y>2040)continue;let raw=m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+String(y),iso=String(y)+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(!out.some(x=>x.iso===iso))out.push({raw,iso});}
  return out;
 }
 function showDateCandidates(cands){
  let box=document.getElementById('dateCandidates');if(!box)return;
  if(!cands.length){box.innerHTML='';return}
- box.innerHTML='<div class="panel" style="margin-top:8px"><b>Date(s) détectée(s) sur l’étiquette</b><div class="note">Touchez la bonne destination. L’application ne choisit pas à votre place lorsqu’il y a plusieurs dates.</div>'+cands.map((d,i)=>'<div class="row" style="margin-top:8px"><button type="button" class="btn" onclick="rd.value=\''+d.iso+'\'">DLC : '+d.raw+'</button><button type="button" class="btn" onclick="rfab.value=\''+d.iso+'\'">Fabrication : '+d.raw+'</button></div>').join('')+'</div>';
+ box.innerHTML='<div class="panel" style="margin-top:8px"><b>Date(s) plausible(s) détectée(s)</b><div class="note">Les lectures incohérentes sont maintenant éliminées. Touchez uniquement une date que vous voyez réellement sur l’étiquette.</div>'+cands.map(d=>'<div class="row" style="margin-top:8px"><button type="button" class="btn" onclick="rd.value=\''+d.iso+'\'">DLC : '+d.raw+(d.hits?' · '+d.hits+' lecture(s)':'')+'</button><button type="button" class="btn" onclick="rfab.value=\''+d.iso+'\'">Fabrication : '+d.raw+'</button></div>').join('')+'</div>';
 }
 function fillFromOCR(text){
  let lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean),joined=lines.join(' ');
@@ -173,7 +173,11 @@ async function makeDateOCRVariants(file){
   };img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url;
  });
 }
-function mergeDateCandidates(texts){let all=[];texts.forEach(t=>extractDateCandidates(t).forEach(d=>{if(!all.some(x=>x.iso===d.iso))all.push(d)}));return all}
+function mergeDateCandidates(texts){
+ let map={};
+ texts.forEach(t=>extractDateCandidates(t).forEach(d=>{map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++}));
+ return Object.values(map).filter(d=>{let y=+d.iso.slice(0,4);return y>=2020&&y<=2040}).sort((a,b)=>b.hits-a.hits);
+}
 async function analyzeLabel(input){
  let n=document.getElementById('scanStatus');if(!input.files||!input.files[0])return;
  window.currentReceptionLabel=input.files[0];
