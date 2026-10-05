@@ -182,7 +182,7 @@ const PHOTO_POS={};
 PHOTO_PRODUCTS.forEach(function(p,i){var n=i%140;PHOTO_POS[p]=[n%14,Math.floor(n/14)]});
 const CATEGORY_PHOTO_POS={};
 Object.entries(CAT).forEach(function(e){var gs=Object.values(e[1]),first=gs.length&&gs[0].length?gs[0][0][0]:'';CATEGORY_PHOTO_POS[e[0]]=PHOTO_POS[first]});
-function foodThumb(cat,p,size){size=size||42;var pos=p?PHOTO_POS[p]:CATEGORY_PHOTO_POS[cat];if(!pos)return '';var left=-(pos[0]*100)+'%',top=-(pos[1]*100)+'%';return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px;position:relative;overflow:hidden"><img src="assets/products/food-atlas.webp?v=2" alt="" style="position:absolute;width:1400%;height:1000%;max-width:none;left:'+left+';top:'+top+';object-fit:fill;display:block" loading="lazy"></span>'}
+function foodThumb(cat,p,size){size=size||42;var pos=p?PHOTO_POS[p]:CATEGORY_PHOTO_POS[cat];if(!pos)return '';var px=pos[0]===13?'100%':(pos[0]/13*100).toFixed(4)+'%',py=pos[1]===9?'100%':(pos[1]/9*100).toFixed(4)+'%';return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px;background-image:url(assets/products/food-atlas.webp?v=3);background-size:1400% 1000%;background-position:'+px+' '+py+';background-repeat:no-repeat"></span>'}
 
 const BRANDS=["Délice","Vitalait","Land'Or","Président","El Mazraa","Mliha","Jadida","Randa","Warda","Spiga","L'Épi d'Or","La Rose Blanche","Saïda","Moulin d'Or","Boga","Safia","Marwa","Melliti","Garci","Oktor","Cristalline","Stil","Beldi","Matinel","El Maraa","Natilait","Montrégal","Majesté","Poulina"];
 const OCR_PRODUCT_ALIASES=[
