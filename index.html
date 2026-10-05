@@ -14,7 +14,64 @@ main{max-width:1200px;margin:0 auto;padding:32px 26px 60px}h1{font-size:29px;mar
 <button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Imprimer DLC</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button>
 </nav><main><div id="app"></div></main>
 <script>
-const CAT={"Viandes":{"Bœuf":[["Bœuf frais",3],["Foie de bœuf",3]],"Veau":[["Veau frais",3]],"Agneau":[["Agneau frais",3],["Foie d'agneau",3]],"Abats":[["Foie",3]],"Préparations de viande":[["Viande hachée",1],["Merguez",2]]},"Volailles":{"Poulet":[["Poulet frais",2]],"Dinde":[["Dinde fraîche",2]],"Canard":[["Canard frais",2]]},"Poissons & fruits de mer":{"Poissons":[["Poisson frais",1],["Saumon frais",1],["Thon frais",1]],"Fruits de mer":[["Crevettes fraîches",1],["Moules fraîches",1],["Calamars frais",1]]},"Produits laitiers":{"Lait":[["Lait ouvert",3]],"Crème":[["Crème ouverte",3]],"Fromage":[["Fromage ouvert",3]],"Yaourt":[["Yaourt ouvert",3]]},"Fruits & légumes":{"Légumes préparés":[["Tomates préparées",2],["Salade préparée",2],["Carottes préparées",2]],"Fruits préparés":[["Fruits préparés",2]]},"Œufs & ovoproduits":{"Œufs":[["Œufs frais",3]],"Ovoproduits":[["Ovoproduits ouverts",3]]},"Charcuterie":{"Charcuterie ouverte":[["Jambon ouvert",3],["Saucisson ouvert",7],["Mortadelle ouverte",3]]},"Épicerie":{"Préparations":[["Riz cuit",3],["Pâtes cuites",3]],"Conserves":[["Conserve ouverte",3]]},"Surgelés":{"Surgelés":[["Légumes surgelés ouverts",3],["Poisson surgelé ouvert",3],["Viande surgelée ouverte",3]]},"Boulangerie & pâtisserie":{"Boulangerie":[["Pain",2],["Baguette",2]],"Pâtisserie":[["Viennoiseries",2],["Pâtisseries",2]]},"Boissons":{"Boissons":[["Jus ouvert",3],["Soda ouvert",3],["Eau ouverte",3]]}},app=document.getElementById('app');
+const CAT={
+"Viandes":{
+"Bœuf":[["Bœuf frais",3],["Entrecôte de bœuf",3],["Faux-filet de bœuf",3],["Filet de bœuf",3],["Jarret de bœuf",3],["Foie de bœuf",3]],
+"Veau":[["Veau frais",3],["Escalope de veau",3],["Foie de veau",3]],
+"Agneau & mouton":[["Agneau frais",3],["Gigot d'agneau",3],["Épaule d'agneau",3],["Côtelettes d'agneau",3],["Mouton",3],["Foie d'agneau",3]],
+"Abats":[["Foie",3],["Cœur",2],["Rognons",2],["Tripes",2]],
+"Préparations de viande":[["Viande hachée",1],["Merguez",2],["Kefta",1]]
+},
+"Volailles":{
+"Poulet":[["Poulet entier frais",2],["Escalope de poulet",2],["Blanc de poulet",2],["Cuisses de poulet",2],["Ailes de poulet",2],["Foie de poulet",2]],
+"Dinde":[["Dinde fraîche",2],["Escalope de dinde",2],["Blanc de dinde",2],["Cuisses de dinde",2]],
+"Canard & autres":[["Canard frais",2],["Caille",2]]
+},
+"Poissons & fruits de mer":{
+"Poissons":[["Daurade",1],["Loup / Bar",1],["Rouget",1],["Sardine",1],["Maquereau",1],["Thon frais",1],["Espadon",1],["Mérou",1],["Sole",1],["Merlan",1],["Saumon frais",1],["Anchois frais",1]],
+"Fruits de mer":[["Crevettes fraîches",1],["Calamars frais",1],["Poulpe frais",1],["Seiche",1],["Moules fraîches",1],["Palourdes",1]]
+},
+"Produits laitiers":{
+"Laits":[["Lait frais",3],["Lait ouvert",3],["Lait fermenté / Leben",3]],
+"Yaourts":[["Yaourt nature",3],["Yaourt aromatisé",3]],
+"Fromages":[["Fromage frais",3],["Mozzarella",3],["Ricotta",3],["Gruyère",3],["Fromage râpé",3]],
+"Crèmes & matières grasses":[["Crème fraîche",3],["Crème liquide",3],["Beurre",7]]
+},
+"Fruits & légumes":{
+"Légumes":[["Tomate",3],["Pomme de terre",5],["Carotte",5],["Oignon",7],["Ail",7],["Poivron",4],["Piment",4],["Courgette",4],["Aubergine",4],["Concombre",4],["Navet",5],["Courge",5],["Artichaut",4],["Fenouil",4],["Céleri",4],["Poireau",4],["Chou",5],["Chou-fleur",4],["Brocoli",4],["Haricots verts",3],["Petits pois",3],["Fèves",3],["Épinards",3],["Blette",3],["Salade / laitue",3],["Persil",3],["Coriandre",3],["Menthe fraîche",3]],
+"Fruits":[["Orange",5],["Citron",7],["Mandarine",5],["Pomme",7],["Poire",5],["Banane",4],["Fraise",3],["Raisin",4],["Pastèque",4],["Melon",4],["Pêche",4],["Abricot",4],["Prune",4],["Grenade",5],["Figue",3],["Datte",7],["Coing",5]],
+"Produits préparés":[["Tomates préparées",2],["Salade préparée",2],["Carottes préparées",2],["Fruits préparés",2]]
+},
+"Œufs & ovoproduits":{
+"Œufs":[["Œufs frais",3],["Œufs durs préparés",2]],
+"Ovoproduits":[["Blanc d'œuf liquide",3],["Jaune d'œuf liquide",3],["Œuf liquide pasteurisé",3]]
+},
+"Charcuterie":{
+"Charcuterie":[["Jambon de dinde",3],["Jambon de poulet",3],["Mortadelle",3],["Salami",5],["Saucisson",7],["Bacon de bœuf",3]]
+},
+"Épicerie":{
+"Céréales & féculents":[["Riz",30],["Semoule",30],["Couscous",30],["Pâtes",30],["Borghol / Boulgour",30],["Frik",30],["Farine",30]],
+"Légumineuses":[["Pois chiches",30],["Lentilles",30],["Haricots secs",30],["Fèves sèches",30]],
+"Conserves & condiments":[["Concentré de tomate",7],["Harissa",14],["Thon en conserve ouvert",3],["Olives",14],["Câpres",14],["Cornichons",14]],
+"Huiles & sauces":[["Huile d'olive",30],["Huile végétale",30],["Mayonnaise ouverte",7],["Ketchup ouvert",14],["Moutarde ouverte",14]],
+"Préparations cuites":[["Riz cuit",3],["Pâtes cuites",3],["Couscous cuit",2],["Sauce tomate préparée",3]]
+},
+"Surgelés":{
+"Viandes & volailles":[["Viande surgelée ouverte",3],["Poulet surgelé",3],["Escalope surgelée",3]],
+"Poissons & fruits de mer":[["Poisson surgelé ouvert",3],["Crevettes surgelées",3],["Calamars surgelés",3]],
+"Légumes & autres":[["Légumes surgelés ouverts",3],["Frites surgelées",3],["Petits pois surgelés",3],["Pâte feuilletée surgelée",3]]
+},
+"Boulangerie & pâtisserie":{
+"Pains":[["Pain",2],["Baguette",2],["Pain complet",2],["Pain tabouna",2],["Pain de mie",3]],
+"Viennoiseries":[["Croissant",2],["Pain au chocolat",2],["Brioche",2]],
+"Pâtisserie":[["Gâteau à la crème",2],["Tarte",2],["Mille-feuille",2],["Éclair",2],["Pâtisserie tunisienne",5]]
+},
+"Boissons":{
+"Jus":[["Jus d'orange frais",1],["Jus de citron",1],["Jus de fraise",1],["Jus multifruits",2],["Jus conditionné ouvert",3]],
+"Boissons":[["Eau minérale",7],["Eau gazeuse",7],["Soda ouvert",3]],
+"Boissons chaudes":[["Café",30],["Thé",30]]
+}
+},app=document.getElementById('app');
 const S=JSON.parse(localStorage.getItem('haccpV3')||'{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{"name":"Frigo 1","min":0,"max":4},{"name":"Congélateur 1","min":-24,"max":-18}]}');
 if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);
 function save(){localStorage.setItem('haccpV3',JSON.stringify(S))}
