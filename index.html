@@ -239,7 +239,7 @@ function toggleNCReason(){let bad=re.value==='Non conforme';ncReason.style.displ
 function updateReceptionQuantityUnit(){
  let p=(document.getElementById('rp')||{}).value||'',l=document.getElementById('rqtyLabel'),q=document.getElementById('rqty'),u=document.getElementById('rqtyUnit');
  if(!l||!q)return;
- const pieceProducts=['Œufs frais','Poulet entier frais','Canard','Caille','Daurade','Loup / Bar','Rouget','Sole','Artichaut','Chou','Chou-fleur','Salade / laitue','Orange','Citron','Mandarine','Pomme','Poire','Banane','Pêche','Abricot','Prune','Grenade','Figue','Coing','Pain','Baguette','Pain complet','Pain tabouna','Croissant','Pain au chocolat','Brioche'];
+ const pieceProducts=['Œufs frais','Pain','Baguette','Pain complet','Pain tabouna','Croissant','Pain au chocolat','Brioche'];
  if(pieceProducts.includes(p)){
    l.textContent='Nombre de pièces';q.placeholder='Ex. 24';q.type='number';q.min='1';q.step='1';if(u){u.textContent='pièces';u.style.display='inline'}
  }else{
