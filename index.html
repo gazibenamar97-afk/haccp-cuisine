@@ -494,7 +494,7 @@ function ticket(i){
  app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
  '<div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="applyLabelAutoRule()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option><option>Portionnement</option><option>Décongélation</option><option>Cuisson / refroidissement</option></select></div><div><label>Quantité (facultatif)</label><input id="labelQty" oninput="calcLabel()" placeholder="Ex. 2,5 kg"></div></div>'+
  '<div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div>'+
- '<div class="row print-hide"><div><label>Durée automatique</label><input id="labelDays" type="number" min="0" step="1" onchange="clearManualDlc();calcLabel()"><div id="labelRuleNote" class="note"></div></div><div><label>DLC manuelle (facultatif)</label><input id="labelManualDlc" type="date" onchange="calcLabel()"><div class="note">Si renseignée, cette date remplace la date calculée automatiquement.</div></div></div><div class="row print-hide"><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div><div></div></div>'+
+ '<div class="row print-hide"><div><label>Recommandation HACCP</label><div id="labelSuggestion" class="metric" style="padding:12px;margin-top:6px"></div><div id="labelRuleNote" class="note"></div></div><div><label>Durée choisie par l’opérateur <b>*</b></label><input id="labelDays" type="number" min="0" step="1" placeholder="Nombre de jours" oninput="calcLabel()"><div class="note">La recommandation est indicative. L’opérateur confirme la durée appliquée.</div></div></div><div class="row print-hide"><div><label>DLC manuelle (facultatif)</label><input id="labelManualDlc" type="date" onchange="calcLabel()"><div class="note">Si renseignée, cette date remplace le calcul basé sur le nombre de jours.</div></div><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div></div>'+
  '<div class="row print-hide"><div><label>Emplacement / équipement</label><select id="labelStorage" onchange="calcLabel()"><option value="">Choisir un équipement</option>'+S.equipment.map(function(e){return '<option value="'+String(e.name||'').replace(/"/g,'&quot;')+'">'+e.name+'</option>'}).join('')+'</select><div class="note">Liste synchronisée avec les équipements du module Températures.</div></div><div><label>Opérateur</label><input id="labelOperator" oninput="calcLabel()"></div></div>'+
  '<div class="row print-hide"><div><label>Lot interne (facultatif)</label><input id="labelLot" oninput="calcLabel()"></div><div><label>Instruction fabricant après ouverture (si applicable)</label><input id="labelManufacturer" oninput="calcLabel()" placeholder="Ex. à consommer sous 3 jours après ouverture"><div class="note">Si le fabricant indique une durée plus courte, elle est prioritaire.</div></div></div>'+
  '<h2 class="print-hide">Aperçu</h2><div id="labelPreview" style="width:60mm;min-height:40mm;margin:12px auto;border:2px solid #17251f;padding:4mm;background:white;color:#111;font-family:Arial,sans-serif"></div>'+
@@ -504,9 +504,11 @@ function ticket(i){
 function applyLabelAutoRule(){
  let a=document.getElementById('labelAction'),r=labelAutoRule(P,a?a.value:'Préparation'),days=document.getElementById('labelDays'),temp=document.getElementById('labelTemp'),note=document.getElementById('labelRuleNote');
  DAYS=r.days;
- if(days){days.value=r.manual?'':r.days;days.placeholder=r.manual?'À définir selon procédure validée':''}
+ let suggestion=document.getElementById('labelSuggestion');
+ if(days){days.value='';days.placeholder='Nombre de jours'}
+ if(suggestion)suggestion.innerHTML=r.manual?'⚠ Durée à définir selon une procédure HACCP validée.':('Conseil : à consommer de préférence sous <b>'+r.days+' jour'+(r.days>1?'s':'')+'</b>.');
  if(temp)temp.value=r.temp||'';
- if(note)note.innerHTML=(r.manual?'⚠ ':'')+r.basis+(r.manufacturer?' — <b>fabricant prioritaire</b>':'');
+ if(note)note.innerHTML=r.basis+(r.manufacturer?' — <b>instruction fabricant prioritaire</b>':'');
  calcLabel();
 }
 function clearManualDlc(){let m=document.getElementById('labelManualDlc');if(m)m.value=''}
