@@ -456,14 +456,81 @@ const LABEL_CAT={
 }
 };
 let C='',SUB='',P='',DAYS=0,outDate='';
+const LABEL_AUTO_RULES=[
+ {re:/Viande hachée|Kefta/i,days:1,temp:'≤ +2 °C',basis:'Règle interne prudente — viande hachée'},
+ {re:/Merguez|marinée/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — préparation de viande'},
+ {re:/Bœuf|Veau|Agneau|Mouton|Entrecôte|Faux-filet|Filet|Steak|Gigot|Épaule|Côtelettes/i,days:3,temp:'≤ +4 °C',basis:'Règle interne prudente — viande préparée'},
+ {re:/Foie|Cœur|Rognons|Tripes/i,days:2,temp:'≤ +3 °C',basis:'Règle interne prudente — abats'},
+ {re:/Poulet|Dinde|Canard|Caille|volaille/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — volaille préparée'},
+ {re:/Daurade|Loup|Bar|Mérou|Sole|Rouget|Thon préparé|Espadon|Saumon|Sardine|Maquereau|Merlan|Anchois|Poisson du jour|Crevettes|Gambas|Calamars|Poulpe|Seiche|Moules|Palourdes|Fruits de mer/i,days:1,temp:'0 à +2 °C',basis:'Règle interne prudente — produits de la mer'},
+ {re:/Mayonnaise maison/i,days:1,temp:'≤ +5 °C',basis:'Règle interne renforcée — préparation maison à base d’œufs'},
+ {re:/Œufs durs|Œufs préparés/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — œufs préparés'},
+ {re:/Blanc d'œuf liquide|Jaune d'œuf liquide|Œuf liquide pasteurisé/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — ovoproduit ouvert'},
+ {re:/Riz cuit|Pâtes cuites|Couscous cuit|Légumes cuits|Pommes de terre cuites|Viande cuite|Volaille cuite|Poisson cuit|Sauce chaude|Sauce tomate préparée|Soupe|Potage|Fond de cuisine|Bouillon|Jus de viande/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — préparation cuite refroidie'},
+ {re:/Salade composée|Salade tunisienne|Salade méchouia|Tartare|Carpaccio|Ceviche|Garniture froide|Sandwich préparé|Sauce froide maison|Vinaigrette préparée/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — préparation froide'},
+ {re:/Salade lavée|Tomates coupées|Carottes préparées|Concombre préparé|Poivrons préparés|Oignons préparés|Pommes de terre épluchées|Légumes découpés|Herbes préparées|Fruits coupés|Salade de fruits|Jus frais/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — végétal préparé'},
+ {re:/Gâteau à la crème|Tarte|Mille-feuille|Éclair|Tiramisu|Mousse|Crème pâtissière|Crème anglaise|Chantilly|Panna cotta|Flan|Dessert à base d'œufs|Fruits préparés pour dessert/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — pâtisserie/dessert réfrigéré'},
+ {re:/Pâte à pizza|Pâte fraîche|Pâte à pain|Pâte feuilletée|Pâte brisée|Pâte à crêpes|Appareil préparé/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — pâte/appareil préparé'},
+ {re:/décongelé|décongelée/i,days:1,temp:'≤ +5 °C',basis:'Règle interne prudente — produit décongelé, ne pas recongeler'},
+ {re:/Lait ouvert|Crème fraîche ouverte|Crème liquide ouverte|Crème à cuisson ouverte|Fromage frais ouvert|Mozzarella ouverte|Ricotta ouverte|Mascarpone ouvert|Yaourt ouvert|Beurre ouvert|Jambon|Mortadelle|Salami|Saucisson|Bacon|Charcuterie|conserve ouvert|conserve ouverte|Olives ouvertes|Mayonnaise ouverte|Ketchup ouvert|Moutarde ouverte|Harissa ouverte|Pesto ouvert|Sauce industrielle ouverte|Sauce asiatique ouverte|Concentré de tomate ouvert/i,days:7,temp:'≤ +5 °C',basis:'Plafond automatique par défaut pour aliment réfrigéré prêt à consommer; instruction fabricant après ouverture prioritaire',manufacturer:true},
+ {re:/sous vide|conditionnée|conditionné/i,days:0,temp:'Selon procédé validé',basis:'Durée automatique désactivée : sous-vide/conditionnement nécessite un procédé HACCP validé',manual:true},
+ {re:/conservée|conservé|Préparation refroidie/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — production refroidie et conservée'}
+];
+function labelAutoRule(product,action){
+ let r=LABEL_AUTO_RULES.find(x=>x.re.test(product||''));
+ if(!r)return {days:7,temp:'≤ +5 °C',basis:'Plafond automatique par défaut pour préparation réfrigérée prête à consommer; à réduire si le plan HACCP, le procédé ou le fabricant l’exige',manufacturer:false};
+ return r;
+}
+
 function dlcCats(){app.innerHTML='<h1>Étiquetage HACCP</h1><div class="panel"><h2>Créer une étiquette interne</h2><p>Choisissez une catégorie.</p><div class="grid">'+Object.keys(LABEL_CAT).map(function(c){return '<button type="button" class="btn" onclick="dlcSubsByName(this)" data-name="'+encodeURIComponent(c)+'">'+c+'</button>'}).join('')+'</div><p class="note" style="margin-top:16px">Cette rubrique est réservée aux produits préparés, ouverts ou déconditionnés nécessitant une étiquette interne. Les produits fermés conservent la DLC / DDM du fabricant.</p></div>'}
 function dlcSubsByName(el){C=decodeURIComponent(el.getAttribute('data-name'));let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
 function dlcProductsByName(el){SUB=decodeURIComponent(el.getAttribute('data-name'));let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
 function dlcSubsByCurrent(){let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
 function dlcProductsCurrent(){let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
-function ticket(i){let item=LABEL_CAT[C][SUB][i];P=item[0];DAYS=item[1];let now=new Date();let date=now.toISOString().slice(0,10);let time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2><div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="calcLabel()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option></select></div><div><label>Quantité (facultatif)</label><input id="labelQty" oninput="calcLabel()" placeholder="Ex. 2,5 kg"></div></div><div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div><div class="row print-hide"><div><label>Durée interne</label><input value="'+DAYS+' jour(s)" disabled></div><div><label>Emplacement</label><input id="labelStorage" oninput="calcLabel()" placeholder="Ex. Frigo 1"></div></div><div class="row print-hide"><div><label>Opérateur</label><input id="labelOperator" oninput="calcLabel()"></div><div><label>Lot interne (facultatif)</label><input id="labelLot" oninput="calcLabel()"></div></div><h2 class="print-hide">Aperçu</h2><div id="labelPreview" style="width:60mm;min-height:40mm;margin:12px auto;border:2px solid #17251f;padding:4mm;background:white;color:#111;font-family:Arial,sans-serif"></div><div class="row print-hide"><button class="btn primary" onclick="saveLabel(true)">Imprimer l’étiquette</button><button class="btn" onclick="saveLabel(false)">Enregistrer sans imprimer</button></div></div>';calcLabel()}
-function calcLabel(){let d=document.getElementById('labelDate');if(!d)return;let exp=new Date(d.value+'T12:00:00');exp.setDate(exp.getDate()+Number(DAYS||0));outDate=exp.toLocaleDateString('fr-FR');let v=function(id){let e=document.getElementById(id);return e?e.value:''};document.getElementById('labelPreview').innerHTML='<div style="font-size:15px;font-weight:900;text-align:center;border-bottom:1px solid #111;padding-bottom:3px">'+P+'</div><div style="font-size:11px;margin-top:4px">Opération : '+v('labelAction')+'</div><div style="font-size:11px">Date : '+new Date(d.value+'T12:00:00').toLocaleDateString('fr-FR')+' · '+v('labelTime')+'</div><div style="font-size:15px;font-weight:900;margin:5px 0">À consommer avant : '+outDate+'</div>'+(v('labelQty')?'<div style="font-size:11px">Quantité : '+v('labelQty')+'</div>':'')+(v('labelStorage')?'<div style="font-size:11px">Stockage : '+v('labelStorage')+'</div>':'')+(v('labelLot')?'<div style="font-size:11px">Lot : '+v('labelLot')+'</div>':'')+(v('labelOperator')?'<div style="font-size:11px">Opérateur : '+v('labelOperator')+'</div>':'')}
-function saveLabel(printIt){let v=function(id){let e=document.getElementById(id);return e?e.value:''};S.trace.unshift({type:'Étiquette HACCP',product:P,category:C,subCategory:SUB,action:v('labelAction'),quantity:v('labelQty'),preparedAt:v('labelDate')+' '+v('labelTime'),dlc:outDate,storage:v('labelStorage'),operator:v('labelOperator'),lot:v('labelLot'),date:new Date().toLocaleString('fr-FR')});save();if(printIt){window.print()}else{alert('Étiquette enregistrée dans la traçabilité.');dlcCats()}}
+function ticket(i){
+ let item=LABEL_CAT[C][SUB][i];P=item[0];
+ let now=new Date(),date=now.toISOString().slice(0,10),time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+ let rule=labelAutoRule(P,'Préparation');DAYS=rule.days;
+ app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
+ '<div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="applyLabelAutoRule()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option><option>Portionnement</option><option>Décongélation</option><option>Cuisson / refroidissement</option></select></div><div><label>Quantité (facultatif)</label><input id="labelQty" oninput="calcLabel()" placeholder="Ex. 2,5 kg"></div></div>'+
+ '<div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Durée automatique</label><input id="labelDays" type="number" min="0" step="1" onchange="calcLabel()"><div id="labelRuleNote" class="note"></div></div><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Emplacement</label><input id="labelStorage" oninput="calcLabel()" placeholder="Ex. Frigo 1"></div><div><label>Opérateur</label><input id="labelOperator" oninput="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Lot interne (facultatif)</label><input id="labelLot" oninput="calcLabel()"></div><div><label>Instruction fabricant après ouverture (si applicable)</label><input id="labelManufacturer" oninput="calcLabel()" placeholder="Ex. à consommer sous 3 jours après ouverture"><div class="note">Si le fabricant indique une durée plus courte, elle est prioritaire.</div></div></div>'+
+ '<h2 class="print-hide">Aperçu</h2><div id="labelPreview" style="width:60mm;min-height:40mm;margin:12px auto;border:2px solid #17251f;padding:4mm;background:white;color:#111;font-family:Arial,sans-serif"></div>'+
+ '<div class="row print-hide"><button class="btn primary" onclick="saveLabel(true)">Imprimer l’étiquette</button><button class="btn" onclick="saveLabel(false)">Enregistrer sans imprimer</button></div></div>';
+ applyLabelAutoRule();
+}
+function applyLabelAutoRule(){
+ let a=document.getElementById('labelAction'),r=labelAutoRule(P,a?a.value:'Préparation'),days=document.getElementById('labelDays'),temp=document.getElementById('labelTemp'),note=document.getElementById('labelRuleNote');
+ DAYS=r.days;
+ if(days){days.value=r.manual?'':r.days;days.placeholder=r.manual?'À définir selon procédure validée':''}
+ if(temp)temp.value=r.temp||'';
+ if(note)note.innerHTML=(r.manual?'⚠ ':'')+r.basis+(r.manufacturer?' — <b>fabricant prioritaire</b>':'');
+ calcLabel();
+}
+function calcLabel(){
+ let d=document.getElementById('labelDate'),days=document.getElementById('labelDays');if(!d||!days)return;
+ let n=Number(days.value),has=days.value!==''&&Number.isFinite(n)&&n>=0;
+ let exp=new Date(d.value+'T12:00:00');if(has)exp.setDate(exp.getDate()+n);
+ outDate=has?exp.toLocaleDateString('fr-FR'):'À définir';
+ let v=id=>{let e=document.getElementById(id);return e?e.value:''};
+ document.getElementById('labelPreview').innerHTML='<div style="font-size:15px;font-weight:900;text-align:center;border-bottom:1px solid #111;padding-bottom:3px">'+P+'</div>'+
+ '<div style="font-size:11px;margin-top:4px">Opération : '+v('labelAction')+'</div>'+
+ '<div style="font-size:11px">Date : '+new Date(d.value+'T12:00:00').toLocaleDateString('fr-FR')+' · '+v('labelTime')+'</div>'+
+ '<div style="font-size:15px;font-weight:900;margin:5px 0">À consommer avant : '+outDate+'</div>'+
+ (v('labelTemp')?'<div style="font-size:11px">Conservation : '+v('labelTemp')+'</div>':'')+
+ (v('labelQty')?'<div style="font-size:11px">Quantité : '+v('labelQty')+'</div>':'')+
+ (v('labelStorage')?'<div style="font-size:11px">Emplacement : '+v('labelStorage')+'</div>':'')+
+ (v('labelLot')?'<div style="font-size:11px">Lot : '+v('labelLot')+'</div>':'')+
+ (v('labelOperator')?'<div style="font-size:11px">Opérateur : '+v('labelOperator')+'</div>':'');
+}
+function saveLabel(printIt){
+ let v=id=>{let e=document.getElementById(id);return e?e.value:''};
+ if(!v('labelDays')){alert('La durée doit être définie avant d’enregistrer cette étiquette.');return}
+ S.trace.unshift({type:'Étiquette HACCP',product:P,category:C,subCategory:SUB,action:v('labelAction'),quantity:v('labelQty'),preparedAt:v('labelDate')+' '+v('labelTime'),durationDays:Number(v('labelDays')),dlc:outDate,temperature:v('labelTemp'),storage:v('labelStorage'),operator:v('labelOperator'),lot:v('labelLot'),manufacturerInstruction:v('labelManufacturer'),date:new Date().toLocaleString('fr-FR')});
+ save();if(printIt){window.print()}else{alert('Étiquette enregistrée dans la traçabilité.');dlcCats()}
+}
 
 reception();
 </script></body></html>
