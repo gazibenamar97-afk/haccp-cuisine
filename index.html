@@ -107,7 +107,7 @@ function detectBarcode(text){
 }
 function extractDateCandidates(text){
  // Handles 14/08/26, 14-08-26, 14.08.26 and common OCR spacing/noise around separators.
- let cleaned=(text||'').replace(/[|I]/g,'1').replace(/[Oo]/g,'0');
+ let cleaned=(text||'').replace(/[|Il]/g,'1').replace(/[Oo]/g,'0').replace(/[,:;]/g,'.');
  let rx=/(\d{1,2})\s*[\.\/-]\s*(\d{1,2})\s*[\.\/-]\s*(\d{2,4})/g,m,out=[];
  while((m=rx.exec(cleaned))){let iso=isoDate(m[0]);if(iso&&!out.some(x=>x.iso===iso))out.push({raw:m[0],iso});}
  return out;
@@ -139,6 +139,24 @@ function fillFromOCR(text){
  let bc=detectBarcode(text);if(bc&&!rbarcode.value){rbarcode.value=bc;found.push('Code-barres')}
  return found;
 }
+async function preprocessOCRImage(file){
+ return new Promise((resolve,reject)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+   const max=1800,scale=Math.min(1,max/Math.max(img.width,img.height));
+   const cv=document.createElement('canvas');cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);
+   const ctx=cv.getContext('2d');ctx.drawImage(img,0,0,cv.width,cv.height);
+   const d=ctx.getImageData(0,0,cv.width,cv.height),p=d.data;
+   // grayscale + stronger contrast helps dot-matrix dates and small printed text
+   for(let i=0;i<p.length;i+=4){
+    let g=.299*p[i]+.587*p[i+1]+.114*p[i+2];
+    g=(g-128)*1.65+128; g=Math.max(0,Math.min(255,g));
+    p[i]=p[i+1]=p[i+2]=g;
+   }
+   ctx.putImageData(d,0,0);URL.revokeObjectURL(url);resolve(cv);
+  };img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image'))};img.src=url;
+ });
+}
 async function analyzeLabel(input){
  let n=document.getElementById('scanStatus');if(!input.files||!input.files[0])return;
  window.currentReceptionLabel=input.files[0];
@@ -148,10 +166,14 @@ async function analyzeLabel(input){
   n.innerHTML='<b>Analyse de la photo '+receptionPhotoCount+'…</b>';
   rocr.value='Analyse en cours…';
   // Arabic + French + English. The language data is downloaded by Tesseract in the browser.
-  const result=await Tesseract.recognize(input.files[0],'ara+fra+eng',{logger:m=>{if(m.status==='recognizing text'&&m.progress)n.innerHTML='<b>Lecture OCR :</b> '+Math.round(m.progress*100)+' %'}});
-  const text=result.data.text||'';receptionScanTexts.push(text);
+  const enhanced=await preprocessOCRImage(input.files[0]);
+  const opts={logger:m=>{if(m.status==='recognizing text'&&m.progress)n.innerHTML='<b>Lecture OCR :</b> '+Math.round(m.progress*100)+' %'}};
+  const result=await Tesseract.recognize(input.files[0],'ara+fra+eng',opts);
+  n.innerHTML='<b>Deuxième lecture optimisée…</b>';
+  const result2=await Tesseract.recognize(enhanced,'ara+fra+eng');
+  const text=(result.data.text||'')+'\n'+(result2.data.text||'');receptionScanTexts.push(text);
   let found=fillFromOCR(text);
-  rocr.value=Math.round(result.data.confidence||0)+' %';
+  rocr.value=Math.round(Math.max(result.data.confidence||0,result2.data.confidence||0))+' %';
   detectedInfo.innerHTML='<b>Photo '+receptionPhotoCount+' :</b> '+(found.length?'détecté : '+found.join(', '):'aucune donnée HACCP suffisamment certaine. Les cases restent vides.')+'<br>Vous pouvez scanner une autre face du même emballage.';
   n.innerHTML='<b>Lecture terminée.</b> Vérifiez toutes les données avant validation. <button class="btn" type="button" style="padding:8px 12px;margin-top:8px" onclick="document.getElementById(\'labelPhoto\').click()">📷 Ajouter une autre photo</button>';
   input.value='';
