@@ -174,8 +174,14 @@ function autoFillReceptionDates(texts){
    let sorted=cands.slice().sort((a,b)=>a.iso.localeCompare(b.iso));
    if(!fab)fab=sorted[0].iso;if(!dlc)dlc=sorted[1].iso;
  }
- // Never accept an expiry earlier than fabrication.
- if(fab&&dlc&&dlc<fab){let tmp=fab;fab=dlc;dlc=tmp}
+ // HACCP plausibility filters: do not auto-fill incoherent dates.
+ let todayIso=new Date().toISOString().slice(0,10),futureFab=new Date();futureFab.setDate(futureFab.getDate()+1);
+ if(fab&&fab>futureFab.toISOString().slice(0,10))fab='';
+ let oldExpiry=new Date();oldExpiry.setFullYear(oldExpiry.getFullYear()-2);
+ if(dlc&&dlc<oldExpiry.toISOString().slice(0,10))dlc='';
+ if(fab&&dlc&&dlc<fab){fab='';dlc=''}
+ // Reject an excessive shelf-life pairing (> 5 years), usually an OCR digit error.
+ if(fab&&dlc){let gap=(new Date(dlc+'T12:00:00')-new Date(fab+'T12:00:00'))/86400000;if(gap<0||gap>1826){fab='';dlc=''}}
  let filled=[],fabEl=document.getElementById('rfab'),dlcEl=document.getElementById('rd');
  if(fab&&fabEl){fabEl.value=fab;let na=document.getElementById('rfabNA');if(na){na.checked=false;fabEl.disabled=false}filled.push('Date de fabrication')}
  if(dlc&&dlcEl){dlcEl.value=dlc;let na=document.getElementById('rdNA');if(na){na.checked=false;dlcEl.disabled=false}filled.push('DLC / DDM')}
@@ -241,9 +247,16 @@ async function makeDateOCRVariants(file){
  });
 }
 function mergeDateCandidates(texts){
- let map={};
- texts.forEach(t=>extractDateCandidates(t).forEach(d=>{map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++}));
- return Object.values(map).filter(d=>{let y=+d.iso.slice(0,4);return y>=2020&&y<=2040}).sort((a,b)=>b.hits-a.hits);
+ let map={},now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),min=new Date(today);min.setFullYear(min.getFullYear()-5);let max=new Date(today);max.setFullYear(max.getFullYear()+5);
+ texts.forEach(t=>extractDateCandidates(t).forEach(d=>{let dt=new Date(d.iso+'T12:00:00');if(isNaN(dt))return;
+   // Reject OCR noise and dates implausible for a current food reception.
+   if(dt<min||dt>max)return;
+   map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++;
+ }));
+ let arr=Object.values(map);
+ // Prefer dates confirmed by multiple OCR passes; keep a single-read candidate only if there are very few alternatives.
+ let repeated=arr.filter(d=>d.hits>=2);if(repeated.length)arr=repeated;
+ return arr.sort((a,b)=>b.hits-a.hits||a.iso.localeCompare(b.iso));
 }
 async function analyzeLabel(input){
  let n=document.getElementById('scanStatus');if(!input.files||!input.files[0])return;
