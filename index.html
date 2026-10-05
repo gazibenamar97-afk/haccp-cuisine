@@ -73,6 +73,31 @@ const CAT={
 }
 };
 const BRANDS=["Délice","Vitalait","Land'Or","Président","El Mazraa","Mliha","Jadida","Randa","Warda","Spiga","L'Épi d'Or","La Rose Blanche","Saïda","Moulin d'Or","Boga","Safia","Marwa","Melliti","Garci","Oktor","Cristalline","Stil","Beldi","Matinel","El Maraa","Natilait","Montrégal","Majesté","Poulina"];
+const OCR_PRODUCT_ALIASES=[
+ {rx:/\b(lait|milk|حليب)\b/i,cat:'Produits laitiers',p:'Lait frais'},
+ {rx:/\b(yaourt|yogourt|yogurt|ياغورت)\b/i,cat:'Produits laitiers',p:'Yaourt nature'},
+ {rx:/\b(mozzarella)\b/i,cat:'Produits laitiers',p:'Mozzarella'},
+ {rx:/\b(ricotta)\b/i,cat:'Produits laitiers',p:'Ricotta'},
+ {rx:/\b(beurre|butter|زبدة)\b/i,cat:'Produits laitiers',p:'Beurre'},
+ {rx:/\b(poulet|chicken|دجاج)\b/i,cat:'Volailles',p:'Poulet entier frais'},
+ {rx:/\b(dinde|turkey|ديك\s*رومي)\b/i,cat:'Volailles',p:'Dinde fraîche'},
+ {rx:/\b(boeuf|bœuf|beef|لحم\s*بقري)\b/i,cat:'Viandes',p:'Bœuf frais'},
+ {rx:/\b(veau|veal)\b/i,cat:'Viandes',p:'Veau frais'},
+ {rx:/\b(agneau|lamb|خروف)\b/i,cat:'Viandes',p:'Agneau frais'},
+ {rx:/\b(merguez)\b/i,cat:'Viandes',p:'Merguez'},
+ {rx:/\b(saumon|salmon)\b/i,cat:'Poissons & fruits de mer',p:'Saumon frais'},
+ {rx:/\b(thon|tuna|تونة)\b/i,cat:'Poissons & fruits de mer',p:'Thon frais'},
+ {rx:/\b(crevette|shrimp|prawn|جمبري)\b/i,cat:'Poissons & fruits de mer',p:'Crevettes fraîches'},
+ {rx:/\b(oeuf|œuf|eggs?|بيض)\b/i,cat:'Œufs & ovoproduits',p:'Œufs frais'},
+ {rx:/\b(riz|rice|أرز)\b/i,cat:'Épicerie',p:'Riz'},
+ {rx:/\b(couscous|كسكسي)\b/i,cat:'Épicerie',p:'Couscous'},
+ {rx:/\b(farine|flour|دقيق)\b/i,cat:'Épicerie',p:'Farine'},
+ {rx:/\b(harissa|هريسة)\b/i,cat:'Épicerie',p:'Harissa'},
+ {rx:/\b(mayonnaise|mayo)\b/i,cat:'Épicerie',p:'Mayonnaise ouverte'},
+ {rx:/\b(eau\s*min[eé]rale|mineral\s*water)\b/i,cat:'Boissons',p:'Eau minérale'},
+ {rx:/\b(jus|juice|عصير)\b/i,cat:'Boissons',p:'Jus conditionné ouvert'}
+];
+
 app=document.getElementById('app');
 const S=JSON.parse(localStorage.getItem('haccpV3')||'{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{"name":"Frigo 1","min":0,"max":4},{"name":"Congélateur 1","min":-24,"max":-18}]}');
 if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);
@@ -103,7 +128,7 @@ function editStock(i){let x=S.stock[i],cats=Object.keys(CAT).map(c=>`<option val
 
 function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function saveStockEdit(i){if(!emodby.value.trim()||!emodreason.value.trim()){alert('Le nom du responsable et le motif de la modification sont obligatoires.');return}let cold=['Viandes','Volailles','Poissons & fruits de mer','Produits laitiers','Œufs & ovoproduits','Charcuterie','Surgelés'].includes(ec.value.trim());if(!ec.value.trim()||!ep.value.trim()||!esupplier.value.trim()){alert('Catégorie, produit et fournisseur sont obligatoires.');return}if(cold&&!etemp.value){alert('La température est obligatoire pour cette catégorie.');return}if(!efab.value&&!efabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');return}if(ec.value.trim()!=='Fruits & légumes'&&!edlc.value&&!edlcNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');return}if(epack.value==='Non conforme'&&!ereason.value.trim()){alert('Le motif de non-conformité est obligatoire.');return}let x=S.stock[i],old=JSON.parse(JSON.stringify(x));Object.assign(x,{category:ec.value.trim(),product:ep.value.trim(),brand:ebrand.value.trim(),quantity:eqty.value.trim(),supplier:esupplier.value.trim(),lot:elot.value.trim(),temp:etemp.value,fabrication:efab.value,fabricationNA:efabNA.checked,dlc:edlc.value,dlcNA:edlcNA.checked,barcode:ebarcode.value.trim(),pack:epack.value,nonConformityReason:ereason.value.trim(),observation:eobs.value.trim(),modifiedAt:new Date().toISOString()});let changedAt=new Date().toLocaleString('fr-FR');S.trace.unshift({type:'Modification réception',product:x.product,date:changedAt,modifiedBy:emodby.value.trim(),reason:emodreason.value.trim(),before:old,after:JSON.parse(JSON.stringify(x))});save();stock()}
-function reception(){let cats=Object.keys(CAT).map(c=>`<option value="${c}">`).join('');app.innerHTML=`<h1>Réception</h1><div style="margin:8px 0 14px"><button class="btn" type="button" style="width:auto;padding:8px 12px;font-size:13px" onclick="document.getElementById('labelPhoto').click()">📷 Photographier DLC / dates</button><input id="labelPhoto" type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeLabel(this)"><div class="note" style="margin-top:8px">Photographiez clairement la zone où figurent la date de fabrication et la DLC / DDM. L’application tente de détecter les deux dates et de les placer automatiquement dans les champs correspondants. Vérifiez toujours les dates avant d’enregistrer la réception.</div><div id="scanStatus" class="note" style="margin-top:10px">La photo est facultative. Vous pouvez commencer directement la saisie ci-dessous.</div></div><div class="panel"><div class="row"><div><label>Catégorie <b>*</b></label><select id="rc" onchange="updateReceptionProducts()"><option value="">Choisir une catégorie</option>${Object.keys(CAT).map(c=>`<option value="${c}">${c}</option>`).join('')}</select><div class="note">Appuyez sur la catégorie pour afficher directement toutes les catégories disponibles.</div></div><div><label>Produit <b>*</b></label><select id="rp" disabled onchange="updateReceptionQuantityUnit()"><option value="">Choisir d’abord une catégorie</option></select><div id="rpnote" class="note">Les produits proposés dépendront automatiquement de la catégorie choisie.</div></div></div><div class="row"><div><label>Marque / fabricant</label><select id="rbrand"><option value="">Choisir une marque / fabricant</option>${BRANDS.map(b=>`<option value="${b}">${b}</option>`).join('')}</select><div class="note">Appuyez sur la marque pour afficher directement toutes les propositions disponibles.</div></div><div><label id="rqtyLabel">Quantité / poids</label><div style="display:flex;gap:8px;align-items:center"><input id="rqty" placeholder="Ex. 5 kg"><span id="rqtyUnit" style="display:none;font-weight:700;white-space:nowrap">pièces</span></div></div></div><div class="row"><div><label>Fournisseur <b>*</b></label><input id="rf" list="fournisseurs-reception" placeholder="Choisir un fournisseur enregistré"><datalist id="fournisseurs-reception">${S.suppliers.map(s=>`<option value="${typeof s==='string'?s:s.name}">`).join('')}</datalist><button type="button" class="btn" style="width:auto;margin-top:8px;padding:8px 12px" onclick="quickAddSupplier()">+ Ajouter un fournisseur</button><div class="note">Vous pouvez ajouter un fournisseur directement ici sans quitter la réception.</div></div><div><label>Lot <span class="note">(si applicable / présent)</span></label><input id="rl"></div></div><div class="row"><div><label>Température °C <span id="tempReq" class="note">(selon catégorie)</span></label><input id="rt" type="number" step=".1"></div><div><label>Date fabrication / conditionnement <b>*</b></label><input id="rfab" type="date" onchange="if(this.value){rfabNA.checked=false}"><label class="note"><input id="rfabNA" type="checkbox" onchange="rfab.disabled=this.checked;if(this.checked)rfab.value=''"> Non applicable / non indiquée</label></div></div><div class="row"><div><label>DLC / DDM fabricant <span id="dlcReq"><b>*</b></span></label><input id="rd" type="date" onchange="if(this.value){rdNA.checked=false}"><label id="rdNALabel" class="note"><input id="rdNA" type="checkbox" onchange="rd.disabled=this.checked;if(this.checked)rd.value=''"> Non applicable / non indiquée</label><div id="dlcNote" class="note"></div></div><div><label>Code-barres</label><input id="rbarcode" inputmode="numeric" autocomplete="off" placeholder="Saisie manuelle facultative"><div class="note">Facultatif. Le code-barres est saisi uniquement manuellement et n’est jamais rempli par l’OCR.</div></div></div><div style="display:none"><input id="rocr" readonly value=""></div><div style="margin-top:8px;max-width:220px"><label>Photos analysées</label><input id="rphotos" readonly value="0"></div><div id="detectedInfo" class="note" style="margin-top:10px"></div><div id="dateCandidates" style="margin-top:10px"></div><label>État emballage <b>*</b></label><select id="re" onchange="toggleNCReason()"><option>Conforme</option><option>Non conforme</option></select><div id="ncReason" style="display:none"><label>Motif de non-conformité <b>*</b></label><textarea id="rreason" placeholder="Décrire l’anomalie constatée"></textarea></div><label>Photo de l'étiquette <span class="note">(si disponible)</span></label><input type="file" accept="image/*" capture="environment"><label>Observation <span class="note">(facultatif)</span></label><textarea id="robs" placeholder="Remarque éventuelle"></textarea><div class="note" style="margin-top:10px">* Champ obligatoire · Date et heure de réception enregistrées automatiquement.</div><br>${B('Enregistrer la réception','saveRec()','primary')}</div>`}
+function reception(){let cats=Object.keys(CAT).map(c=>`<option value="${c}">`).join('');app.innerHTML=`<h1>Réception</h1><div style="margin:8px 0 14px"><button class="btn" type="button" style="width:auto;padding:8px 12px;font-size:13px" onclick="document.getElementById('labelPhoto').click()">📷 Scanner le produit / l’étiquette</button><input id="labelPhoto" type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeLabel(this)"><div class="note" style="margin-top:8px">Photographiez l’étiquette du produit. L’application tente d’identifier automatiquement le produit et sa catégorie, la marque / le fabricant, la contenance ou quantité, le lot, la date de fabrication et la DLC / DDM, puis préremplit les champs correspondants. Vérifiez toujours les informations avant d’enregistrer la réception.</div><div id="scanStatus" class="note" style="margin-top:10px">La photo est facultative. Vous pouvez commencer directement la saisie ci-dessous.</div></div><div class="panel"><div class="row"><div><label>Catégorie <b>*</b></label><select id="rc" onchange="updateReceptionProducts()"><option value="">Choisir une catégorie</option>${Object.keys(CAT).map(c=>`<option value="${c}">${c}</option>`).join('')}</select><div class="note">Appuyez sur la catégorie pour afficher directement toutes les catégories disponibles.</div></div><div><label>Produit <b>*</b></label><select id="rp" disabled onchange="updateReceptionQuantityUnit()"><option value="">Choisir d’abord une catégorie</option></select><div id="rpnote" class="note">Les produits proposés dépendront automatiquement de la catégorie choisie.</div></div></div><div class="row"><div><label>Marque / fabricant</label><select id="rbrand"><option value="">Choisir une marque / fabricant</option>${BRANDS.map(b=>`<option value="${b}">${b}</option>`).join('')}</select><div class="note">Appuyez sur la marque pour afficher directement toutes les propositions disponibles.</div></div><div><label id="rqtyLabel">Quantité / poids</label><div style="display:flex;gap:8px;align-items:center"><input id="rqty" placeholder="Ex. 5 kg"><span id="rqtyUnit" style="display:none;font-weight:700;white-space:nowrap">pièces</span></div></div></div><div class="row"><div><label>Fournisseur <b>*</b></label><input id="rf" list="fournisseurs-reception" placeholder="Choisir un fournisseur enregistré"><datalist id="fournisseurs-reception">${S.suppliers.map(s=>`<option value="${typeof s==='string'?s:s.name}">`).join('')}</datalist><button type="button" class="btn" style="width:auto;margin-top:8px;padding:8px 12px" onclick="quickAddSupplier()">+ Ajouter un fournisseur</button><div class="note">Vous pouvez ajouter un fournisseur directement ici sans quitter la réception.</div></div><div><label>Lot <span class="note">(si applicable / présent)</span></label><input id="rl"></div></div><div class="row"><div><label>Température °C <span id="tempReq" class="note">(selon catégorie)</span></label><input id="rt" type="number" step=".1"></div><div><label>Date fabrication / conditionnement <b>*</b></label><input id="rfab" type="date" onchange="if(this.value){rfabNA.checked=false}"><label class="note"><input id="rfabNA" type="checkbox" onchange="rfab.disabled=this.checked;if(this.checked)rfab.value=''"> Non applicable / non indiquée</label></div></div><div class="row"><div><label>DLC / DDM fabricant <span id="dlcReq"><b>*</b></span></label><input id="rd" type="date" onchange="if(this.value){rdNA.checked=false}"><label id="rdNALabel" class="note"><input id="rdNA" type="checkbox" onchange="rd.disabled=this.checked;if(this.checked)rd.value=''"> Non applicable / non indiquée</label><div id="dlcNote" class="note"></div></div><div><label>Code-barres</label><input id="rbarcode" inputmode="numeric" autocomplete="off" placeholder="Saisie manuelle facultative"><div class="note">Facultatif. Le code-barres est saisi uniquement manuellement et n’est jamais rempli par l’OCR.</div></div></div><div style="display:none"><input id="rocr" readonly value=""></div><div style="margin-top:8px;max-width:220px"><label>Photos analysées</label><input id="rphotos" readonly value="0"></div><div id="detectedInfo" class="note" style="margin-top:10px"></div><div id="dateCandidates" style="margin-top:10px"></div><label>État emballage <b>*</b></label><select id="re" onchange="toggleNCReason()"><option>Conforme</option><option>Non conforme</option></select><div id="ncReason" style="display:none"><label>Motif de non-conformité <b>*</b></label><textarea id="rreason" placeholder="Décrire l’anomalie constatée"></textarea></div><label>Photo de l'étiquette <span class="note">(si disponible)</span></label><input type="file" accept="image/*" capture="environment"><label>Observation <span class="note">(facultatif)</span></label><textarea id="robs" placeholder="Remarque éventuelle"></textarea><div class="note" style="margin-top:10px">* Champ obligatoire · Date et heure de réception enregistrées automatiquement.</div><br>${B('Enregistrer la réception','saveRec()','primary')}</div>`}
 
 function quickAddSupplier(){let name=prompt('Nom du fournisseur :');if(name===null)return;name=name.trim();if(!name){alert('Veuillez saisir le nom du fournisseur.');return}let existing=S.suppliers.find(s=>(typeof s==='string'?s:s.name).trim().toLowerCase()===name.toLowerCase());if(!existing){S.suppliers.push({name:name,phone:'',plate:'',driver:''});save()}let list=document.getElementById('fournisseurs-reception');if(list&&!Array.from(list.options).some(o=>o.value.toLowerCase()===name.toLowerCase())){let o=document.createElement('option');o.value=name;list.appendChild(o)}let input=document.getElementById('rf');if(input)input.value=name;alert(existing?'Fournisseur déjà enregistré et sélectionné.':'Fournisseur ajouté et sélectionné.')}
 
@@ -113,18 +138,27 @@ function isoDate(v){let m=(v||'').match(/(\d{1,2})[\.\/-](\d{1,2})[\.\/-](\d{2,4
 function detectProduct(text){
  let nt=normText(text),best=null;
  Object.entries(CAT).forEach(([cat,subs])=>Object.values(subs).forEach(arr=>arr.forEach(([p])=>{
-  let np=normText(p),score=np.split(' ').filter(w=>w.length>2&&nt.includes(w)).length;
-  if(np&&nt.includes(np))score+=5;if(!best||score>best.score)best={cat,p,score};
+   let np=normText(p),words=np.split(' ').filter(w=>w.length>2),score=words.filter(w=>nt.includes(w)).length;
+   if(np&&nt.includes(np))score+=8;
+   if(!best||score>best.score)best={cat,p,score};
  })));
- // Conservative Tunisia-oriented aliases: only fill when an explicit product word is present.
- const aliases=[
-  {rx:/\b(lait|milk)\b|حليب/i,cat:'Produits laitiers',p:'Lait frais'},
-  {rx:/\b(yaourt|yogurt)\b|ياغورت/i,cat:'Produits laitiers',p:'Yaourt nature'},
-  {rx:/\b(poulet|chicken)\b|دجاج/i,cat:'Volailles',p:'Poulet entier frais'},
-  {rx:/\b(tomate|tomato)\b|طماطم/i,cat:'Fruits & légumes',p:'Tomate'}
- ];
- let a=aliases.find(x=>x.rx.test(text));if(a&&(!best||best.score<2))best={...a,score:3};
+ OCR_PRODUCT_ALIASES.forEach(a=>{if(a.rx.test(text)&&(!best||best.score<7))best={cat:a.cat,p:a.p,score:7}});
  return best&&best.score>=2?best:null;
+}
+function detectBrand(text){
+ let nt=normText(text),best='';
+ BRANDS.forEach(b=>{let nb=normText(b);if(nb&&nt.includes(nb)&&nb.length>(normText(best).length||0))best=b});
+ return best;
+}
+function detectQuantity(text){
+ let t=(text||'').replace(/,/g,'.');
+ let patterns=[
+  /(?:poids\s*(?:net)?|net\s*weight|contenance|quantit[eé]|volume|الوزن\s*الصافي|السعة)?\s*[:.-]?\s*(\d+(?:\.\d+)?)\s*(kg|kgs|g|gr|grammes?|mg|l|litres?|ml|cl)\b/i,
+  /\b(\d+(?:\.\d+)?)\s*(kg|kgs|g|gr|grammes?|mg|l|litres?|ml|cl)\b/i,
+  /\b(\d+)\s*(pi[eè]ces?|pcs?|unit[eé]s?|œufs?|oeufs?)\b/i
+ ];
+ for(let rx of patterns){let m=t.match(rx);if(m){let u=m[2].toLowerCase().replace('kgs','kg').replace(/^gr$/,'g').replace(/^grammes?$/,'g').replace(/^litres?$/,'l');return m[1]+' '+u}}
+ return '';
 }
 function detectBarcode(text){
  let compact=(text||'').replace(/[\s\-]/g,'');
@@ -206,14 +240,10 @@ function fillFromOCR(text){
  let found=[];
  let prod=detectProduct(text);
  if(prod){if(!rc.value){rc.value=prod.cat;updateReceptionProducts()}if(!rp.value){rp.value=prod.p;updateReceptionQuantityUnit()}found.push('Produit')}
- // Brand aliases are explicit, never guessed from an arbitrary line.
- if(!rbrand.value){
-   if(/d[eé]lice|دليس/i.test(text)){rbrand.value='Délice';found.push('Marque')}
- }
+ let brand=detectBrand(text);if(brand&&!rbrand.value){rbrand.value=brand;found.push('Marque')}
  let lot=joined.match(/(?:\blot\b|batch|n[°ºo]?\s*lot|رقم\s*(?:الدفعة|التشغيلة))\s*[:#.-]?\s*([A-Z0-9][A-Z0-9\-\/\.]{2,})/i);
  if(lot&&!rl.value){rl.value=lot[1];found.push('Lot')}
- let qty=joined.match(/(?:poids\s*(?:net)?|net\s*weight|quantit[eé]|الوزن\s*الصافي)?\s*[:.-]?\s*(\d+(?:[.,]\d+)?)\s*(kg|g|gr|ml|cl|l|كغ|غ|مل|لتر)\b/i);
- if(qty&&!rqty.value){rqty.value=qty[1].replace(',','.')+' '+qty[2];found.push('Quantité')}
+ let qty=detectQuantity(joined);if(qty&&!rqty.value){rqty.value=qty;found.push('Contenance / quantité')}
  let cands=extractDateCandidates(text);showDateCandidates(cands);
  let dlc=joined.match(/(?:\bdlc\b|date\s*limite|a\s*consommer|exp(?:iry)?|use\s*by|انتهاء|الصلاحية)[\s\S]{0,60}?(\d{1,2}\s*[\.\/-]\s*\d{1,2}\s*[\.\/-]\s*\d{2,4})/i);
  if(dlc&&!rd.value&&cands.length===1){rd.value=isoDate(dlc[1]);found.push('DLC')}
