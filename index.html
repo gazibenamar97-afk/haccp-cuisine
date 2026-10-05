@@ -494,7 +494,7 @@ function ticket(i){
  app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
  '<div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="applyLabelAutoRule()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option><option>Portionnement</option><option>Décongélation</option><option>Cuisson / refroidissement</option></select></div><div><label>Quantité (facultatif)</label><input id="labelQty" oninput="calcLabel()" placeholder="Ex. 2,5 kg"></div></div>'+
  '<div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div>'+
- '<div class="row print-hide"><div><label>Recommandation HACCP</label><div id="labelSuggestion" class="metric" style="padding:12px;margin-top:6px"></div><div id="labelRuleNote" class="note"></div></div><div><label>Durée choisie par l’opérateur <b>*</b></label><input id="labelDays" type="number" min="0" step="1" placeholder="Nombre de jours" oninput="calcLabel()"><div class="note">La recommandation est indicative. L’opérateur confirme la durée appliquée.</div></div></div><div class="row print-hide"><div><label>DLC manuelle (facultatif)</label><input id="labelManualDlc" type="date" onchange="calcLabel()"><div class="note">Si renseignée, cette date remplace le calcul basé sur le nombre de jours.</div></div><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Recommandation HACCP</label><div id="labelSuggestion" class="metric" style="padding:12px;margin-top:6px"></div><div id="labelRuleNote" class="note"></div></div><div><label>DLC en jours <b>*</b></label><input id="labelDays" type="number" min="0" step="1" placeholder="Ex. 1, 2, 3…" oninput="calcLabel()"><div class="note">L’opérateur indique le nombre de jours. La date limite est calculée automatiquement sur l’étiquette.</div></div></div><div class="row print-hide"><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div><div></div></div>'+
  '<div class="row print-hide"><div><label>Emplacement / équipement</label><select id="labelStorage" onchange="calcLabel()"><option value="">Choisir un équipement</option>'+S.equipment.map(function(e){return '<option value="'+String(e.name||'').replace(/"/g,'&quot;')+'">'+e.name+'</option>'}).join('')+'</select><div class="note">Liste synchronisée avec les équipements du module Températures.</div></div><div><label>Opérateur</label><input id="labelOperator" oninput="calcLabel()"></div></div>'+
  '<div class="row print-hide"><div><label>Lot interne (facultatif)</label><input id="labelLot" oninput="calcLabel()"></div><div><label>Instruction fabricant après ouverture (si applicable)</label><input id="labelManufacturer" oninput="calcLabel()" placeholder="Ex. à consommer sous 3 jours après ouverture"><div class="note">Si le fabricant indique une durée plus courte, elle est prioritaire.</div></div></div>'+
  '<h2 class="print-hide">Aperçu</h2><div id="labelPreview" style="width:60mm;min-height:40mm;margin:12px auto;border:2px solid #17251f;padding:4mm;background:white;color:#111;font-family:Arial,sans-serif"></div>'+
@@ -511,12 +511,11 @@ function applyLabelAutoRule(){
  if(note)note.innerHTML=r.basis+(r.manufacturer?' — <b>instruction fabricant prioritaire</b>':'');
  calcLabel();
 }
-function clearManualDlc(){let m=document.getElementById('labelManualDlc');if(m)m.value=''}
 function calcLabel(){
- let d=document.getElementById('labelDate'),days=document.getElementById('labelDays'),manual=document.getElementById('labelManualDlc');if(!d||!days)return;
+ let d=document.getElementById('labelDate'),days=document.getElementById('labelDays');if(!d||!days)return;
  let n=Number(days.value),has=days.value!==''&&Number.isFinite(n)&&n>=0;
  let exp=new Date(d.value+'T12:00:00');if(has)exp.setDate(exp.getDate()+n);
- outDate=(manual&&manual.value)?new Date(manual.value+'T12:00:00').toLocaleDateString('fr-FR'):(has?exp.toLocaleDateString('fr-FR'):'À définir');
+ outDate=has?exp.toLocaleDateString('fr-FR'):'À définir';
  let v=id=>{let e=document.getElementById(id);return e?e.value:''};
  document.getElementById('labelPreview').innerHTML='<div style="font-size:15px;font-weight:900;text-align:center;border-bottom:1px solid #111;padding-bottom:3px">'+P+'</div>'+
  '<div style="font-size:11px;margin-top:4px">Opération : '+v('labelAction')+'</div>'+
@@ -530,8 +529,8 @@ function calcLabel(){
 }
 function saveLabel(printIt){
  let v=id=>{let e=document.getElementById(id);return e?e.value:''};
- if(!v('labelDays')&&!v('labelManualDlc')){alert('La durée ou la DLC manuelle doit être définie avant d’enregistrer cette étiquette.');return}
- S.trace.unshift({type:'Étiquette HACCP',product:P,category:C,subCategory:SUB,action:v('labelAction'),quantity:v('labelQty'),preparedAt:v('labelDate')+' '+v('labelTime'),durationDays:v('labelDays')===''?null:Number(v('labelDays')),manualDlc:v('labelManualDlc'),dlc:outDate,temperature:v('labelTemp'),storage:v('labelStorage'),operator:v('labelOperator'),lot:v('labelLot'),manufacturerInstruction:v('labelManufacturer'),date:new Date().toLocaleString('fr-FR')});
+ if(!v('labelDays')){alert('Indiquez la DLC en nombre de jours avant d’enregistrer cette étiquette.');return}
+ S.trace.unshift({type:'Étiquette HACCP',product:P,category:C,subCategory:SUB,action:v('labelAction'),quantity:v('labelQty'),preparedAt:v('labelDate')+' '+v('labelTime'),durationDays:Number(v('labelDays')),dlc:outDate,temperature:v('labelTemp'),storage:v('labelStorage'),operator:v('labelOperator'),lot:v('labelLot'),manufacturerInstruction:v('labelManufacturer'),date:new Date().toLocaleString('fr-FR')});
  save();if(printIt){window.print()}else{alert('Étiquette enregistrée dans la traçabilité.');dlcCats()}
 }
 
