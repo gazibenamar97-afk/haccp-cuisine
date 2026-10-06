@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v91-clear-search-on-exit-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v92-global-search-exit-temperature-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1307,6 +1307,16 @@ document.addEventListener('click',function(e){
    let wrap=input.parentElement;
    if(wrap&&wrap.contains(e.target))return;
    if(input.value)input.value='';
+   if(input.id==='teSearch'){
+     let box=document.getElementById('teSuggestions');
+     if(box)box.style.display='none';
+     let hidden=document.getElementById('te');
+     if(hidden&&hidden.value==='')checkEquipmentTemperature();
+   }
+ });
+ document.querySelectorAll('[id$="Suggestions"],[id$="List"]').forEach(function(box){
+   let parent=box.parentElement;
+   if(parent&&!parent.contains(e.target))box.style.display='none';
  });
 });
 
