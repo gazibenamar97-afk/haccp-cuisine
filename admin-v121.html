@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v122-users-realtime-fix-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v123-users-direct-init-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1029,8 +1029,15 @@ async function usersManager(){
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option></select></div></div>
  <label>Établissement</label><select id="userSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option></select><br><br>
  <button id="createUserBtn" type="button" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note" style="margin-top:12px;font-weight:700"></div></div>
- <div class="panel"><h2>Comptes enregistrés — v122</h2><div id="usersList"><p class="note" style="color:#20543e"><b>Module utilisateurs v119 chargé.</b><br>Recherche des comptes Firebase…</p></div></div>`;
- setTimeout(function(){loadAppUsers().catch(function(e){let b=document.getElementById("usersList");if(b)b.innerHTML="<p class=\"note\" style=\"color:#9e4545\">Erreur de chargement : "+esc(e.message||String(e))+"</p>"})},100);
+ <div class="panel"><h2>Comptes enregistrés — v123</h2><div id="usersList" style="min-height:70px"><p style="margin:12px 0;color:#20543e;font-weight:800">Initialisation de la liste v123…</p></div></div>`;
+ const box=document.getElementById('usersList');
+ if(box){
+  box.innerHTML='<p style="margin:12px 0;color:#20543e;font-weight:800">Connexion Firestore en cours…</p>';
+  Promise.resolve(loadAppUsers()).catch(function(e){
+   const b=document.getElementById('usersList');
+   if(b)b.innerHTML='<p style="margin:12px 0;color:#9e4545;font-weight:800">Erreur liste utilisateurs : '+esc(e.message||String(e))+'</p>';
+  });
+ }
 }
 async function createAppUser(btn){
  const status=document.getElementById('createUserStatus');
