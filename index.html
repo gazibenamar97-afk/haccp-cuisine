@@ -751,8 +751,14 @@ function checkEquipmentRange(){
  return logical
 }
 
-function temperatures(){CURRENT_VIEW='temperatures';let activeEquipment=S.equipment.filter(e=>!e.outOfService);app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements en service</span><b>${activeEquipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Rechercher / choisir un équipement</label><div style="position:relative"><input id="teSearch" placeholder="Rechercher dans les équipements enregistrés" autocomplete="off" onfocus="showTemperatureEquipmentSuggestions(true)" onclick="showTemperatureEquipmentSuggestions(true)" oninput="showTemperatureEquipmentSuggestions(false)"><div id="teSuggestions" style="display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #b8c9d8;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,.14)"></div></div><input id="te" type="hidden" value=""><div class="note">Recherchez puis touchez un équipement dans la liste. Les équipements hors service restent visibles.</div><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}</div>`;checkEquipmentTemperature()}
+function temperatures(){CURRENT_VIEW='temperatures';let activeEquipment=S.equipment.filter(e=>!e.outOfService);app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements en service</span><b>${activeEquipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Rechercher / choisir un équipement</label><div id="teSelected" style="display:none;margin-bottom:8px;padding:10px 12px;border:1px solid #b8c9d8;border-radius:10px;background:#f5f9fc"></div><div style="position:relative"><input id="teSearch" placeholder="Choisir / changer d’équipement" autocomplete="off" onfocus="openTemperatureEquipmentPicker()" onclick="openTemperatureEquipmentPicker()" oninput="showTemperatureEquipmentSuggestions(false)"><div id="teSuggestions" style="display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #b8c9d8;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,.14)"></div></div><input id="te" type="hidden" value=""><div class="note">Recherchez puis touchez un équipement dans la liste. Les équipements hors service restent visibles.</div><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}</div>`;checkEquipmentTemperature()}
 
+function openTemperatureEquipmentPicker(){
+ let search=document.getElementById('teSearch');
+ if(!search)return;
+ search.value='';
+ showTemperatureEquipmentSuggestions(true)
+}
 function showTemperatureEquipmentSuggestions(showAll){
  let search=document.getElementById('teSearch'),box=document.getElementById('teSuggestions'),hidden=document.getElementById('te');
  if(!search||!box||!hidden)return;
@@ -771,11 +777,20 @@ function showTemperatureEquipmentSuggestions(showAll){
  box.style.display='block'
 }
 function chooseTemperatureEquipment(i){
- let e=S.equipment[i],search=document.getElementById('teSearch'),hidden=document.getElementById('te'),box=document.getElementById('teSuggestions');
+ let e=S.equipment[i],search=document.getElementById('teSearch'),hidden=document.getElementById('te'),box=document.getElementById('teSuggestions'),selected=document.getElementById('teSelected');
  if(!e||!search||!hidden)return;
- search.value=e.name;
  hidden.value=String(i);
+ search.value='';
+ search.placeholder='Choisir / changer d’équipement';
+ if(selected){
+  selected.style.display='block';
+  selected.style.borderColor=e.outOfService?'#b42318':'#b8c9d8';
+  selected.style.background=e.outOfService?'#fde8e8':'#f5f9fc';
+  selected.style.color=e.outOfService?'#8a1c13':'#243f5b';
+  selected.innerHTML='<b>Équipement sélectionné : '+esc(e.name)+'</b>'+(e.outOfService?'<br><b>⚠ HORS SERVICE</b>':'')
+ }
  if(box)box.style.display='none';
+ search.blur();
  checkEquipmentTemperature()
 }
 
