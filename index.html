@@ -735,14 +735,25 @@ function checkEquipmentRange(){
  return logical
 }
 
-function temperatures(){CURRENT_VIEW='temperatures';let activeEquipment=S.equipment.filter(e=>!e.outOfService),equipmentList=S.equipment.map((e,i)=>`<option value="${esc(e.name+(e.outOfService?' — ⚠ HORS SERVICE':''))}" data-index="${i}"></option>`).join('');app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements en service</span><b>${activeEquipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Rechercher / choisir un équipement</label><input id="teSearch" list="teList" placeholder="Rechercher dans les équipements enregistrés" autocomplete="off" oninput="selectTemperatureEquipment()"><datalist id="teList">${equipmentList}</datalist><input id="te" type="hidden" value=""><div class="note">Tous les équipements restent visibles. Un équipement hors service est signalé en rouge et ne peut pas recevoir de relevé tant qu’il n’est pas réactivé.</div><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}</div>`;checkEquipmentTemperature()}
+function temperatures(){CURRENT_VIEW='temperatures';let activeEquipment=S.equipment.filter(e=>!e.outOfService);app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements en service</span><b>${activeEquipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Rechercher / choisir un équipement</label><div style="position:relative"><input id="teSearch" placeholder="Rechercher dans les équipements enregistrés" autocomplete="off" onfocus="showTemperatureEquipmentSuggestions()" oninput="showTemperatureEquipmentSuggestions()"><div id="teSuggestions" style="display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #b8c9d8;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,.14)"></div></div><input id="te" type="hidden" value=""><div class="note">Recherchez puis touchez un équipement dans la liste. Les équipements hors service restent visibles.</div><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}</div>`;checkEquipmentTemperature()}
 
-function selectTemperatureEquipment(){
- let search=document.getElementById('teSearch'),hidden=document.getElementById('te');
- if(!search||!hidden)return;
- let q=search.value.trim().toLocaleLowerCase('fr');
- let i=S.equipment.findIndex(e=>{let n=String(e&&e.name||'').trim().toLocaleLowerCase('fr');return q===n||q===(n+(e.outOfService?' — ⚠ hors service':''))});
- hidden.value=i>=0?String(i):'';
+function showTemperatureEquipmentSuggestions(){
+ let search=document.getElementById('teSearch'),box=document.getElementById('teSuggestions'),hidden=document.getElementById('te');
+ if(!search||!box||!hidden)return;
+ hidden.value='';
+ checkEquipmentTemperature();
+ let q=search.value.trim().toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let rows=S.equipment.map((e,i)=>({e,i})).filter(x=>!q||String(x.e.name||'').toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
+ if(!rows.length){box.innerHTML='<div style="padding:12px" class="note">Aucun équipement trouvé.</div>';box.style.display='block';return}
+ box.innerHTML=rows.map(x=>'<button type="button" onclick="chooseTemperatureEquipment('+x.i+')" style="display:block;width:100%;text-align:left;padding:13px 14px;border:0;border-bottom:1px solid #e5edf3;background:'+(x.e.outOfService?'#fde8e8':'#fff')+';color:'+(x.e.outOfService?'#8a1c13':'#243f5b')+';font-size:16px"><b>'+esc(x.e.name)+'</b>'+(x.e.outOfService?'<br><span style="font-weight:800">⚠ HORS SERVICE</span>':'')+'</button>').join('');
+ box.style.display='block'
+}
+function chooseTemperatureEquipment(i){
+ let e=S.equipment[i],search=document.getElementById('teSearch'),hidden=document.getElementById('te'),box=document.getElementById('teSuggestions');
+ if(!e||!search||!hidden)return;
+ search.value=e.name;
+ hidden.value=String(i);
+ if(box)box.style.display='none';
  checkEquipmentTemperature()
 }
 
