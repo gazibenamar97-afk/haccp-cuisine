@@ -106,7 +106,9 @@ input:focus,select:focus,textarea:focus{border-color:#1685d1;box-shadow:0 0 0 3p
  nav .brand{display:flex!important}
  .rec-steps span{display:block!important;font-size:9px!important;line-height:1.15}
 }
-</style></head><body>
+</style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head><body>
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="dashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
 </nav><main><div id="app"></div></main>
@@ -285,7 +287,15 @@ const OCR_PRODUCT_ALIASES=[
 app=document.getElementById('app');
 const S=JSON.parse(localStorage.getItem('haccpV3')||'{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{"name":"Frigo 1","min":0,"max":4},{"name":"Congélateur 1","min":-24,"max":-18}]}');
 if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};
-function save(){localStorage.setItem('haccpV3',JSON.stringify(S))}
+const FIREBASE_CONFIG={apiKey:"AIzaSyD_038HRskQXxVB13-koMfQUUsRMwJGUYo",authDomain:"mt-haccp.firebaseapp.com",projectId:"mt-haccp",storageBucket:"mt-haccp.firebasestorage.app",messagingSenderId:"2200684541667",appId:"1:2200684541667:web:c1fb0060787ff0e360d7d6"};
+let cloudDb=null,cloudReady=false,cloudApplying=false,cloudWriteTimer=null;
+try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e){console.warn('Firebase init',e)}
+function cloudComparable(x){let y=JSON.parse(JSON.stringify(x||{}));delete y._cloudUpdatedAt;return JSON.stringify(y)}
+function cloudApply(data){if(!data||typeof data!=='object')return;cloudApplying=true;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,JSON.parse(JSON.stringify(data)));delete S._cloudUpdatedAt;if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};localStorage.setItem('haccpV3',JSON.stringify(S));cloudApplying=false;try{let active=document.querySelector('nav .tab.active');if(active)active.click();else reception()}catch(e){}}
+function cloudWrite(){if(!cloudDb||!cloudReady||cloudApplying)return;clearTimeout(cloudWriteTimer);cloudWriteTimer=setTimeout(()=>{let data=JSON.parse(JSON.stringify(S));data._cloudUpdatedAt=new Date().toISOString();cloudDb.collection('appState').doc('main').set(data).catch(e=>console.warn('Cloud save',e))},250)}
+function save(){localStorage.setItem('haccpV3',JSON.stringify(S));cloudWrite()}
+async function initCloudSync(){if(!cloudDb)return;let ref=cloudDb.collection('appState').doc('main');try{let snap=await ref.get();if(!snap.exists){let seed=JSON.parse(JSON.stringify(S));seed._cloudUpdatedAt=new Date().toISOString();await ref.set(seed)}else{let remote=snap.data();let localHasData=(S.trace&&S.trace.length)||(S.stock&&S.stock.length)||(S.temps&&S.temps.length)||(S.clean&&S.clean.length);let remoteHasData=(remote.trace&&remote.trace.length)||(remote.stock&&remote.stock.length)||(remote.temps&&remote.temps.length)||(remote.clean&&remote.clean.length);if(!remoteHasData&&localHasData){let seed=JSON.parse(JSON.stringify(S));seed._cloudUpdatedAt=new Date().toISOString();await ref.set(seed)}else if(remoteHasData){cloudApply(remote)}}cloudReady=true;ref.onSnapshot(s=>{if(!s.exists)return;let remote=s.data();if(cloudComparable(remote)!==cloudComparable(S))cloudApply(remote)},e=>console.warn('Cloud listen',e))}catch(e){console.warn('Cloud sync unavailable',e)}}
+
 function B(t,f,c=''){return `<button class="btn ${c}" onclick="${f}">${t}</button>`}
 function authorizeStockEdit(i){let pin=localStorage.getItem('haccpAdminPin');if(!pin){alert('Aucun code PIN administrateur n’est configuré. Allez dans Paramètres → Sécurité pour le créer.');settings();return}let entered=prompt('Code PIN Responsable / Administrateur :');if(entered===null)return;if(entered!==pin){alert('Code PIN incorrect. Modification refusée.');return}editStock(i)}
 function dashboard(){if(sessionStorage.getItem('haccpDashboardUnlocked')==='1'){renderDashboard();return}let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Tableau de bord Direction 🔒</h1><div class="dash-lock"><div class="dash-blur"><div class="cards"><div class="metric"><span>Produits en stock</span><b>8</b></div><div class="metric"><span>Alertes DLC</span><b>2</b></div><div class="metric"><span>Non-conformités</span><b>1</b></div></div><div class="panel"><h2>Points à surveiller</h2><div class="record">Informations réservées à la Direction</div></div></div><div class="dash-gate"><div class="dash-gate-card"><h2>Accès Direction</h2><p class="note">Ce tableau de bord est réservé au propriétaire, à la direction générale et aux personnes autorisées.</p>${hasPin?'<label>Code PIN administrateur</label><input id="dashboardPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" onkeydown="if(event.key===\'Enter\')unlockDashboard()"><br><br>'+B('Déverrouiller le tableau de bord','unlockDashboard()','primary'):'<p><b>Aucun code PIN administrateur n’est encore configuré.</b></p><p class="note">Créez-le dans Paramètres → Sécurité.</p>'+B('Aller aux Paramètres','settings()','primary')}</div></div></div>`}
@@ -801,4 +811,5 @@ function saveLabel(printIt){
 }
 
 reception();
+initCloudSync();
 </script></body></html>
