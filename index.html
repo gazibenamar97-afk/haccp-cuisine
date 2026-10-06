@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v94-reception-photo-mobile-fix-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v95-reception-show-selected-product-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -584,7 +584,7 @@ function selectReceptionPhotoProduct(p){
  let catEl=document.getElementById('rc'),hidden=document.getElementById('rp'),input=document.getElementById('rpSearch'),box=document.getElementById('rpList');
  if(catEl&&catEl.value!==item.category)catEl.value=item.category;
  if(hidden)hidden.value=item.name;
- if(input){input.value='';input.placeholder='Choisir / changer de produit'}
+ if(input){input.value=item.name;input.placeholder='Choisir / changer de produit'}
  if(box)box.style.display='none';
  let sel=document.getElementById('rpSelected');
  if(sel)sel.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><b>Produit sélectionné :</b> '+esc(item.name)+' · '+esc(item.category)+'</span><button type="button" class="btn" style="padding:5px 9px;min-width:auto" onclick="clearReceptionSelectedProduct()" aria-label="Supprimer le produit sélectionné">×</button></div>';
@@ -811,7 +811,7 @@ function receptionSearchItems(){return typeof allCatalogueItems==='function'?all
 function updateReceptionProducts(){
  hardClearReceptionTemperature();receptionRules();
  let cat=(document.getElementById('rc')||{}).value||'',input=document.getElementById('rpSearch'),hidden=document.getElementById('rp'),note=document.getElementById('rpnote');
- if(input){input.value='';input.placeholder='Choisir / changer de produit'}
+ if(input){input.value=name||item.name;input.placeholder='Choisir / changer de produit'}
  if(hidden)hidden.value='';
  let sel=document.getElementById('rpSelected');if(sel)sel.textContent='Aucun produit sélectionné.';
  if(note)note.textContent=cat?'Produits disponibles dans la catégorie « '+cat+' ». Vous pouvez rechercher ou ouvrir toutes les suggestions.':'Recherchez un produit dans tout le catalogue ou choisissez une catégorie pour filtrer.';
@@ -826,7 +826,7 @@ function filterReceptionProductList(){
 }
 function selectReceptionSearchProduct(el){
  let name=decodeURIComponent(el.getAttribute('data-name')),cat=decodeURIComponent(el.getAttribute('data-cat')),catEl=document.getElementById('rc'),hidden=document.getElementById('rp'),input=document.getElementById('rpSearch');
- if(catEl&&catEl.value!==cat)catEl.value=cat;if(hidden)hidden.value=name;if(input){input.value='';input.placeholder='Choisir / changer de produit'}
+ if(catEl&&catEl.value!==cat)catEl.value=cat;if(hidden)hidden.value=name;if(input){input.value=name;input.placeholder='Choisir / changer de produit'}
  let box=document.getElementById('rpList');if(box)box.style.display='none';
  let sel=document.getElementById('rpSelected');if(sel)sel.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><b>Produit sélectionné :</b> '+esc(name)+' · '+esc(cat)+'</span><button type="button" class="btn" style="padding:5px 9px;min-width:auto" onclick="clearReceptionSelectedProduct()" aria-label="Supprimer le produit sélectionné">×</button></div>';
  updateReceptionQuantityUnit(false);hardClearReceptionTemperature();receptionRules();checkReceivingTemp();renderPhotoCatalogue();updateReceptionSide()
@@ -1317,12 +1317,13 @@ document.addEventListener('click',function(e){
  let labelBox=document.getElementById('labelProductList'),labelInput=document.getElementById('labelProductSearch');
  if(labelBox&&labelInput&&!labelBox.contains(e.target)&&e.target!==labelInput){labelBox.style.display='none';labelInput.value=''}
  let recBox=document.getElementById('rpList'),recInput=document.getElementById('rpSearch');
- if(recBox&&recInput&&!recBox.contains(e.target)&&e.target!==recInput){recBox.style.display='none';recInput.value=''}
+ if(recBox&&recInput&&!recBox.contains(e.target)&&e.target!==recInput){recBox.style.display='none';let rp=document.getElementById('rp');recInput.value=rp&&rp.value?rp.value:''}
  document.querySelectorAll('input[id*="Search"],input[id*="search"]').forEach(function(input){
    if(e.target===input)return;
    let wrap=input.parentElement;
    if(wrap&&wrap.contains(e.target))return;
-   if(input.value)input.value='';
+   if(input.id==='rpSearch'){let rp=document.getElementById('rp');input.value=rp&&rp.value?rp.value:''}
+   else if(input.value)input.value='';
    if(input.id==='teSearch'){
      let box=document.getElementById('teSuggestions');
      if(box)box.style.display='none';
