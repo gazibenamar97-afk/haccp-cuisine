@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v76-direction-arrow-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v77-mobile-layout-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -171,6 +171,58 @@ body.on-home .home-direction{background-size:50% auto!important;background-posit
 body.on-home .home-card:nth-child(8){background-image:url("./assets/home/settings.jpg?v=75")!important;background-position:right center!important}
 </style>
 <style id="home-direction-arrow-v76">body.on-home .home-direction .home-arrow{left:auto!important;right:calc(50% - 19px)!important;bottom:auto!important;top:50%!important;transform:translateY(-50%)!important;z-index:4!important}@media(max-width:850px){body.on-home .home-direction .home-arrow{left:auto!important;right:12px!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important}}</style>
+<style id="mobile-home-v77">
+@media(max-width:850px){
+ body.on-home main{padding-left:10px!important;padding-right:10px!important}
+ body.on-home .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+ body.on-home .home-card:not(.home-direction){
+   height:220px!important;min-height:220px!important;
+   padding:18px 16px 112px!important;
+   border-radius:28px!important;
+   background-size:100% 105px!important;
+   background-position:center bottom!important;
+   background-repeat:no-repeat!important;
+ }
+ body.on-home .home-card:not(.home-direction):after{
+   background:linear-gradient(180deg,#fff 0,#fff 48%,rgba(255,255,255,.96) 53%,rgba(255,255,255,.15) 66%,rgba(255,255,255,0) 78%)!important;
+ }
+ body.on-home .home-card:not(.home-direction) .home-icon{
+   width:46px!important;height:46px!important;margin:0 0 8px!important;font-size:20px!important
+ }
+ body.on-home .home-card:not(.home-direction) b{
+   font-size:18px!important;line-height:1.08!important;margin:0!important
+ }
+ body.on-home .home-card:not(.home-direction) small{
+   display:block!important;font-size:12.5px!important;line-height:1.2!important;
+   margin-top:5px!important;max-width:100%!important
+ }
+ body.on-home .home-card:not(.home-direction) .home-arrow{
+   left:auto!important;right:12px!important;top:auto!important;bottom:12px!important;
+   transform:none!important;width:34px!important;height:34px!important
+ }
+ body.on-home .home-direction{
+   height:120px!important;min-height:120px!important;
+   padding:18px 50% 18px 18px!important;border-radius:28px!important;
+   background-size:50% auto!important;background-position:right center!important
+ }
+ body.on-home .home-direction:after{
+   background:linear-gradient(90deg,#fff 0,#fff 43%,rgba(255,255,255,.92) 49%,rgba(255,255,255,.08) 65%,rgba(255,255,255,0) 100%)!important
+ }
+ body.on-home .home-direction .home-icon{width:46px!important;height:46px!important;margin:0 12px 0 0!important}
+ body.on-home .home-direction b{font-size:17px!important;line-height:1.08!important}
+ body.on-home .home-direction small{font-size:12px!important;line-height:1.15!important;margin-top:5px!important}
+ body.on-home .home-direction .home-arrow{
+   left:auto!important;right:calc(50% + 8px)!important;top:50%!important;bottom:auto!important;
+   transform:translateY(-50%)!important;width:34px!important;height:34px!important
+ }
+}
+@media(max-width:430px){
+ body.on-home .home-card:not(.home-direction){height:210px!important;min-height:210px!important;padding:15px 13px 105px!important;background-size:100% 98px!important}
+ body.on-home .home-card:not(.home-direction) b{font-size:16px!important}
+ body.on-home .home-card:not(.home-direction) small{font-size:11.5px!important}
+ body.on-home .home-direction{height:116px!important;min-height:116px!important}
+}
+</style>
 </head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
