@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v78-home-no-arrows-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v79-label-simple-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1156,16 +1156,60 @@ function labelAutoRule(product,action){
  return r;
 }
 
-function dlcCats(){app.innerHTML='<h1>Étiquetage HACCP</h1><div class="panel"><h2>Créer une étiquette interne</h2><p>Choisissez une catégorie.</p><div class="grid">'+Object.keys(LABEL_CAT).map(function(c){return '<button type="button" class="btn" onclick="dlcSubsByName(this)" data-name="'+encodeURIComponent(c)+'">'+c+'</button>'}).join('')+'</div><p class="note" style="margin-top:16px">Cette rubrique est réservée aux produits préparés, ouverts ou déconditionnés nécessitant une étiquette interne. Les produits fermés conservent la DLC / DDM du fabricant.</p></div>'}
-function dlcSubsByName(el){C=decodeURIComponent(el.getAttribute('data-name'));let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
-function dlcProductsByName(el){SUB=decodeURIComponent(el.getAttribute('data-name'));let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
-function dlcSubsByCurrent(){let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
-function dlcProductsCurrent(){let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
+function labelAllProducts(){
+ let rows=[];
+ Object.keys(LABEL_CAT).forEach(function(cat){
+   Object.keys(LABEL_CAT[cat]).forEach(function(sub){
+     LABEL_CAT[cat][sub].forEach(function(item,i){rows.push({cat:cat,sub:sub,item:item,index:i})})
+   })
+ });
+ return rows
+}
+function labelProductsForCategory(cat){
+ return labelAllProducts().filter(function(x){return x.cat===cat})
+}
+function dlcCats(){
+ C='';SUB='';P='';
+ let cats=Object.keys(LABEL_CAT);
+ app.innerHTML='<h1>Étiquetage HACCP</h1><div class="panel"><h2>Créer une étiquette</h2>'+
+ '<div class="row"><div><label>Catégorie <b>*</b></label><select id="labelCategory" onchange="labelCategoryChanged()"><option value="">Choisir une catégorie</option>'+cats.map(function(x){return '<option value="'+esc(x)+'">'+x+'</option>'}).join('')+'</select></div>'+
+ '<div><label>Produit <b>*</b></label><div style="position:relative"><input id="labelProductSearch" placeholder="Rechercher ou choisir un produit" autocomplete="off" disabled onfocus="showLabelProductList()" oninput="filterLabelProducts()"><div id="labelProductList" class="panel" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;max-height:260px;overflow:auto;padding:6px;margin-top:4px"></div></div></div></div>'+
+ '<div id="labelSelected" class="note" style="margin:12px 0">Choisissez d’abord une catégorie, puis un produit.</div>'+
+ '<button id="labelContinue" class="btn primary" disabled onclick="openSelectedLabelTicket()">Créer / imprimer le ticket</button>'+
+ '<p class="note" style="margin-top:16px">Les produits proposés proviennent de la base HACCP existante. La recherche Produit est limitée à la catégorie sélectionnée.</p></div>'
+}
+function labelCategoryChanged(){
+ let cat=document.getElementById('labelCategory').value,input=document.getElementById('labelProductSearch');
+ C=cat;SUB='';P='';input.value='';input.disabled=!cat;
+ document.getElementById('labelContinue').disabled=true;
+ document.getElementById('labelSelected').textContent=cat?'Choisissez ou recherchez un produit.':'Choisissez d’abord une catégorie, puis un produit.';
+ if(cat){showLabelProductList()}else{document.getElementById('labelProductList').style.display='none'}
+}
+function showLabelProductList(){filterLabelProducts()}
+function filterLabelProducts(){
+ let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input||!C)return;
+ let q=input.value.trim().toLowerCase(),rows=labelProductsForCategory(C).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)});
+ box.innerHTML=rows.length?rows.map(function(x){return '<button type="button" class="btn" style="display:block;width:100%;text-align:left;margin:3px 0" onclick="selectLabelProduct(this)" data-cat="'+encodeURIComponent(x.cat)+'" data-sub="'+encodeURIComponent(x.sub)+'" data-i="'+x.index+'">'+x.item[0]+'</button>'}).join(''):'<div class="note" style="padding:10px">Aucun produit trouvé.</div>';
+ box.style.display='block'
+}
+function selectLabelProduct(el){
+ C=decodeURIComponent(el.getAttribute('data-cat'));SUB=decodeURIComponent(el.getAttribute('data-sub'));let i=Number(el.getAttribute('data-i')),item=LABEL_CAT[C][SUB][i];
+ P=item[0];document.getElementById('labelProductSearch').value=P;document.getElementById('labelProductList').style.display='none';
+ document.getElementById('labelSelected').innerHTML='<b>'+P+'</b> · '+C;document.getElementById('labelContinue').disabled=false
+}
+function openSelectedLabelTicket(){
+ if(!C||!SUB||!P){alert('Choisissez une catégorie et un produit.');return}
+ let products=LABEL_CAT[C][SUB],i=products.findIndex(function(x){return x[0]===P});if(i<0)return;ticket(i)
+}
+function dlcSubsByName(){dlcCats()}
+function dlcProductsByName(){dlcCats()}
+function dlcSubsByCurrent(){dlcCats()}
+function dlcProductsCurrent(){dlcCats()}
 function ticket(i){
  let item=LABEL_CAT[C][SUB][i];P=item[0];
  let now=new Date(),date=now.toISOString().slice(0,10),time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  let rule=labelAutoRule(P,'Préparation');DAYS=rule.days;
- app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
+ app.innerHTML='<button class="btn back print-hide" onclick="dlcCats()">← Étiquetage</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
  '<div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="applyLabelAutoRule()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option><option>Portionnement</option><option>Décongélation</option><option>Cuisson / refroidissement</option></select></div><div></div></div>'+
  '<div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div>'+
  '<div class="row print-hide"><div><label>Recommandation HACCP</label><div id="labelSuggestion" class="metric" style="padding:12px;margin-top:6px"></div><div id="labelRuleNote" class="note"></div></div><div><label>DLC en jours <b>*</b></label><input id="labelDays" type="number" min="0" step="1" placeholder="Ex. 1, 2, 3…" oninput="calcLabel()"><div class="note">L’opérateur indique le nombre de jours. La date limite est calculée automatiquement sur l’étiquette.</div><div id="labelDlcAlert" style="display:none;margin-top:10px;padding:12px;border-radius:10px;font-weight:800"></div></div></div><div class="row print-hide"><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div><div></div></div>'+
