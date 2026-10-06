@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v103-admin-multisite-supervision-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v104-empty-site-supervision-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -520,7 +520,12 @@ async function adminSelectSite(site){
  try{
   let ref=cloudDb.collection('appState').doc(site);
   let snap=await ref.get();
-  if(!snap.exists){app.innerHTML='<h1>Supervision administrateur</h1><div class="panel"><p class="empty">Aucune donnée pour cet établissement.</p>'+B('Retour',"renderDashboard()")+'</div>';return}
+  if(!snap.exists){
+   const emptyState=sanitizeCloudState(JSON.parse(DEFAULT_STATE));
+   renderAdminSiteDashboard(site,emptyState);
+   ADMIN_SITE_UNSUB=ref.onSnapshot({includeMetadataChanges:false},s=>{if(ADMIN_SITE_ID!==site)return;if(s.exists&&!s.metadata.hasPendingWrites)renderAdminSiteDashboard(site,sanitizeCloudState(s.data()))});
+   return
+  }
   renderAdminSiteDashboard(site,sanitizeCloudState(snap.data()));
   ADMIN_SITE_UNSUB=ref.onSnapshot({includeMetadataChanges:false},s=>{if(s.exists&&!s.metadata.hasPendingWrites&&ADMIN_SITE_ID===site)renderAdminSiteDashboard(site,sanitizeCloudState(s.data()))});
  }catch(e){console.warn(e);alert('Impossible de charger cet établissement.')}
