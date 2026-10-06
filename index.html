@@ -214,7 +214,7 @@ const PHOTO_PRODUCT={
  "Saumon frais":"assets/products/saumon-frais.webp"
 };
 function customPhotoKey(cat,p){return 'haccpProductPhoto::'+cat+'::'+p}
-function foodThumb(cat,p,size){size=size||42;var custom=localStorage.getItem(customPhotoKey(cat,p)),src=custom||PHOTO_PRODUCT[p];if(!src)return '';var v=(cat==='Volailles'?'volailles-complet-1':'catalogue-custom-1');return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+(custom?'':'?v='+v)+'" alt="'+esc(p)+'" loading="eager" decoding="async" onerror="this.closest(\\'.food-thumb\\').style.display=\\'none\\'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
+function foodThumb(cat,p,size){size=size||42;var custom=localStorage.getItem(customPhotoKey(cat,p)),src=custom||PHOTO_PRODUCT[p];if(!src)return '';var v=(cat==='Volailles'?'volailles-complet-1':'catalogue-custom-2');return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+(custom?'':'?v='+v)+'" alt="'+esc(p)+'" loading="eager" decoding="async" onerror="this.parentElement.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
 function productPhotoManager(){
  let cats=Object.keys(CAT),cat=(document.getElementById('ppmCat')||{}).value||cats[0],q=((document.getElementById('ppmSearch')||{}).value||'').toLowerCase(),items=[];
  Object.values(CAT[cat]||{}).forEach(g=>g.forEach(x=>{if(!q||x[0].toLowerCase().includes(q))items.push(x[0])}));
