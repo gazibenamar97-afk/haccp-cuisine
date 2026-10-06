@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v107-user-create-button-fix-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v108-user-create-diagnostics-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -115,7 +115,8 @@ input:focus,select:focus,textarea:focus{border-color:#1685d1;box-shadow:0 0 0 3p
  .rec-steps span{display:block!important;font-size:9px!important;line-height:1.15}
 }
 </style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>\n<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
 <style id="home-photo-v70">
 body.on-home .home-shell{max-width:1240px!important;width:min(1240px,calc(100vw - 44px))!important}
@@ -964,30 +965,46 @@ async function usersManager(){
  <div class="row"><div><label>Nom complet</label><input id="userName" autocomplete="off" placeholder="Nom du responsable"></div><div><label>E-mail</label><input id="userEmail" type="email" autocomplete="off" placeholder="utilisateur@restaurant.tn"></div></div>
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option></select></div></div>
  <label>Établissement</label><select id="userSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option></select><br><br>
- <button id="createUserBtn" type="button" class="btn primary" onclick="createAppUser(this)">Créer le compte</button></div>
+ <button id="createUserBtn" type="button" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note" style="margin-top:12px;font-weight:700"></div></div>
  <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList"><p class="note">Chargement…</p></div></div>`;
  await loadAppUsers();
 }
 async function createAppUser(btn){
- if(SITE_ID!=='main'||!cloudDb||!authReady){alert('Service utilisateurs indisponible.');return}
- let name=(document.getElementById('userName').value||'').trim(),email=(document.getElementById('userEmail').value||'').trim().toLowerCase(),password=document.getElementById('userPassword').value||'',role=document.getElementById('userRole').value,site=document.getElementById('userSite').value;
- if(!name){alert('Indiquez le nom de l’utilisateur.');return}
- if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)){alert('Adresse e-mail invalide.');return}
- if(password.length<8){alert('Le mot de passe doit contenir au moins 8 caractères.');return}
- if(btn){btn.disabled=true;btn.textContent='Création…'}
+ const status=document.getElementById('createUserStatus');
+ const say=(m,bad)=>{if(status){status.textContent=m;status.style.color=bad?'#a12622':'#20543e'}};
+ say('Vérification des informations…',false);
+ if(SITE_ID!=='main'||!cloudDb){say('Service Firestore indisponible.',true);return}
+ if(typeof firebase==='undefined'||typeof firebase.auth!=='function'){say('Firebase Authentication ne s’est pas chargé. Actualisez la page.',true);return}
+ const name=(document.getElementById('userName').value||'').trim();
+ const email=(document.getElementById('userEmail').value||'').trim().toLowerCase();
+ const password=document.getElementById('userPassword').value||'';
+ const role=document.getElementById('userRole').value,site=document.getElementById('userSite').value;
+ if(!name){say('Indiquez le nom de l’utilisateur.',true);return}
+ const emailField=document.getElementById('userEmail');
+ if(!emailField.checkValidity()){say('Adresse e-mail invalide.',true);return}
+ if(password.length<8){say('Le mot de passe doit contenir au moins 8 caractères.',true);return}
+ if(btn){btn.disabled=true;btn.textContent='Création…'} say('Création du compte Firebase en cours…',false);
  try{
   let creator;
   try{creator=firebase.app('mtUserCreator')}catch(e){creator=firebase.initializeApp(FIREBASE_CONFIG,'mtUserCreator')}
-  let cred=await creator.auth().createUserWithEmailAndPassword(email,password);
-  let profile={uid:cred.user.uid,name,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:'M&T Admin'};
+  const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
+  say('Compte Firebase créé. Enregistrement du profil…',false);
+  const profile={uid:cred.user.uid,name,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:'M&T Admin'};
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);
   await creator.auth().signOut();
-  S.trace.unshift({type:'Sécurité',product:'Utilisateur créé : '+name+' — '+SITE_NAME,date:new Date().toLocaleString('fr-FR')});save();
-  alert('Compte créé avec succès pour '+name+'.');usersManager();
+  S.trace.unshift({type:'Sécurité',product:'Utilisateur créé : '+name+' — '+site,date:new Date().toLocaleString('fr-FR')});save();
+  say('Compte créé avec succès pour '+name+'.',false);
+  if(btn){btn.disabled=false;btn.textContent='Créer le compte'}
+  setTimeout(loadAppUsers,300);
  }catch(e){
-  console.error(e);
-  let msg=e.code==='auth/operation-not-allowed'?'Activez la connexion E-mail/Mot de passe dans Firebase Authentication.':e.code==='auth/email-already-in-use'?'Cette adresse e-mail possède déjà un compte.':(e.message||'Erreur inconnue');
-  alert('Création impossible : '+msg);
+  console.error('Create user',e);
+  let msg=e.code==='auth/operation-not-allowed'?'Activez E-mail/Mot de passe dans Firebase Authentication.':
+   e.code==='auth/email-already-in-use'?'Cette adresse e-mail possède déjà un compte.':
+   e.code==='auth/weak-password'?'Mot de passe trop faible. Utilisez au moins 8 caractères.':
+   e.code==='auth/unauthorized-domain'?'Le domaine GitHub Pages doit être autorisé dans Firebase Authentication.':
+   e.code==='permission-denied'?'Le compte Firebase a été créé mais Firestore refuse l’enregistrement du profil. Les règles Firestore doivent être adaptées.':
+   (e.code?e.code+' — ':'')+(e.message||'Erreur inconnue');
+  say('Création impossible : '+msg,true);
   if(btn){btn.disabled=false;btn.textContent='Créer le compte'}
  }
 }
