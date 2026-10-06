@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v109-firebase-config-fix-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v110-auth-login-role-site-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -469,8 +469,52 @@ const DEFAULT_STATE='{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{
 const S=JSON.parse(localStorage.getItem(SITE_STORAGE_KEY)||(SITE_ID==='main'?localStorage.getItem(LEGACY_STORAGE_KEY):null)||DEFAULT_STATE);
 if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};
 const FIREBASE_CONFIG={apiKey:"AIzaSyD_Q38HRskQXxVB13-koMfQUUsRMwJGUYo",authDomain:"mt-haccp.firebaseapp.com",projectId:"mt-haccp",storageBucket:"mt-haccp.firebasestorage.app",messagingSenderId:"200684541667",appId:"1:200684541667:web:c1fb0660787ff0e360d7d6"};
-let cloudDb=null,cloudReady=false,cloudApplying=false,cloudWriteTimer=null;
+let cloudDb=null,cloudReady=false,cloudApplying=false,cloudWriteTimer=null,currentUserProfile=null;
 try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e){console.warn('Firebase init',e)}
+function authLoginScreen(message=''){
+ document.body.classList.remove('on-home');
+ let n=document.querySelector('nav');if(n)n.style.display='none';
+ app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><label>E-mail</label><input id="loginEmail" type="email" autocomplete="username" placeholder="nom@entreprise.com"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="button" class="btn primary" style="margin-top:18px" onclick="loginAppUser(this)">Se connecter</button><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
+}
+async function loginAppUser(btn){
+ const email=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
+ const say=m=>{if(st)st.textContent=m};
+ if(!email||!password){say('Saisissez votre e-mail et votre mot de passe.');return}
+ if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
+ try{
+  const cred=await firebase.auth().signInWithEmailAndPassword(email,password);
+  await authorizeAppUser(cred.user);
+ }catch(e){
+  console.error('Login',e);
+  let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?'E-mail ou mot de passe incorrect.':(e.message||'Connexion impossible.');
+  say(msg);if(btn){btn.disabled=false;btn.textContent='Se connecter'}
+ }
+}
+async function authorizeAppUser(user){
+ if(!user){currentUserProfile=null;authLoginScreen();return false}
+ try{
+  const snap=await cloudDb.collection('users').doc(user.uid).get();
+  if(!snap.exists){await firebase.auth().signOut();authLoginScreen('Ce compte n’est pas autorisé dans M&T HACCP.');return false}
+  const p=snap.data()||{};currentUserProfile={...p,uid:user.uid};
+  if(p.active===false){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Ce compte a été désactivé par l’administrateur.');return false}
+  if(!p.site||!['restaurant-1','restaurant-2'].includes(p.site)){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Aucun établissement valide n’est affecté à ce compte.');return false}
+  if(SITE_ID!==p.site){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
+  renderUserSessionBar();home();await initCloudSync();return true
+ }catch(e){console.error('Authorize',e);authLoginScreen('Impossible de vérifier les droits du compte. '+(e.message||''));return false}
+}
+function renderUserSessionBar(){
+ let old=document.getElementById('userSessionBar');if(old)old.remove();
+ if(!currentUserProfile)return;
+ let d=document.createElement('div');d.id='userSessionBar';d.style.cssText='position:fixed;right:14px;bottom:14px;z-index:40;background:#fff;border:1px solid #c7d2cc;border-radius:12px;padding:8px 10px;box-shadow:0 4px 16px #0002;font-size:12px';
+ d.innerHTML='<b>'+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'</b> · '+esc(SITE_NAME)+' <button type="button" onclick="logoutAppUser()" style="margin-left:8px;border:0;background:#eef3f0;border-radius:8px;padding:6px 9px;cursor:pointer">Déconnexion</button>';
+ document.body.appendChild(d);
+}
+async function logoutAppUser(){try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
+async function startApplication(){
+ if(SITE_ID==='main'){home();initCloudSync();return}
+ if(!firebase.auth){authLoginScreen('Firebase Authentication indisponible.');return}
+ firebase.auth().onAuthStateChanged(async user=>{if(user)await authorizeAppUser(user);else authLoginScreen()});
+}
 function cloudComparable(x){let y=JSON.parse(JSON.stringify(x||{}));delete y._cloudUpdatedAt;return JSON.stringify(y)}
 function syncLocalSettingsIntoState(){S.settings=S.settings||{};let pin=localStorage.getItem('haccpAdminPin');if(pin)S.settings.adminPin=pin}
 function syncStateSettingsToLocal(){if(S.settings&&S.settings.adminPin)localStorage.setItem('haccpAdminPin',S.settings.adminPin)}
@@ -1510,7 +1554,6 @@ document.addEventListener('click',function(e){
  });
 });
 
-home();
-initCloudSync();
+startApplication();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=101').catch(()=>{}))}
 </script></body></html>
