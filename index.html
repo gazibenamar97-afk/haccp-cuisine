@@ -224,6 +224,22 @@ body.on-home .home-card:nth-child(8){background-image:url("./assets/home/setting
 }
 </style>
 <style id="home-no-arrows-v78">body.on-home .home-arrow{display:none!important}</style>
+<style id="mobile-primary-button-fix-v97">
+/* Prevent sticky :hover on touch devices from washing out primary action buttons. */
+.btn.primary:hover,.btn.primary:focus-visible{
+  background:linear-gradient(135deg,#0b83df,#0669bd)!important;
+  border-color:#0877d1!important;
+  color:#fff!important;
+}
+@media (hover:none),(pointer:coarse){
+  .btn:hover{background:#fff}
+  .btn.primary:hover{
+    background:linear-gradient(135deg,#0b83df,#0669bd)!important;
+    border-color:#0877d1!important;
+    color:#fff!important;
+  }
+}
+</style>
 </head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
