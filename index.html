@@ -637,8 +637,17 @@ function checkEquipmentTemperature(){let sel=document.getElementById('te'),input
 function saveTemp(){if(!te||te.value===''){alert('Choisissez votre équipement.');return}let e=S.equipment[+te.value],v=+tv.value,ok=v>=e.min&&v<=e.max,operator=to.value.trim(),note=(document.getElementById('tn')||{}).value||'';note=note.trim();if(!operator){alert('Le nom de l’opérateur est obligatoire.');to.focus();return}if(!ok&&!note){alert('Température non conforme : indiquez obligatoirement l’observation ou l’action corrective.');document.getElementById('tn').focus();return}let id='temp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),x={id,equipment:e.name,value:v,ok,operator,note,observation:note,date:new Date().toLocaleString('fr-FR'),createdAt:new Date().toISOString()};S.temps.unshift(x);S.trace.unshift({type:'Température',...x});save();temperatures()}
 function addEq(){
  let name=(document.getElementById('en')||{}).value||'',min=(document.getElementById('emin')||{}).value,max=(document.getElementById('emax')||{}).value;
- name=name.trim();
+ name=name.trim().replace(/\s+/g,' ');
  if(!name){alert('Indiquez le nom de l’équipement.');return}
+ let normalized=name.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let duplicate=S.equipment.some(e=>{
+  let existing=String(e&&e.name||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return existing===normalized
+ });
+ if(duplicate){
+  alert('Cet équipement existe déjà. Pour plusieurs équipements similaires, utilisez un nom distinct, par exemple : '+name+' 1, '+name+' 2.');
+  return
+ }
  let item={name:name,min:Number(min),max:Number(max)};
  S.equipment.push(item);
  save();
