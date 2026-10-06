@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v105-admin-detailed-supervision-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v106-user-management-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -115,7 +115,7 @@ input:focus,select:focus,textarea:focus{border-color:#1685d1;box-shadow:0 0 0 3p
  .rec-steps span{display:block!important;font-size:9px!important;line-height:1.15}
 }
 </style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>\n<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
 <style id="home-photo-v70">
 body.on-home .home-shell{max-width:1240px!important;width:min(1240px,calc(100vw - 44px))!important}
@@ -948,7 +948,62 @@ if(!rpEl||!rpEl.value.trim())missing.push('produit');
 if(!rfEl||!rfEl.value.trim())missing.push('fournisseur');
 if(!receiverEl||!receiverEl.value.trim())missing.push('nom de la personne ayant réceptionné');
 if(missing.length){alert('Champ'+(missing.length>1?'s':'')+' obligatoire'+(missing.length>1?'s':'')+' manquant'+(missing.length>1?'s':'')+' : '+missing.join(', ')+'.');let target=!rpEl||!rpEl.value.trim()?rpSearchEl:(!rfEl||!rfEl.value.trim()?rfEl:receiverEl);if(target){target.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){target.focus()},250)}return}if(!re.value.trim()){alert("L’état de l’emballage est obligatoire.");re.focus();return}if(rt.required&&!rt.value){alert('La température est obligatoire pour cette catégorie de produit.');rt.focus();return}if(!rfab.value&&!rfabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');rfab.focus();return}if(rc.value.trim()!=='Fruits & légumes'&&!rd.value&&!rdNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');rd.focus();return}if(re.value==='Non conforme'&&!rreason.value.trim()){alert('Le motif de non-conformité est obligatoire.');rreason.focus();return}let tempRuleAtSave=receivingTempRule(rc.value,rp.value),tempNumber=parseFloat(String(rt.value).replace(',','.')),tempOverRecommendation=!!tempRuleAtSave&&rt.value!==''&&!Number.isNaN(tempNumber)&&tempNumber>tempRuleAtSave.max;if(tempOverRecommendation&&!confirm('ALERTE HACCP : la température saisie ('+tempNumber+' °C) dépasse la recommandation ('+tempRuleAtSave.label+').\n\nUne action a été renseignée dans Observation. Voulez-vous malgré tout valider cette réception ?'))return;let x={category:rc.value,product:rp.value,brand:rbrand.value,quantity:rqty.value,supplier:rf.value,receivedBy:document.getElementById('rreceiver').value.trim(),lot:rl.value,temp:rt.value,recommendedTemp:tempRuleAtSave?tempRuleAtSave.label:'',recommendedTempMax:tempRuleAtSave?tempRuleAtSave.max:null,tempOverRecommendation:tempOverRecommendation,fabrication:rfab.value,fabricationNA:rfabNA.checked,dlc:rd.value,dlcNA:rdNA.checked,barcode:rbarcode.value.trim(),pack:re.value,nonConformityReason:document.getElementById('rreason')?rreason.value.trim():'',observation:document.getElementById('robs')?robs.value.trim():'',ocr:rocr.value,date:new Date().toLocaleDateString('fr-FR'),receivedAt:new Date().toISOString()};S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();stock()}
-function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1><div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div><div class="panel" style="margin-top:18px;border-color:#d9b8b8"><h2>🧪 Données d’essai</h2><p class="note">Permet d’effacer toutes les saisies de test : produits réceptionnés, stock, relevés de température, nettoyages et traçabilité. Le code PIN administrateur est conservé.</p><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetDemoData()">↺ Effacer toutes les données d’essai</button></div>`}
+function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1>${SITE_ID==='main'?'<div class="panel"><h2>👥 Utilisateurs</h2><p class="note">Créez les comptes des restaurateurs et affectez chaque compte à son établissement.</p>'+B('Gérer les utilisateurs','usersManager()','primary')+'</div>':''}<div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div><div class="panel" style="margin-top:18px;border-color:#d9b8b8"><h2>🧪 Données d’essai</h2><p class="note">Permet d’effacer toutes les saisies de test : produits réceptionnés, stock, relevés de température, nettoyages et traçabilité. Le code PIN administrateur est conservé.</p><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetDemoData()">↺ Effacer toutes les données d’essai</button></div>`}
+
+
+async function usersManager(){
+ if(SITE_ID!=='main'){settings();return}
+ let pin=localStorage.getItem('haccpAdminPin');
+ if(pin&&sessionStorage.getItem('haccpDashboardUnlocked')!=='1'){
+  let entered=prompt('Code PIN administrateur requis :');if(entered===null)return;if(entered!==pin){alert('Code PIN incorrect.');return}
+  sessionStorage.setItem('haccpDashboardUnlocked','1');
+ }
+ CURRENT_VIEW='users-manager';
+ app.innerHTML=`${B('← Paramètres','settings()','back')}<h1>Gestion des utilisateurs</h1>
+ <div class="panel"><h2>Créer un utilisateur</h2>
+ <div class="row"><div><label>Nom complet</label><input id="userName" autocomplete="off" placeholder="Nom du responsable"></div><div><label>E-mail</label><input id="userEmail" type="email" autocomplete="off" placeholder="utilisateur@restaurant.tn"></div></div>
+ <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option></select></div></div>
+ <label>Établissement</label><select id="userSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option></select><br><br>
+ ${B('Créer le compte','createAppUser()','primary')}</div>
+ <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList"><p class="note">Chargement…</p></div></div>`;
+ await loadAppUsers();
+}
+async function createAppUser(){
+ if(SITE_ID!=='main'||!cloudDb||!authReady){alert('Service utilisateurs indisponible.');return}
+ let name=(document.getElementById('userName').value||'').trim(),email=(document.getElementById('userEmail').value||'').trim().toLowerCase(),password=document.getElementById('userPassword').value||'',role=document.getElementById('userRole').value,site=document.getElementById('userSite').value;
+ if(!name){alert('Indiquez le nom de l’utilisateur.');return}
+ if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)){alert('Adresse e-mail invalide.');return}
+ if(password.length<8){alert('Le mot de passe doit contenir au moins 8 caractères.');return}
+ let btn=event&&event.target; if(btn){btn.disabled=true;btn.textContent='Création…'}
+ try{
+  let creator;
+  try{creator=firebase.app('mtUserCreator')}catch(e){creator=firebase.initializeApp(FIREBASE_CONFIG,'mtUserCreator')}
+  let cred=await creator.auth().createUserWithEmailAndPassword(email,password);
+  let profile={uid:cred.user.uid,name,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:'M&T Admin'};
+  await cloudDb.collection('users').doc(cred.user.uid).set(profile);
+  await creator.auth().signOut();
+  S.trace.unshift({type:'Sécurité',product:'Utilisateur créé : '+name+' — '+SITE_NAME,date:new Date().toLocaleString('fr-FR')});save();
+  alert('Compte créé avec succès pour '+name+'.');usersManager();
+ }catch(e){
+  console.error(e);
+  let msg=e.code==='auth/operation-not-allowed'?'Activez la connexion E-mail/Mot de passe dans Firebase Authentication.':e.code==='auth/email-already-in-use'?'Cette adresse e-mail possède déjà un compte.':(e.message||'Erreur inconnue');
+  alert('Création impossible : '+msg);
+  if(btn){btn.disabled=false;btn.textContent='Créer le compte'}
+ }
+}
+async function loadAppUsers(){
+ let box=document.getElementById('usersList');if(!box||!cloudDb)return;
+ try{
+  let snap=await cloudDb.collection('users').get(),rows=[];
+  snap.forEach(d=>{let u=d.data()||{};rows.push({...u,uid:d.id})});
+  rows.sort((a,b)=>(a.site||'').localeCompare(b.site||'')||(a.name||'').localeCompare(b.name||''));
+  box.innerHTML=rows.length?rows.map(u=>`<div class="record"><b>${esc(u.name||u.email||'Utilisateur')}</b><br><span class="note">${esc(u.email||'')} · ${esc(u.site==='restaurant-1'?'Restaurant 1':u.site==='restaurant-2'?'Restaurant 2':u.site||'')} · ${esc(u.role||'')}</span><div style="margin-top:8px"><button class="btn" style="padding:8px 12px;width:auto" onclick="toggleAppUser('${esc(u.uid)}',${u.active!==false})">${u.active===false?'Réactiver':'Désactiver'}</button></div></div>`).join(''):'<p class="empty">Aucun utilisateur créé.</p>';
+ }catch(e){console.error(e);box.innerHTML='<p class="note">Impossible de charger les utilisateurs : '+esc(e.message||'erreur')+'</p>'}
+}
+async function toggleAppUser(uid,isActive){
+ if(!cloudDb)return;
+ try{await cloudDb.collection('users').doc(uid).update({active:!isActive,updatedAt:new Date().toISOString()});await loadAppUsers()}catch(e){alert('Modification impossible : '+(e.message||'erreur'))}
+}
 
 async function resetDemoData(){let pin=localStorage.getItem('haccpAdminPin');if(pin){let entered=prompt('Code PIN administrateur requis :');if(entered===null||entered!==pin)return}if(!confirm('Remettre les données à zéro sur tous les appareils ?'))return;if(!cloudDb){alert('Firestore n’est pas disponible. Remise à zéro annulée pour éviter le retour des anciennes données.');return}if(!cloudReady){try{let probe=await cloudDb.collection('appState').doc(SITE_ID).get({source:'server'});if(!probe.exists)throw new Error('Document cloud introuvable');cloudReady=true}catch(e){console.warn('Firestore reset check',e);alert('Connexion Firestore indisponible pour le moment. Vérifiez Internet puis réessayez. Aucune donnée n’a été effacée.');return}}clearTimeout(cloudWriteTimer);let backup=JSON.parse(JSON.stringify(S));cloudApplying=true;let empty=JSON.parse(JSON.stringify(S));empty.stock=[];empty.temps=[];empty.clean=[];empty.trace=[];empty.suppliers=[];syncLocalSettingsIntoState();try{let data=sanitizeCloudState(empty);data._cloudUpdatedAt=new Date().toISOString();let ref=cloudDb.collection('appState').doc(SITE_ID);await ref.set(data);let check=await ref.get({source:'server'});let server=check.data()||{};if((server.stock||[]).length||(server.trace||[]).length)throw new Error('Firestore conserve encore des données');Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,empty);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));cloudApplying=false;sessionStorage.removeItem('haccpDashboardUnlocked');trace();alert('Firestore vérifié : données à zéro sur le serveur.')}catch(e){cloudApplying=false;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,backup);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));console.error(e);alert('Échec de la remise à zéro Firestore : '+(e.code||e.message||'erreur inconnue'))}}
 
