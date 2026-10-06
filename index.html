@@ -308,6 +308,8 @@ function refreshCurrentView(){try{
   return
  }
  let h=(document.querySelector('#app h1')||{}).textContent||'';
+ if(/^Historique /i.test(h))return;
+ if(CURRENT_VIEW==='trace'){trace();return}
  if(/Traçabilité/i.test(h))trace();
  else if(/Stock/i.test(h))stock();
  else if(/température/i.test(h))temperatures();
