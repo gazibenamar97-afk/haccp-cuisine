@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v116-user-edit-audit-identity-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v117-users-list-render-fix-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1071,13 +1071,26 @@ async function createAppUser(btn){
  }
 }
 async function loadAppUsers(){
- let box=document.getElementById('usersList');if(!box||!cloudDb)return;
+ const box=document.getElementById('usersList');
+ if(!box)return;
+ box.innerHTML='<p class="note">Chargement des comptes…</p>';
+ if(!cloudDb){box.innerHTML='<p class="note" style="color:#9e4545">Firestore indisponible.</p>';return}
  try{
-  let snap=await cloudDb.collection('users').get(),rows=[];
-  snap.forEach(d=>{let u=d.data()||{};rows.push({...u,uid:d.id})});
-  rows.sort((a,b)=>(a.site||'').localeCompare(b.site||'')||(a.name||'').localeCompare(b.name||''));
-  box.innerHTML=rows.length?rows.map(u=>`<div class="record"><b>${esc(u.name||u.email||'Utilisateur')}</b><br><span class="note">${esc(u.email||'')} · ${esc(u.site==='restaurant-1'?'Restaurant 1':u.site==='restaurant-2'?'Restaurant 2':u.site||'')} · ${esc(u.role||'')} · ${u.active===false?'Désactivé':'Actif'}</span><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="padding:8px 12px;width:auto" onclick="editAppUser('${esc(u.uid)}')">Modifier</button><button class="btn" style="padding:8px 12px;width:auto" onclick="toggleAppUser('${esc(u.uid)}',${u.active!==false})">${u.active===false?'Réactiver':'Désactiver'}</button></div></div>`).join(''):'<p class="empty">Aucun utilisateur créé.</p>';
- }catch(e){console.error(e);box.innerHTML='<p class="note">Impossible de charger les utilisateurs : '+esc(e.message||'erreur')+'</p>'}
+  const snap=await cloudDb.collection('users').get();
+  const rows=[];
+  snap.forEach(doc=>{const data=doc.data()||{};rows.push(Object.assign({},data,{uid:doc.id}))});
+  rows.sort((a,b)=>String(a.site||'').localeCompare(String(b.site||''))||String(a.name||'').localeCompare(String(b.name||'')));
+  if(!rows.length){box.innerHTML='<p class="note">Aucun compte enregistré dans Firestore.</p>';return}
+  box.innerHTML='<p class="note" style="margin-bottom:10px"><b>'+rows.length+' compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</b></p>'+
+   rows.map(u=>{
+    const siteLabel=u.site==='restaurant-1'?'Restaurant 1':u.site==='restaurant-2'?'Restaurant 2':(u.site||'Non affecté');
+    const status=u.active===false?'Désactivé':'Actif';
+    return '<div class="record"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.email||'')+' · '+esc(siteLabel)+' · '+esc(u.role||'')+' · '+status+'</span><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="padding:8px 12px;width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="padding:8px 12px;width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div></div>';
+   }).join('');
+ }catch(err){
+  console.error('Users list',err);
+  box.innerHTML='<p class="note" style="color:#9e4545"><b>Impossible de charger les comptes.</b><br>'+esc((err.code?err.code+' — ':'')+(err.message||'Erreur Firestore'))+'</p>';
+ }
 }
 async function editAppUser(uid){
  if(!cloudDb||!uid)return;
