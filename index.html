@@ -210,7 +210,8 @@ const PHOTO_PRODUCT={
  "Tripes":"assets/products/tripes.webp",
  "Viande hachée":"assets/products/viande-hachee.webp",
  "Merguez":"assets/products/merguez.webp",
- "Kefta":"assets/products/kefta.webp"
+ "Kefta":"assets/products/kefta.webp",
+ "Saumon frais":"assets/products/saumon-frais.webp"
 };
 function foodThumb(cat,p,size){size=size||42;var src=PHOTO_PRODUCT[p];if(!src)return '';var v=(cat==='Volailles'?'volailles-complet-1':'filet-final-1');return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'?v='+v+'" alt="'+esc(p)+'" loading="eager" decoding="async" onerror="this.closest(\'.food-thumb\').style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
 
