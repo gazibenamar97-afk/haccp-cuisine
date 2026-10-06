@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v108-user-create-diagnostics-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v109-firebase-config-fix-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -468,7 +468,7 @@ const LEGACY_STORAGE_KEY='haccpV3';
 const DEFAULT_STATE='{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{"name":"Frigo 1","min":0,"max":4},{"name":"Congélateur 1","min":-24,"max":-18}]}';
 const S=JSON.parse(localStorage.getItem(SITE_STORAGE_KEY)||(SITE_ID==='main'?localStorage.getItem(LEGACY_STORAGE_KEY):null)||DEFAULT_STATE);
 if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};
-const FIREBASE_CONFIG={apiKey:"AIzaSyD_038HRskQXxVB13-koMfQUUsRMwJGUYo",authDomain:"mt-haccp.firebaseapp.com",projectId:"mt-haccp",storageBucket:"mt-haccp.firebasestorage.app",messagingSenderId:"2200684541667",appId:"1:2200684541667:web:c1fb0060787ff0e360d7d6"};
+const FIREBASE_CONFIG={apiKey:"AIzaSyD_Q38HRskQXxVB13-koMfQUUsRMwJGUYo",authDomain:"mt-haccp.firebaseapp.com",projectId:"mt-haccp",storageBucket:"mt-haccp.firebasestorage.app",messagingSenderId:"200684541667",appId:"1:200684541667:web:c1fb0660787ff0e360d7d6"};
 let cloudDb=null,cloudReady=false,cloudApplying=false,cloudWriteTimer=null;
 try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e){console.warn('Firebase init',e)}
 function cloudComparable(x){let y=JSON.parse(JSON.stringify(x||{}));delete y._cloudUpdatedAt;return JSON.stringify(y)}
