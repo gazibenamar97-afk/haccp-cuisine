@@ -631,32 +631,31 @@ function createAdminPin(){let p=newPin.value.trim(),c=confirmPin.value.trim();if
 function changeAdminPin(){let current=localStorage.getItem('haccpAdminPin'),old=oldPin.value.trim(),p=newPin.value.trim(),c=confirmPin.value.trim();if(old!==current){alert('Le code PIN actuel est incorrect.');return}if(!validPin(p)){alert('Le nouveau code PIN doit contenir uniquement 4 à 8 chiffres.');return}if(p!==c){alert('Les deux nouveaux codes PIN ne correspondent pas.');return}localStorage.setItem('haccpAdminPin',p);S.settings=S.settings||{};S.settings.adminPin=p;S.trace.unshift({type:'Sécurité',product:'Code PIN administrateur modifié',date:new Date().toLocaleString('fr-FR')});save();alert('Code PIN modifié.');settings()}
 
 const EQUIPMENT_PRESETS=[
- {group:'Viandes',name:'Chambre froide viande — morceaux de découpe',min:0,max:4},
- {group:'Viandes',name:'Chambre froide viande hachée',min:0,max:2},
- {group:'Viandes',name:'Chambre froide abats',min:0,max:3},
- {group:'Volailles',name:'Chambre froide volaille',min:0,max:4},
- {group:'Poissons & fruits de mer',name:'Chambre froide poisson / produits de la pêche',min:0,max:2},
- {group:'Produits laitiers',name:'Réfrigérateur lait cru',min:0,max:4},
- {group:'Produits laitiers',name:'Réfrigérateur produits laitiers',min:0,max:4},
- {group:'Préparations',name:'Chambre froide préparations culinaires',min:0,max:3},
- {group:'Préparations',name:'Réfrigérateur préparations froides',min:0,max:4},
- {group:'Préparations',name:'Réfrigérateur pâtisserie / desserts',min:0,max:4},
- {group:'Préparations',name:'Réfrigérateur sandwich / snack',min:0,max:4},
- {group:'Fruits & légumes',name:'Chambre froide fruits et légumes',min:2,max:8},
- {group:'Boissons',name:'Réfrigérateur boissons',min:2,max:8},
- {group:'Service froid',name:'Vitrine réfrigérée',min:0,max:4},
- {group:'Service froid',name:'Saladette réfrigérée',min:0,max:4},
- {group:'Service froid',name:'Table réfrigérée / tour réfrigéré',min:0,max:4},
- {group:'Service froid',name:'Buffet froid',min:0,max:4},
- {group:'Service froid',name:'Armoire réfrigérée positive',min:0,max:4},
+ {group:'Chambres froides',name:'Chambre froide viande',min:0,max:4},
+ {group:'Chambres froides',name:'Chambre froide poisson',min:0,max:2},
+ {group:'Chambres froides',name:'Chambre froide volaille',min:0,max:4},
+ {group:'Chambres froides',name:'Chambre froide fruits et légumes',min:2,max:8},
+ {group:'Chambres froides',name:'Chambre froide produits laitiers',min:0,max:4},
+ {group:'Chambres froides',name:'Chambre froide positive',min:0,max:4},
+ {group:'Chambres froides',name:'Chambre froide négative',min:-24,max:-18},
+ {group:'Réfrigération',name:'Réfrigérateur',min:0,max:4},
+ {group:'Réfrigération',name:'Armoire réfrigérée positive',min:0,max:4},
+ {group:'Réfrigération',name:'Table réfrigérée',min:0,max:4},
+ {group:'Réfrigération',name:'Saladette réfrigérée',min:0,max:4},
+ {group:'Réfrigération',name:'Vitrine réfrigérée',min:0,max:4},
+ {group:'Réfrigération',name:'Comptoir réfrigéré',min:0,max:4},
+ {group:'Réfrigération',name:'Meuble réfrigéré',min:0,max:4},
+ {group:'Réfrigération',name:'Buffet froid',min:0,max:4},
  {group:'Congélation',name:'Congélateur',min:-24,max:-18},
  {group:'Congélation',name:'Armoire négative',min:-24,max:-18},
- {group:'Congélation',name:'Chambre froide négative',min:-24,max:-18},
- {group:'Congélation',name:'Congélateur glaces / crèmes glacées',min:-24,max:-18},
- {group:'Maintien chaud',name:'Armoire chaude / maintien chaud',min:63,max:85},
- {group:'Maintien chaud',name:'Bain-marie chaud',min:63,max:85},
- {group:'Maintien chaud',name:'Buffet chaud',min:63,max:85}
-];
+ {group:'Congélation',name:'Coffre congélateur',min:-24,max:-18},
+ {group:'Congélation',name:'Vitrine congélateur',min:-24,max:-18},
+ {group:'Service chaud',name:'Bain-marie',min:63,max:85},
+ {group:'Service chaud',name:'Buffet chaud',min:63,max:85},
+ {group:'Service chaud',name:'Armoire chaude',min:63,max:85},
+ {group:'Service chaud',name:'Chariot chauffant',min:63,max:85},
+ {group:'Autres',name:'Machine à glaçons',min:0,max:4}
+]
 function equipmentPresetOptions(){
  let groups={};
  EQUIPMENT_PRESETS.forEach((x,i)=>(groups[x.group]||(groups[x.group]=[])).push([x,i]));
