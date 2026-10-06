@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v84-reception-clear-product-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v85-product-suggestions-fix-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -799,7 +799,7 @@ function updateReceptionProducts(){
  if(hidden)hidden.value='';
  let sel=document.getElementById('rpSelected');if(sel)sel.textContent='Aucun produit sélectionné.';
  if(note)note.textContent=cat?'Produits disponibles dans la catégorie « '+cat+' ». Vous pouvez rechercher ou ouvrir toutes les suggestions.':'Recherchez un produit dans tout le catalogue ou choisissez une catégorie pour filtrer.';
- filterReceptionProductList();updateReceptionQuantityUnit(false);hardClearReceptionTemperature();renderPhotoCatalogue();updateReceptionSide()
+ let box=document.getElementById('rpList');if(box)box.style.display='none';updateReceptionQuantityUnit(false);hardClearReceptionTemperature();renderPhotoCatalogue();updateReceptionSide()
 }
 function showReceptionProductList(){let i=document.getElementById('rpSearch');if(i)i.value='';filterReceptionProductList()}
 function filterReceptionProductList(){
@@ -1217,7 +1217,7 @@ function labelCategoryChanged(){
 }
 function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(input){input.disabled=false;input.readOnly=false;input.value=''}filterLabelProducts()}
 function filterLabelProducts(){
- let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input||!C)return;
+ let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input)return;
  let q=input.value.trim().toLowerCase(),rows=(C?labelProductsForCategory(C):labelAllProducts()).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)}).sort(function(a,b){return String(a.item[0]).localeCompare(String(b.item[0]),'fr')});
  box.innerHTML=rows.length?rows.map(function(x){return '<button type="button" class="btn" style="display:block;width:100%;text-align:left;margin:3px 0" onclick="selectLabelProduct(this)" data-cat="'+encodeURIComponent(x.cat)+'" data-sub="'+encodeURIComponent(x.sub)+'" data-i="'+x.index+'">'+x.item[0]+'</button>'}).join(''):'<div class="note" style="padding:10px">Aucun produit trouvé.</div>';
  box.style.display='block'
@@ -1292,6 +1292,13 @@ function saveLabel(printIt){
  S.trace.unshift({type:'Étiquette HACCP',overRecommendation:overRecommendation,recommendedDays:DAYS,product:P,category:C,subCategory:SUB,action:v('labelAction'),preparedAt:v('labelDate')+' '+v('labelTime'),durationDays:Number(v('labelDays')),dlc:outDate,temperature:v('labelTemp'),storage:v('labelStorage'),operator:v('labelOperator'),manufacturerInstruction:v('labelManufacturer'),date:new Date().toLocaleString('fr-FR')});
  save();if(printIt){window.print()}else{alert('Étiquette enregistrée dans la traçabilité.');dlcCats()}
 }
+
+document.addEventListener('click',function(e){
+ let labelBox=document.getElementById('labelProductList'),labelInput=document.getElementById('labelProductSearch');
+ if(labelBox&&labelInput&&!labelBox.contains(e.target)&&e.target!==labelInput)labelBox.style.display='none';
+ let recBox=document.getElementById('rpList'),recInput=document.getElementById('rpSearch');
+ if(recBox&&recInput&&!recBox.contains(e.target)&&e.target!==recInput)recBox.style.display='none';
+});
 
 home();
 initCloudSync();
