@@ -630,7 +630,49 @@ function validPin(p){return /^\d{4,8}$/.test(p)}
 function createAdminPin(){let p=newPin.value.trim(),c=confirmPin.value.trim();if(!validPin(p)){alert('Le code PIN doit contenir uniquement 4 à 8 chiffres.');return}if(p!==c){alert('Les deux codes PIN ne correspondent pas.');return}localStorage.setItem('haccpAdminPin',p);S.settings=S.settings||{};S.settings.adminPin=p;S.trace.unshift({type:'Sécurité',product:'Code PIN administrateur créé',date:new Date().toLocaleString('fr-FR')});save();alert('Code PIN administrateur créé.');settings()}
 function changeAdminPin(){let current=localStorage.getItem('haccpAdminPin'),old=oldPin.value.trim(),p=newPin.value.trim(),c=confirmPin.value.trim();if(old!==current){alert('Le code PIN actuel est incorrect.');return}if(!validPin(p)){alert('Le nouveau code PIN doit contenir uniquement 4 à 8 chiffres.');return}if(p!==c){alert('Les deux nouveaux codes PIN ne correspondent pas.');return}localStorage.setItem('haccpAdminPin',p);S.settings=S.settings||{};S.settings.adminPin=p;S.trace.unshift({type:'Sécurité',product:'Code PIN administrateur modifié',date:new Date().toLocaleString('fr-FR')});save();alert('Code PIN modifié.');settings()}
 
-function temperatures(){CURRENT_VIEW='temperatures';let opts='<option value="">Choisir votre équipement</option>'+S.equipment.map((e,i)=>`<option value="${i}">${esc(e.name)}</option>`).join('');app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements</span><b>${S.equipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Équipement</label><select id="te" onchange="checkEquipmentTemperature()">${opts}</select><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}<h2>Ajouter un équipement</h2><div class="row"><input id="en" placeholder="Nom : Frigo pâtisserie"><input id="emin" type="number" placeholder="Minimum °C"></div><input id="emax" type="number" placeholder="Maximum °C">${B('Ajouter l’équipement','addEq()')}</div>`;checkEquipmentTemperature()}
+const EQUIPMENT_PRESETS=[
+ {group:'Viandes',name:'Chambre froide viande — morceaux de découpe',min:0,max:4},
+ {group:'Viandes',name:'Chambre froide viande hachée',min:0,max:2},
+ {group:'Viandes',name:'Chambre froide abats',min:0,max:3},
+ {group:'Volailles',name:'Chambre froide volaille',min:0,max:4},
+ {group:'Poissons & fruits de mer',name:'Chambre froide poisson / produits de la pêche',min:0,max:2},
+ {group:'Produits laitiers',name:'Réfrigérateur lait cru',min:0,max:4},
+ {group:'Produits laitiers',name:'Réfrigérateur produits laitiers',min:0,max:4},
+ {group:'Préparations',name:'Chambre froide préparations culinaires',min:0,max:3},
+ {group:'Préparations',name:'Réfrigérateur préparations froides',min:0,max:4},
+ {group:'Préparations',name:'Réfrigérateur pâtisserie / desserts',min:0,max:4},
+ {group:'Préparations',name:'Réfrigérateur sandwich / snack',min:0,max:4},
+ {group:'Fruits & légumes',name:'Chambre froide fruits et légumes',min:2,max:8},
+ {group:'Boissons',name:'Réfrigérateur boissons',min:2,max:8},
+ {group:'Service froid',name:'Vitrine réfrigérée',min:0,max:4},
+ {group:'Service froid',name:'Saladette réfrigérée',min:0,max:4},
+ {group:'Service froid',name:'Table réfrigérée / tour réfrigéré',min:0,max:4},
+ {group:'Service froid',name:'Buffet froid',min:0,max:4},
+ {group:'Service froid',name:'Armoire réfrigérée positive',min:0,max:4},
+ {group:'Congélation',name:'Congélateur',min:-24,max:-18},
+ {group:'Congélation',name:'Armoire négative',min:-24,max:-18},
+ {group:'Congélation',name:'Chambre froide négative',min:-24,max:-18},
+ {group:'Congélation',name:'Congélateur glaces / crèmes glacées',min:-24,max:-18},
+ {group:'Maintien chaud',name:'Armoire chaude / maintien chaud',min:63,max:85},
+ {group:'Maintien chaud',name:'Bain-marie chaud',min:63,max:85},
+ {group:'Maintien chaud',name:'Buffet chaud',min:63,max:85}
+];
+function equipmentPresetOptions(){
+ let groups={};
+ EQUIPMENT_PRESETS.forEach((x,i)=>(groups[x.group]||(groups[x.group]=[])).push([x,i]));
+ return '<option value="">Choisir un équipement prédéfini</option>'+Object.keys(groups).map(g=>'<optgroup label="'+esc(g)+'">'+groups[g].map(([x,i])=>'<option value="'+i+'">'+esc(x.name)+' ('+x.min+' à '+x.max+' °C)</option>').join('')+'</optgroup>').join('')
+}
+function applyEquipmentPreset(){
+ let s=document.getElementById('equipmentPreset');
+ if(!s||s.value==='')return;
+ let x=EQUIPMENT_PRESETS[Number(s.value)];
+ if(!x)return;
+ document.getElementById('en').value=x.name;
+ document.getElementById('emin').value=x.min;
+ document.getElementById('emax').value=x.max
+}
+
+function temperatures(){CURRENT_VIEW='temperatures';let opts='<option value="">Choisir votre équipement</option>'+S.equipment.map((e,i)=>`<option value="${i}">${esc(e.name)}</option>`).join('');app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements</span><b>${S.equipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Équipement</label><select id="te" onchange="checkEquipmentTemperature()">${opts}</select><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}<h2>Ajouter un équipement</h2><label>Bibliothèque d’équipements HACCP</label><select id="equipmentPreset" onchange="applyEquipmentPreset()">${equipmentPresetOptions()}</select><div class="note" style="margin:7px 0 12px">Choisissez un modèle pour préremplir le nom et la plage de température, puis adaptez le nom si nécessaire (ex. « Chambre froide viande 1 »).</div><div class="row"><input id="en" placeholder="Nom : Frigo pâtisserie"><input id="emin" type="number" step=".1" placeholder="Minimum °C"></div><input id="emax" type="number" step=".1" placeholder="Maximum °C">${B('Ajouter l’équipement','addEq()')}</div>`;checkEquipmentTemperature()}
 
 function checkEquipmentTemperature(){let sel=document.getElementById('te'),input=document.getElementById('tv'),ideal=document.getElementById('tempIdeal'),status=document.getElementById('tempStatus');if(!sel||!ideal||!status)return;if(sel.value===''){ideal.textContent='';status.style.display='none';return}let e=S.equipment[Number(sel.value)];if(!e){ideal.textContent='';status.style.display='none';return}ideal.innerHTML='<b>Température idéale à respecter : '+esc(e.min)+' °C à '+esc(e.max)+' °C</b>';if(!input||input.value===''){status.style.display='none';return}let v=Number(input.value),ok=Number.isFinite(v)&&v>=Number(e.min)&&v<=Number(e.max);status.style.display='block';if(ok){status.style.border='1px solid #b9e5d2';status.style.background='#e8f8f0';status.style.color='#14704f';status.innerHTML='<b>✓ Température conforme</b><br>'+esc(v)+' °C est dans la plage autorisée ('+esc(e.min)+' °C à '+esc(e.max)+' °C).'}else{status.style.border='2px solid #b42318';status.style.background='#fde8e8';status.style.color='#8a1c13';status.innerHTML='<b>⚠ NON CONFORME — Température hors de la plage autorisée</b><br>Température saisie : '+esc(v)+' °C · Plage à respecter : '+esc(e.min)+' °C à '+esc(e.max)+' °C.<br><b>Indiquez l’observation ou l’action corrective avant d’enregistrer.</b>'}}
 
