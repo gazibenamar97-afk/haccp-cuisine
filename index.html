@@ -666,17 +666,26 @@ function applyEquipmentPreset(){
  if(!s||s.value===''){if(ideal)ideal.innerHTML='';checkEquipmentRange();return}
  let x=EQUIPMENT_PRESETS[Number(s.value)];
  if(!x)return;
- let base=x.name,normalizedBase=base.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
- let used=new Set();
+ let base=x.name;
+ let normalizeName=v=>String(v||'').trim().toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let normalizedBase=normalizeName(base),used=new Set();
  S.equipment.forEach(e=>{
-  let n=String(e&&e.name||'').trim(),normalized=n.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  let normalized=normalizeName(e&&e.name);
   if(normalized===normalizedBase)used.add(1);
-  let m=normalized.match(new RegExp('^'+normalizedBase.replace(/[.*+?^$()|[\]\\]/g,'\\ document.getElementById('en').value=x.name;
- document.getElementById('emin').value=x.min;')+'\\\\s+(\\\\d+)
+  if(normalized.indexOf(normalizedBase+' ')===0){
+   let suffix=normalized.slice(normalizedBase.length+1);
+   if(/^\\d+$/.test(suffix))used.add(Number(suffix))
+  }
+ });
+ let next=1;
+ while(used.has(next))next++;
+ document.getElementById('en').value=base+' '+next;
+ document.getElementById('emin').value=x.min;
  document.getElementById('emax').value=x.max;
  if(ideal)ideal.innerHTML='<b>Température idéale : '+esc(x.min)+' °C à '+esc(x.max)+' °C</b>';
  checkEquipmentRange()
 }
+
 function checkEquipmentRange(){
  let s=document.getElementById('equipmentPreset'),box=document.getElementById('equipmentRangeStatus'),minEl=document.getElementById('emin'),maxEl=document.getElementById('emax');
  if(!box||!s||s.value===''||!minEl||!maxEl){if(box)box.style.display='none';return true}
