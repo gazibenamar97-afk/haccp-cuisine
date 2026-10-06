@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v89-equipment-normalized-search-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v90-global-search-normalization-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -519,7 +519,7 @@ function showEditSuggestions(kind){
  let input=document.getElementById(kind==='category'?'ec':'esupplier'),box=document.getElementById(kind==='category'?'ecSuggestions':'esupplierSuggestions');
  if(!input||!box)return;
  let values=kind==='category'?Object.keys(CAT):S.suppliers.map(s=>typeof s==='string'?s:s.name).filter(Boolean);
- let norm=v=>String(v||'').toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let norm=v=>normalizeSearch(v);
  let q=norm(input.value),rows=values.filter(v=>!q||norm(v).includes(q));
  if(!rows.length){box.innerHTML='<div class="note" style="padding:12px">Aucune suggestion trouvée.</div>';box.style.display='block';return}
  box.innerHTML=rows.map(v=>'<button type="button" style="display:block;width:100%;text-align:left;padding:13px 14px;border:0;border-bottom:1px solid #e5edf3;background:#fff;color:#243f5b;font-size:16px" onclick="chooseEditSuggestion(\''+encodeURIComponent(v)+'\',\''+kind+'\')"><b>'+esc(v)+'</b></button>').join('');
@@ -1186,9 +1186,10 @@ function labelAutoRule(product,action){
  return r;
 }
 
-function normalizeProductSearch(v){
- return String(v||'').toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')
+function normalizeSearch(v){
+ return String(v||'').toLocaleLowerCase('fr').replace(/œ/g,'oe').replace(/æ/g,'ae').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')
 }
+function normalizeProductSearch(v){return normalizeSearch(v)}
 function labelAllProducts(){
  let rows=[];
  Object.keys(LABEL_CAT).forEach(function(cat){
