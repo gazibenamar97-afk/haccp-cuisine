@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v79-label-simple-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v80-label-product-click-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1180,12 +1180,12 @@ function dlcCats(){
 }
 function labelCategoryChanged(){
  let cat=document.getElementById('labelCategory').value,input=document.getElementById('labelProductSearch');
- C=cat;SUB='';P='';input.value='';input.disabled=!cat;
+ C=cat;SUB='';P='';input.value='';if(input){input.disabled=false;input.readOnly=!cat;if(cat){input.removeAttribute('disabled');input.removeAttribute('readonly')}}
  document.getElementById('labelContinue').disabled=true;
  document.getElementById('labelSelected').textContent=cat?'Choisissez ou recherchez un produit.':'Choisissez d’abord une catégorie, puis un produit.';
  if(cat){showLabelProductList()}else{document.getElementById('labelProductList').style.display='none'}
 }
-function showLabelProductList(){filterLabelProducts()}
+function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(!C){alert('Choisissez d’abord une catégorie.');return}if(input){input.disabled=false;input.readOnly=false}filterLabelProducts()}
 function filterLabelProducts(){
  let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input||!C)return;
  let q=input.value.trim().toLowerCase(),rows=labelProductsForCategory(C).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)});
