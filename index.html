@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v81-label-reselect-product-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v82-label-global-search-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1173,28 +1173,28 @@ function dlcCats(){
  let cats=Object.keys(LABEL_CAT);
  app.innerHTML='<h1>Étiquetage HACCP</h1><div class="panel"><h2>Créer une étiquette</h2>'+
  '<div class="row"><div><label>Catégorie <b>*</b></label><select id="labelCategory" onchange="labelCategoryChanged()"><option value="">Choisir une catégorie</option>'+cats.map(function(x){return '<option value="'+esc(x)+'">'+x+'</option>'}).join('')+'</select></div>'+
- '<div><label>Produit <b>*</b></label><div style="position:relative"><input id="labelProductSearch" placeholder="Rechercher ou choisir un produit" autocomplete="off" disabled onfocus="showLabelProductList()" oninput="filterLabelProducts()"><div id="labelProductList" class="panel" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;max-height:260px;overflow:auto;padding:6px;margin-top:4px"></div></div></div></div>'+
- '<div id="labelSelected" class="note" style="margin:12px 0">Choisissez d’abord une catégorie, puis un produit.</div>'+
+ '<div><label>Produit <b>*</b></label><div style="position:relative"><input id="labelProductSearch" placeholder="Rechercher ou choisir un produit" autocomplete="off" onfocus="showLabelProductList()" oninput="filterLabelProducts()"><div id="labelProductList" class="panel" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;max-height:260px;overflow:auto;padding:6px;margin-top:4px"></div></div></div></div>'+
+ '<div id="labelSelected" class="note" style="margin:12px 0">Recherchez un produit dans tout le catalogue ou choisissez une catégorie pour filtrer.</div>'+
  '<button id="labelContinue" class="btn primary" disabled onclick="openSelectedLabelTicket()">Créer / imprimer le ticket</button>'+
  '<p class="note" style="margin-top:16px">Les produits proposés proviennent de la base HACCP existante. La recherche Produit est limitée à la catégorie sélectionnée.</p></div>'
 }
 function labelCategoryChanged(){
  let cat=document.getElementById('labelCategory').value,input=document.getElementById('labelProductSearch');
- C=cat;SUB='';P='';input.value='';if(input){input.disabled=false;input.readOnly=!cat;if(cat){input.removeAttribute('disabled');input.removeAttribute('readonly')}}
+ C=cat;SUB='';P='';input.value='';if(input){input.disabled=false;input.readOnly=false}
  document.getElementById('labelContinue').disabled=true;
- document.getElementById('labelSelected').textContent=cat?'Choisissez ou recherchez un produit.':'Choisissez d’abord une catégorie, puis un produit.';
- if(cat){showLabelProductList()}else{document.getElementById('labelProductList').style.display='none'}
+ document.getElementById('labelSelected').textContent=cat?'Choisissez ou recherchez un produit dans cette catégorie.':'Recherchez un produit dans tout le catalogue ou choisissez une catégorie pour filtrer.';
+ showLabelProductList()
 }
-function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(!C){alert('Choisissez d’abord une catégorie.');return}if(input){input.disabled=false;input.readOnly=false;input.value=''}filterLabelProducts()}
+function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(input){input.disabled=false;input.readOnly=false;input.value=''}filterLabelProducts()}
 function filterLabelProducts(){
  let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input||!C)return;
- let q=input.value.trim().toLowerCase(),rows=labelProductsForCategory(C).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)});
+ let q=input.value.trim().toLowerCase(),rows=(C?labelProductsForCategory(C):labelAllProducts()).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)}).sort(function(a,b){return String(a.item[0]).localeCompare(String(b.item[0]),'fr')});
  box.innerHTML=rows.length?rows.map(function(x){return '<button type="button" class="btn" style="display:block;width:100%;text-align:left;margin:3px 0" onclick="selectLabelProduct(this)" data-cat="'+encodeURIComponent(x.cat)+'" data-sub="'+encodeURIComponent(x.sub)+'" data-i="'+x.index+'">'+x.item[0]+'</button>'}).join(''):'<div class="note" style="padding:10px">Aucun produit trouvé.</div>';
  box.style.display='block'
 }
 function selectLabelProduct(el){
  C=decodeURIComponent(el.getAttribute('data-cat'));SUB=decodeURIComponent(el.getAttribute('data-sub'));let i=Number(el.getAttribute('data-i')),item=LABEL_CAT[C][SUB][i];
- P=item[0];document.getElementById('labelProductSearch').value=P;document.getElementById('labelProductList').style.display='none';
+ P=item[0];let catEl=document.getElementById('labelCategory');if(catEl&&catEl.value!==C)catEl.value=C;document.getElementById('labelProductSearch').value=P;document.getElementById('labelProductList').style.display='none';
  document.getElementById('labelSelected').innerHTML='<b>Produit sélectionné :</b> '+P+' · '+C;document.getElementById('labelContinue').disabled=false;document.getElementById('labelProductSearch').value='';document.getElementById('labelProductSearch').placeholder='Choisir / changer de produit'
 }
 function openSelectedLabelTicket(){
