@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v80-label-product-click-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v81-label-reselect-product-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1185,7 +1185,7 @@ function labelCategoryChanged(){
  document.getElementById('labelSelected').textContent=cat?'Choisissez ou recherchez un produit.':'Choisissez d’abord une catégorie, puis un produit.';
  if(cat){showLabelProductList()}else{document.getElementById('labelProductList').style.display='none'}
 }
-function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(!C){alert('Choisissez d’abord une catégorie.');return}if(input){input.disabled=false;input.readOnly=false}filterLabelProducts()}
+function showLabelProductList(){let input=document.getElementById('labelProductSearch');if(!C){alert('Choisissez d’abord une catégorie.');return}if(input){input.disabled=false;input.readOnly=false;input.value=''}filterLabelProducts()}
 function filterLabelProducts(){
  let box=document.getElementById('labelProductList'),input=document.getElementById('labelProductSearch');if(!box||!input||!C)return;
  let q=input.value.trim().toLowerCase(),rows=labelProductsForCategory(C).filter(function(x){return !q||String(x.item[0]).toLowerCase().includes(q)});
@@ -1195,7 +1195,7 @@ function filterLabelProducts(){
 function selectLabelProduct(el){
  C=decodeURIComponent(el.getAttribute('data-cat'));SUB=decodeURIComponent(el.getAttribute('data-sub'));let i=Number(el.getAttribute('data-i')),item=LABEL_CAT[C][SUB][i];
  P=item[0];document.getElementById('labelProductSearch').value=P;document.getElementById('labelProductList').style.display='none';
- document.getElementById('labelSelected').innerHTML='<b>'+P+'</b> · '+C;document.getElementById('labelContinue').disabled=false
+ document.getElementById('labelSelected').innerHTML='<b>Produit sélectionné :</b> '+P+' · '+C;document.getElementById('labelContinue').disabled=false;document.getElementById('labelProductSearch').value='';document.getElementById('labelProductSearch').placeholder='Choisir / changer de produit'
 }
 function openSelectedLabelTicket(){
  if(!C||!SUB||!P){alert('Choisissez une catégorie et un produit.');return}
