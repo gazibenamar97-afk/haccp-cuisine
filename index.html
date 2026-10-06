@@ -666,7 +666,301 @@ function applyEquipmentPreset(){
  if(!s||s.value===''){if(ideal)ideal.innerHTML='';checkEquipmentRange();return}
  let x=EQUIPMENT_PRESETS[Number(s.value)];
  if(!x)return;
- document.getElementById('en').value=x.name;
+ let base=x.name,normalizedBase=base.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let used=new Set();
+ S.equipment.forEach(e=>{
+  let n=String(e&&e.name||'').trim(),normalized=n.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(normalized===normalizedBase)used.add(1);
+  let m=normalized.match(new RegExp('^'+normalizedBase.replace(/[.*+?^$()|[\]\\]/g,'\\ document.getElementById('en').value=x.name;
+ document.getElementById('emin').value=x.min;')+'\\\\s+(\\\\d+)
+ document.getElementById('emax').value=x.max;
+ if(ideal)ideal.innerHTML='<b>Température idéale : '+esc(x.min)+' °C à '+esc(x.max)+' °C</b>';
+ checkEquipmentRange()
+}
+function checkEquipmentRange(){
+ let s=document.getElementById('equipmentPreset'),box=document.getElementById('equipmentRangeStatus'),minEl=document.getElementById('emin'),maxEl=document.getElementById('emax');
+ if(!box||!s||s.value===''||!minEl||!maxEl){if(box)box.style.display='none';return true}
+ let x=EQUIPMENT_PRESETS[Number(s.value)];
+ if(!x||minEl.value===''||maxEl.value===''){box.style.display='none';return true}
+ let min=Number(minEl.value),max=Number(maxEl.value),logical=Number.isFinite(min)&&Number.isFinite(max)&&min<=max&&min>=x.min&&max<=x.max;
+ box.style.display='block';
+ if(logical){
+  box.style.border='1px solid #b9e5d2';box.style.background='#e8f8f0';box.style.color='#14704f';
+  box.innerHTML='<b>✓ Plage cohérente</b><br>Référence : '+esc(x.min)+' °C à '+esc(x.max)+' °C.'
+ }else{
+  box.style.border='2px solid #b42318';box.style.background='#fde8e8';box.style.color='#8a1c13';
+  box.innerHTML='<b>⚠ Température incohérente avec la référence de cet équipement</b><br>Référence : '+esc(x.min)+' °C à '+esc(x.max)+' °C. Vérifiez la saisie ou le plan HACCP de votre établissement.'
+ }
+ return logical
+}
+
+function temperatures(){CURRENT_VIEW='temperatures';let opts='<option value="">Choisir votre équipement</option>'+S.equipment.map((e,i)=>`<option value="${i}">${esc(e.name)}</option>`).join('');app.innerHTML=`<h1>Contrôle des températures</h1><div class="cards"><div class="metric"><span>Équipements</span><b>${S.equipment.length}</b></div><div class="metric"><span>Relevés</span><b>${S.temps.length}</b></div><div class="metric"><span>Non conformes</span><b>${S.temps.filter(x=>!x.ok).length}</b></div></div><div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Équipement</label><select id="te" onchange="checkEquipmentTemperature()">${opts}</select><div id="tempIdeal" class="note" style="margin-top:8px"></div></div><div><label>Température °C</label><input id="tv" type="number" step=".1" oninput="checkEquipmentTemperature()" placeholder="Saisir la température mesurée"></div></div><div id="tempStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="to" placeholder="Nom de l’opérateur"><label>Observation / action corrective</label><textarea id="tn" placeholder="Obligatoire si la température est non conforme"></textarea>${B('Enregistrer','saveTemp()','primary')}<h2>Ajouter un équipement</h2><label>Bibliothèque d’équipements HACCP</label><select id="equipmentPreset" onchange="applyEquipmentPreset()">${equipmentPresetOptions()}</select><div id="equipmentPresetIdeal" class="note" style="margin:7px 0 6px"></div><div class="note" style="margin:0 0 12px">Les valeurs sont préremplies mais restent modifiables manuellement selon le plan HACCP de l’établissement.</div><div class="row"><input id="en" placeholder="Nom : Frigo pâtisserie"><input id="emin" type="number" step=".1" oninput="checkEquipmentRange()" placeholder="Minimum °C"></div><input id="emax" type="number" step=".1" oninput="checkEquipmentRange()" placeholder="Maximum °C"><div id="equipmentRangeStatus" style="display:none;margin:12px 0;padding:12px;border-radius:10px"></div><label>Opérateur</label><input id="eqOperator" placeholder="Nom de l’opérateur">${B('Ajouter l’équipement','addEq()')}</div>`;checkEquipmentTemperature()}
+
+function checkEquipmentTemperature(){let sel=document.getElementById('te'),input=document.getElementById('tv'),ideal=document.getElementById('tempIdeal'),status=document.getElementById('tempStatus');if(!sel||!ideal||!status)return;if(sel.value===''){ideal.textContent='';status.style.display='none';return}let e=S.equipment[Number(sel.value)];if(!e){ideal.textContent='';status.style.display='none';return}ideal.innerHTML='<b>Température idéale à respecter : '+esc(e.min)+' °C à '+esc(e.max)+' °C</b>';if(!input||input.value===''){status.style.display='none';return}let v=Number(input.value),ok=Number.isFinite(v)&&v>=Number(e.min)&&v<=Number(e.max);status.style.display='block';if(ok){status.style.border='1px solid #b9e5d2';status.style.background='#e8f8f0';status.style.color='#14704f';status.innerHTML='<b>✓ Température conforme</b><br>'+esc(v)+' °C est dans la plage autorisée ('+esc(e.min)+' °C à '+esc(e.max)+' °C).'}else{status.style.border='2px solid #b42318';status.style.background='#fde8e8';status.style.color='#8a1c13';status.innerHTML='<b>⚠ NON CONFORME — Température hors de la plage autorisée</b><br>Température saisie : '+esc(v)+' °C · Plage à respecter : '+esc(e.min)+' °C à '+esc(e.max)+' °C.<br><b>Indiquez l’observation ou l’action corrective avant d’enregistrer.</b>'}}
+
+function saveTemp(){if(!te||te.value===''){alert('Choisissez votre équipement.');return}let e=S.equipment[+te.value],v=+tv.value,ok=v>=e.min&&v<=e.max,operator=to.value.trim(),note=(document.getElementById('tn')||{}).value||'';note=note.trim();if(!operator){alert('Le nom de l’opérateur est obligatoire.');to.focus();return}if(!ok&&!note){alert('Température non conforme : indiquez obligatoirement l’observation ou l’action corrective.');document.getElementById('tn').focus();return}let id='temp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),x={id,equipment:e.name,value:v,ok,operator,note,observation:note,date:new Date().toLocaleString('fr-FR'),createdAt:new Date().toISOString()};S.temps.unshift(x);S.trace.unshift({type:'Température',...x});save();temperatures()}
+function addEq(){
+ let name=(document.getElementById('en')||{}).value||'',min=(document.getElementById('emin')||{}).value,max=(document.getElementById('emax')||{}).value,operator=((document.getElementById('eqOperator')||{}).value||'').trim();
+ name=name.trim().replace(/\s+/g,' ');
+ if(!name){alert('Le nom de l’équipement est obligatoire.');document.getElementById('en').focus();return}
+ if(!operator){alert('Le nom de l’opérateur est obligatoire.');document.getElementById('eqOperator').focus();return}
+ if(min===''||max===''){alert('Les températures minimum et maximum sont obligatoires.');(min===''?document.getElementById('emin'):document.getElementById('emax')).focus();return}
+ let minValue=Number(min),maxValue=Number(max);
+ if(!Number.isFinite(minValue)||!Number.isFinite(maxValue)){alert('Saisissez des températures minimum et maximum valides.');return}
+ if(minValue>maxValue){alert('La température minimum ne peut pas être supérieure à la température maximum.');document.getElementById('emin').focus();return}
+ let preset=document.getElementById('equipmentPreset');
+ if(preset&&preset.value!==''&&!checkEquipmentRange()){
+  let ref=EQUIPMENT_PRESETS[Number(preset.value)];
+  if(!confirm('La plage saisie ('+minValue+' °C à '+maxValue+' °C) est différente de la référence ('+ref.min+' °C à '+ref.max+' °C). Voulez-vous quand même ajouter cet équipement selon votre plan HACCP ?'))return
+ }
+ let normalized=name.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ let duplicate=S.equipment.some(e=>{
+  let existing=String(e&&e.name||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return existing===normalized
+ });
+ if(duplicate){
+  alert('Cet équipement existe déjà. Pour plusieurs équipements similaires, utilisez un nom distinct, par exemple : '+name+' 1, '+name+' 2.');
+  return
+ }
+ let ref=preset&&preset.value!==''?EQUIPMENT_PRESETS[Number(preset.value)]:null;
+ let referenceOk=!ref||(minValue>=ref.min&&maxValue<=ref.max);
+ let item={name:name,min:minValue,max:maxValue};
+ S.equipment.push(item);
+ S.trace.unshift({type:'Équipement ajouté',equipment:name,product:name,min:minValue,max:maxValue,operator:operator,date:new Date().toLocaleString('fr-FR'),referenceMin:ref?ref.min:null,referenceMax:ref?ref.max:null,referenceName:ref?ref.name:'',ok:referenceOk,note:referenceOk?'Plage conforme à la référence':'Plage différente de la référence'});
+ save();
+ temperatures();
+}
+let CLEAN_PHOTO='';
+function cleaning(){CLEAN_PHOTO='';app.innerHTML=`<h1>Nettoyage</h1><div class="panel"><div class="row"><div><label>Zone / équipement</label><select id="cleanZoneSelect" onchange="cleanZoneChoice(this.value)"><option value="">Choisir une zone / équipement</option><optgroup label="Cuisine & préparation"><option>Cuisine principale</option><option>Cuisine chaude</option><option>Cuisine froide</option><option>Zone de préparation</option><option>Plan de travail</option><option>Plonge</option><option>Laverie vaisselle</option><option>Pâtisserie</option><option>Boulangerie</option><option>Office / passe</option></optgroup><optgroup label="Stockage & réception"><option>Réserve sèche</option><option>Économat / magasin</option><option>Chambre froide positive</option><option>Chambre froide négative</option><option>Réfrigérateur</option><option>Congélateur</option><option>Vitrine réfrigérée</option><option>Zone de réception marchandises</option><option>Quai de réception</option></optgroup><optgroup label="Restaurant & service"><option>Bar</option><option>Cafétéria</option><option>Buffet petit-déjeuner</option><option>Buffet chaud</option><option>Buffet froid</option><option>Salle de restaurant</option><option>Terrasse</option></optgroup><optgroup label="Matériel"><option>Machine à café</option><option>Machine à glaçons</option><option>Lave-vaisselle</option><option>Hotte aspirante</option><option>Four</option><option>Friteuse</option><option>Grill / plancha</option></optgroup><optgroup label="Hygiène & locaux"><option>Sol cuisine</option><option>Murs cuisine</option><option>Poubelles / local déchets</option><option>Sanitaires personnel</option><option>Vestiaires personnel</option></optgroup><option value="__other">Autre zone / équipement…</option></select><input id="cz" placeholder="Saisir une autre zone / équipement" style="display:none;margin-top:8px"><div class="note">La même liste de suggestions est disponible sur ordinateur et sur mobile.</div></div><div><label>Opérateur</label><input id="co"></div></div><label>Action réalisée</label><select id="ca"><option>Nettoyage</option><option>Désinfection</option><option>Nettoyage + désinfection</option></select><div class="row"><div><label>Résultat du contrôle</label><select id="cs" onchange="cleanStatusChanged()"><option value="Conforme">Conforme</option><option value="Problème / anomalie">Problème / anomalie</option></select></div><div><label>Photo de preuve <span class="note">(facultative)</span></label><div class="photo-actions"><button type="button" class="btn" onclick="document.getElementById('cleanCameraInput').click()">Prendre une photo</button><button type="button" class="btn" onclick="document.getElementById('cleanGalleryInput').click()">Choisir dans la galerie</button></div><input id="cleanCameraInput" type="file" accept="image/*" capture="environment" onchange="prepareCleanPhoto(this.files[0])" style="display:none"><input id="cleanGalleryInput" type="file" accept="image/*" onchange="prepareCleanPhoto(this.files[0])" style="display:none"><div class="note">Appareil photo ou galerie du téléphone. L'image choisie est automatiquement réduite et compressée avant stockage.</div></div></div><div id="cleanPhotoPreview" style="display:none;margin-top:12px;padding:12px;border:1px solid #d9e4ee;border-radius:10px;background:#f8fbfd"></div><div id="cleanProblemHint" style="display:none;margin-top:12px;padding:12px;border:2px solid #d92d20;background:#fff0f0;color:#8a1c13;border-radius:10px"><b>Anomalie signalée</b><br>Décrivez le problème et, si possible, ajoutez une photo comme preuve.</div><label>Observation / action corrective</label><textarea id="cn" placeholder="Observation facultative. En cas d'anomalie, décrire le problème et l'action réalisée."></textarea>${B('Valider le nettoyage','saveClean()','primary')}</div>`}
+function cleanZoneChoice(v){let i=document.getElementById('cz');if(!i)return;if(v==='__other'){i.value='';i.style.display='block';i.focus()}else{i.value=v||'';i.style.display='none'}}
+function cleanStatusChanged(){let bad=document.getElementById('cs')&&document.getElementById('cs').value!=='Conforme',h=document.getElementById('cleanProblemHint');if(h)h.style.display=bad?'block':'none'}
+function prepareCleanPhoto(file){if(!file)return;let r=new FileReader();r.onload=function(){let im=new Image();im.onload=function(){let maxW=1000,maxH=750,scale=Math.min(1,maxW/im.width,maxH/im.height),w=Math.max(1,Math.round(im.width*scale)),h=Math.max(1,Math.round(im.height*scale)),cv=document.createElement('canvas');cv.width=w;cv.height=h;let ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);CLEAN_PHOTO=cv.toDataURL('image/webp',.68);let p=document.getElementById('cleanPhotoPreview');if(p){p.style.display='block';p.innerHTML='<b>Photo prête</b><br><img src="'+CLEAN_PHOTO+'" alt="Preuve nettoyage" style="display:block;max-width:260px;max-height:190px;object-fit:contain;margin-top:8px;border-radius:8px"><button type="button" class="btn" style="margin-top:8px;padding:8px 12px" onclick="removeCleanPhoto()">Supprimer la photo</button>'}};im.src=r.result};r.readAsDataURL(file)}
+function removeCleanPhoto(){CLEAN_PHOTO='';['cleanCameraInput','cleanGalleryInput'].forEach(function(id){let i=document.getElementById(id);if(i)i.value=''});let p=document.getElementById('cleanPhotoPreview');if(p){p.style.display='none';p.innerHTML=''}}
+function saveClean(){if(!cz.value.trim()){alert('Indiquez la zone ou l’équipement nettoyé.');return}if(!co.value.trim()){alert('Indiquez l’opérateur.');return}let status=cs.value;if(status!=='Conforme'&&!cn.value.trim()){alert('Décrivez le problème ou l’action corrective avant de valider.');return}let x={zone:cz.value.trim(),operator:co.value.trim(),action:ca.value,status:status,note:cn.value.trim(),photo:CLEAN_PHOTO||'',date:new Date().toLocaleString('fr-FR'),createdAt:new Date().toISOString()};S.clean.unshift(x);S.trace.unshift({type:'Nettoyage',product:x.zone,date:x.date,status:x.status,operator:x.operator,note:x.note,photo:x.photo,action:x.action});save();cleaning()}
+function trace(){CURRENT_VIEW='trace';app.innerHTML=`<h1>Traçabilité</h1><div class="cards"><div class="metric"><span>Réceptions</span><b>${S.stock.length}</b></div><div class="metric"><span>Températures</span><b>${S.temps.length}</b></div><div class="metric"><span>Nettoyages</span><b>${S.clean.length}</b></div></div><div class="panel">${S.trace.length?S.trace.map((x,i)=>{let openable=x&&['Étiquette HACCP','Réception','Nettoyage','Température','Équipement ajouté'].includes(x.type);return `<div class="record ${openable?'clickable':''}" ${openable?`onclick="openTraceIndex(${i})" style="cursor:pointer"`:''}><b>${esc(x&&x.type||'')}</b> — ${esc(x&&x.date||'')}<br><span class="note">${esc(x&&(x.product||x.equipment)||'')}${openable?' · Voir le détail →':''}${x&&x.type==='Modification réception'?'<br>Par : '+esc(x.modifiedBy||'—')+' · Motif : '+esc(x.reason||'—'):''}</span></div>`}).join(''):'Aucune opération enregistrée.'}</div>`}
+
+function openTraceIndex(i){let source=S.trace[i];if(!source){alert('Le relevé a été actualisé. Rouvrez Traçabilité puis réessayez.');return}let record=JSON.parse(JSON.stringify(source));openTraceRecord(record)}
+
+function openTraceRecord(x){if(!x)return;CURRENT_VIEW='trace-detail';if(x.type==='Réception'){renderTraceReception(x);return}if(x.type==='Température'){renderTraceTemperature(x);return}if(x.type==='Nettoyage'){renderTraceCleaning(x);return}if(x.type==='Équipement ajouté'){renderTraceEquipment(x);return}if(x.type==='Étiquette HACCP'){let live=S.trace.findIndex(t=>t&&t.type===x.type&&t.date===x.date&&t.product===x.product);if(live>=0)traceLabelDetail(live);return}}
+
+function renderTraceEquipment(x){let ref=(x.referenceMin!==null&&x.referenceMin!==undefined)?esc(x.referenceMin)+' °C à '+esc(x.referenceMax)+' °C':'Référence non sélectionnée';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique équipement</h1><div class="panel"><h2>${esc(x.equipment||x.product||'Équipement')}</h2><div class="record"><b>Statut de la plage configurée</b><br><span class="note">${x.ok===false?'⚠ ÉCART PAR RAPPORT À LA RÉFÉRENCE':'Conforme'}</span></div><div class="record"><b>Plage configurée</b><br><span class="note">${esc(x.min)} °C à ${esc(x.max)} °C</span></div><div class="record"><b>Plage de référence</b><br><span class="note">${ref}</span></div><div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'—')}</span></div></div>`}
+
+function renderTraceTemperature(tr){let x=(tr.id?temperatureRecord(tr.id):null)||{equipment:tr.equipment,value:tr.value,ok:tr.ok,operator:tr.operator||tr.operateur||'',note:tr.note||tr.observation||tr.action||tr.correctiveAction||'',date:tr.date},eq=S.equipment.find(e=>e.name===x.equipment),range=eq?esc(eq.min)+' °C à '+esc(eq.max)+' °C':'—';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique température</h1><div class="panel"><h2>${esc(x.equipment||'Équipement')}</h2><div class="record"><b>Statut</b><br><span class="note">${x.ok?'Conforme':'NON CONFORME'}</span></div><div class="record"><b>Température mesurée</b><br><span class="note">${esc(x.value)} °C</span></div><div class="record"><b>Plage autorisée</b><br><span class="note">${range}</span></div><div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'Non renseigné')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(x.note||'Non renseignée')}</span></div></div>`}
+
+function renderTraceCleaning(x){let bad=x.status&&x.status!=='Conforme';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique nettoyage</h1><div class="panel"><h2>${esc(x.product||'Zone')}</h2>${bad?'<div style="padding:14px;border:2px solid #b42318;background:#fde8e8;color:#8a1c13;border-radius:12px;margin-bottom:12px"><b>Anomalie signalée</b></div>':'<div style="padding:12px;border:1px solid #b9e5d2;background:#e8f8f0;color:#14704f;border-radius:10px;margin-bottom:12px"><b>Contrôle conforme</b></div>'}<div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Action</b><br><span class="note">${esc(x.action||'Nettoyage')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'—')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(x.note||'—')}</span></div></div>`}
+
+function renderTraceReception(x){let live=S.trace.findIndex(t=>t&&t.type==='Réception'&&t.date===x.date&&t.product===x.product&&t.lot===x.lot);if(live>=0){traceReceptionDetail(live);return}app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique réception</h1><div class="panel"><h2>${esc(x.product||'Produit')}</h2><div class="record"><b>Date de réception</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Fournisseur</b><br><span class="note">${esc(x.supplier||'—')}</span></div><div class="record"><b>Lot fournisseur</b><br><span class="note">${esc(x.lot||'—')}</span></div><div class="record"><b>Température réception</b><br><span class="note">${x.temp!==''?esc(String(x.temp))+' °C':'—'}</span></div><div class="record"><b>Emballage</b><br><span class="note">${esc(x.pack||'—')}</span></div><div class="record"><b>Réceptionné par</b><br><span class="note">${esc(x.receivedBy||x.operator||'—')}</span></div></div>`}
+
+function traceTemperatureById(id){let i=S.trace.findIndex(x=>x&&x.type==='Température'&&x.id===id);if(i<0){let t=S.temps.find(x=>x&&x.id===id);if(!t){alert('Relevé de température introuvable.');return}let eq=S.equipment.find(e=>e.name===t.equipment),range=eq?esc(eq.min)+' °C à '+esc(eq.max)+' °C':'—';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique température</h1><div class="panel"><h2>${esc(t.equipment||'Équipement')}</h2><div class="record"><b>Statut</b><br><span class="note">${t.ok?'Conforme':'NON CONFORME'}</span></div><div class="record"><b>Température mesurée</b><br><span class="note">${esc(t.value)} °C</span></div><div class="record"><b>Plage autorisée</b><br><span class="note">${range}</span></div><div class="record"><b>Date / heure</b><br><span class="note">${esc(t.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(t.operator||'Non renseigné')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(t.note||t.observation||'Non renseignée')}</span></div></div>`;return}traceTemperatureDetail(i)}
+function traceTemperatureDetail(i){let tr=S.trace[i];if(!tr||tr.type!=='Température'){trace();return}let x=(tr.id?temperatureRecord(tr.id):null)||temperatureRecord(S.temps.findIndex(t=>t&&t.equipment===tr.equipment&&t.date===tr.date&&String(t.value)===String(tr.value)))||{equipment:tr.equipment,value:tr.value,ok:tr.ok,operator:tr.operator||tr.operateur||'',note:tr.note||tr.observation||tr.action||tr.correctiveAction||'',date:tr.date};let eq=S.equipment.find(e=>e.name===x.equipment),range=eq?esc(eq.min)+' °C à '+esc(eq.max)+' °C':'—';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique température</h1><div class="panel"><h2>${esc(x.equipment||'Équipement')}</h2><div class="record"><b>Statut</b><br><span class="note">${x.ok?'Conforme':'NON CONFORME'}</span></div><div class="record"><b>Température mesurée</b><br><span class="note">${esc(x.value)} °C</span></div><div class="record"><b>Plage autorisée</b><br><span class="note">${range}</span></div><div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'Non renseigné')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(x.note||'Non renseignée')}</span></div></div>`}
+
+function traceCleaningDetail(i){let x=S.trace[i];if(!x||x.type!=='Nettoyage'){trace();return}let bad=x.status&&x.status!=='Conforme';app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique nettoyage</h1><div class="panel"><h2>${esc(x.product||'Zone')}</h2>${bad?'<div style="padding:14px;border:2px solid #b42318;background:#fde8e8;color:#8a1c13;border-radius:12px;margin-bottom:12px"><b>Anomalie signalée</b></div>':'<div style="padding:12px;border:1px solid #b9e5d2;background:#e8f8f0;color:#14704f;border-radius:10px;margin-bottom:12px"><b>Contrôle conforme</b></div>'}<div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Action</b><br><span class="note">${esc(x.action||'Nettoyage')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'—')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(x.note||'—')}</span></div>${x.photo?'<div class="record"><b>Photo de preuve</b><br><img src="'+x.photo+'" alt="Preuve nettoyage" style="max-width:520px;width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #d9e4ee"></div>':'<div class="record"><b>Photo de preuve</b><br><span class="note">Aucune photo enregistrée.</span></div>'}</div>`}
+function traceReceptionDetail(i){
+ let x=S.trace[i];if(!x||x.type!=='Réception'){trace();return}
+ let currentTempRule=receivingTempRule(x.category,x.product),tempRule=x.recommendedTemp?{max:x.recommendedTempMax,label:x.recommendedTemp}:currentTempRule,tempVal=parseFloat(String(x.temp||'').replace(',','.'));
+ let tempKnown=!!tempRule&&x.temp!==''&&!Number.isNaN(tempVal),tempOk=tempKnown?tempVal<=tempRule.max:null;
+ let packOk=x.pack!=='Non conforme';
+ app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique réception</h1>
+ <div class="panel"><h2>${esc(x.product||'Produit')}</h2>
+ ${!packOk?'<div style="padding:14px;border:2px solid #b42318;background:#fde8e8;color:#8a1c13;border-radius:12px;margin-bottom:12px"><b>⚠ Emballage non conforme</b><br>'+esc(x.nonConformityReason||'Motif non renseigné')+'</div>':''}
+ ${tempKnown&&!tempOk?'<div style="padding:14px;border:2px solid #b42318;background:#fde8e8;color:#8a1c13;border-radius:12px;margin-bottom:12px"><b>⚠ Température non conforme à la réception</b><br>Mesurée : '+esc(String(x.temp))+' °C · Référence : '+esc(tempRule.label)+'<br>Réception validée par : <b>'+esc(x.receivedBy||'—')+'</b></div>':''}
+ <div class="record"><b>Date de réception</b><br><span class="note">${esc(x.date||'—')}${x.receivedAt?' · '+esc(new Date(x.receivedAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})):''}</span></div>
+ <div class="record"><b>Catégorie / produit</b><br><span class="note">${esc(x.category||'—')} · ${esc(x.product||'—')}</span></div>
+ <div class="record"><b>Marque</b><br><span class="note">${esc(x.brand||'—')}</span></div>
+ <div class="record"><b>Fournisseur</b><br><span class="note">${esc(x.supplier||'—')}</span></div>
+ <div class="record"><b>Réceptionné par</b><br><span class="note">${esc(x.receivedBy||'—')}</span></div>
+ <div class="record"><b>Quantité / poids</b><br><span class="note">${esc(x.quantity||'—')}</span></div>
+ <div class="record"><b>Lot fournisseur</b><br><span class="note">${esc(x.lot||'—')}</span></div>
+ <div class="record"><b>Température réception</b><br><span class="note">${x.temp!==''?esc(String(x.temp))+' °C':'—'}${tempRule?' · Référence '+esc(tempRule.label):''}</span></div>
+ <div class="record"><b>Date fabrication / conditionnement</b><br><span class="note">${x.fabricationNA?'Non applicable / non indiquée':esc(x.fabrication||'—')}</span></div>
+ <div class="record"><b>DLC / DDM fabricant</b><br><span class="note">${x.dlcNA?'Non applicable / non indiquée':esc(x.dlc||'—')}</span></div>
+ <div class="record"><b>Code-barres</b><br><span class="note">${esc(x.barcode||'—')}</span></div>
+ <div class="record"><b>Emballage</b><br><span class="note">${esc(x.pack||'—')}</span></div>
+ ${x.nonConformityReason?'<div class="record"><b>Motif de non-conformité</b><br><span class="note">'+esc(x.nonConformityReason)+'</span></div>':''}
+ ${x.observation?'<div class="record"><b>Observation / action</b><br><span class="note">'+esc(x.observation)+'</span></div>':''}
+ </div>`;
+}
+function traceLabelDetail(i){
+ let x=S.trace[i];if(!x||x.type!=='Étiquette HACCP'){trace();return}
+ let over=!!x.overRecommendation;
+ app.innerHTML=`<button class="btn back" onclick="trace()">← Traçabilité</button><h1>Historique étiquette HACCP</h1>
+ <div class="panel"><h2>${esc(x.product||'Produit')}</h2>
+ ${over?'<div style="padding:14px;border:2px solid #b42318;background:#fde8e8;color:#8a1c13;border-radius:12px;margin-bottom:16px"><b>⚠ ALERTE HACCP — Dépassement confirmé</b><br>L’opérateur a maintenu une DLC de '+esc(String(x.durationDays||'—'))+' jour(s), alors que la recommandation était de '+esc(String(x.recommendedDays||'—'))+' jour(s).</div>':'<div style="padding:12px;border:2px solid #2e6a50;background:#e8f5ed;color:#20543e;border-radius:12px;margin-bottom:16px"><b>✓ Durée conforme à la recommandation enregistrée.</b></div>'}
+ <div class="record"><b>Date de l’opération</b><br><span class="note">${esc(x.date||'—')}</span></div>
+ <div class="record"><b>Type d’opération</b><br><span class="note">${esc(x.action||'—')}</span></div>
+ <div class="record"><b>Préparé / ouvert le</b><br><span class="note">${esc(x.preparedAt||'—')}</span></div>
+ <div class="record"><b>DLC choisie</b><br><span class="note">${esc(String(x.durationDays??'—'))} jour(s) · À consommer avant : ${esc(x.dlc||'—')}</span></div>
+ <div class="record"><b>Recommandation HACCP au moment de l’impression</b><br><span class="note">${x.recommendedDays!=null?esc(String(x.recommendedDays))+' jour(s)':'Non enregistrée (ancienne étiquette)'}</span></div>
+ <div class="record"><b>Conservation / emplacement</b><br><span class="note">${esc(x.temperature||'—')} · ${esc(x.storage||'—')}</span></div>
+ <div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'—')}</span></div>
+ ${x.manufacturerInstruction?'<div class="record"><b>Instruction fabricant</b><br><span class="note">'+esc(x.manufacturerInstruction)+'</span></div>':''}
+ </div>`;
+}
+const LABEL_CAT={
+"Viandes préparées / déconditionnées":{
+"Bœuf & veau":[["Bœuf préparé",0],["Entrecôte portionnée",0],["Faux-filet portionné",0],["Filet portionné",0],["Steak portionné",0],["Veau préparé",0],["Escalope de veau",0]],
+"Agneau & mouton":[["Agneau préparé",0],["Gigot préparé",0],["Épaule préparée",0],["Côtelettes préparées",0],["Mouton préparé",0]],
+"Viandes hachées & préparations":[["Viande hachée",0],["Kefta",0],["Merguez",0],["Viande marinée",0],["Viande portionnée",0]],
+"Abats":[["Foie préparé",0],["Cœur préparé",0],["Rognons préparés",0],["Tripes préparées",0]]
+},
+"Volailles préparées / déconditionnées":{
+"Poulet":[["Poulet entier préparé",0],["Blanc de poulet",0],["Escalope de poulet",0],["Cuisses de poulet",0],["Ailes de poulet",0],["Poulet mariné",0],["Foie de volaille",0]],
+"Autres volailles":[["Dinde préparée",0],["Escalope de dinde",0],["Canard préparé",0],["Caille préparée",0]]
+},
+"Poissons & fruits de mer préparés":{
+"Poissons":[["Daurade préparée",0],["Loup / Bar préparé",0],["Mérou préparé",0],["Sole préparée",0],["Rouget préparé",0],["Thon préparé",0],["Espadon préparé",0],["Saumon préparé",0],["Sardine préparée",0],["Maquereau préparé",0],["Merlan préparé",0],["Anchois préparé",0],["Poisson du jour préparé / fileté",0]],
+"Fruits de mer":[["Crevettes préparées",0],["Gambas préparées",0],["Calamars préparés",0],["Poulpe préparé",0],["Seiche préparée",0],["Moules préparées",0],["Palourdes préparées",0],["Fruits de mer décortiqués / préparés",0]]
+},
+"Fruits & légumes préparés":{
+"Légumes":[["Salade lavée / préparée",0],["Tomates coupées",0],["Carottes préparées",0],["Concombre préparé",0],["Poivrons préparés",0],["Oignons préparés",0],["Pommes de terre épluchées",0],["Légumes découpés",0],["Herbes préparées",0]],
+"Fruits":[["Fruits coupés",0],["Salade de fruits",0],["Jus frais",0]]
+},
+"Préparations froides":{
+"Salades & entrées":[["Salade composée",0],["Salade tunisienne",0],["Salade méchouia",0],["Tartare",0],["Carpaccio",0],["Ceviche",0],["Garniture froide",0],["Sandwich préparé",0]],
+"Sauces froides":[["Mayonnaise maison",0],["Sauce froide maison",0],["Vinaigrette préparée",0]]
+},
+"Préparations chaudes / cuites":{
+"Féculents & légumes":[["Riz cuit",0],["Pâtes cuites",0],["Couscous cuit",0],["Légumes cuits",0],["Pommes de terre cuites",0]],
+"Produits cuits":[["Viande cuite",0],["Volaille cuite",0],["Poisson cuit",0]],
+"Sauces, soupes & bases":[["Sauce chaude préparée",0],["Sauce tomate préparée",0],["Soupe",0],["Potage",0],["Fond de cuisine",0],["Bouillon",0],["Jus de viande",0]]
+},
+"Produits laitiers ouverts":{
+"Lait & crèmes":[["Lait ouvert",0],["Crème fraîche ouverte",0],["Crème liquide ouverte",0],["Crème à cuisson ouverte",0]],
+"Fromages & autres":[["Fromage frais ouvert",0],["Mozzarella ouverte",0],["Ricotta ouverte",0],["Mascarpone ouvert",0],["Yaourt ouvert",0],["Beurre ouvert",0]]
+},
+"Charcuterie ouverte / tranchée":{
+"Charcuterie":[["Jambon de dinde ouvert / tranché",0],["Jambon de poulet ouvert / tranché",0],["Mortadelle ouverte / tranchée",0],["Salami ouvert / tranché",0],["Saucisson ouvert / tranché",0],["Bacon de bœuf ouvert / tranché",0],["Charcuterie tranchée",0]]
+},
+"Œufs & ovoproduits":{
+"Œufs préparés":[["Œufs durs préparés",0],["Œufs préparés",0]],
+"Ovoproduits ouverts":[["Blanc d'œuf liquide ouvert",0],["Jaune d'œuf liquide ouvert",0],["Œuf liquide pasteurisé ouvert",0]]
+},
+"Conserves après ouverture":{
+"Poissons & légumes":[["Thon en conserve ouvert",0],["Tomates en conserve ouvertes",0],["Maïs en conserve ouvert",0],["Champignons en conserve ouverts",0],["Olives ouvertes",0],["Pois chiches en conserve ouverts",0],["Haricots en conserve ouverts",0],["Petits pois en conserve ouverts",0]],
+"Fruits":[["Fruits au sirop ouverts",0]],
+"Autres":[["Conserve ouverte / transvasée",0]]
+},
+"Sauces & condiments ouverts":{
+"Sauces":[["Mayonnaise ouverte",0],["Ketchup ouvert",0],["Moutarde ouverte",0],["Harissa ouverte",0],["Pesto ouvert",0],["Sauce industrielle ouverte",0],["Sauce asiatique ouverte",0]],
+"Tomate":[["Concentré de tomate ouvert",0]]
+},
+"Pâtisserie & desserts préparés":{
+"Pâtisseries":[["Gâteau à la crème",0],["Tarte",0],["Mille-feuille",0],["Éclair",0],["Tiramisu",0]],
+"Crèmes & desserts":[["Mousse",0],["Crème pâtissière",0],["Crème anglaise",0],["Chantilly",0],["Panna cotta",0],["Flan",0],["Dessert à base d'œufs / lait",0],["Fruits préparés pour dessert",0]]
+},
+"Boulangerie & pâtes préparées":{
+"Pâtes":[["Pâte à pizza",0],["Pâte fraîche",0],["Pâte à pain",0],["Pâte feuilletée ouverte / décongelée",0],["Pâte brisée",0],["Pâte à crêpes",0],["Appareil préparé",0]]
+},
+"Produits décongelés":{
+"Viandes & volailles":[["Viande décongelée",0],["Volaille décongelée",0]],
+"Poissons & fruits de mer":[["Poisson décongelé",0],["Fruits de mer décongelés",0]],
+"Autres":[["Légumes décongelés",0],["Produit semi-fini décongelé",0],["Pâtisserie décongelée",0]]
+},
+"Produits sous vide / conditionnés en cuisine":{
+"Sous vide":[["Viande préparée sous vide",0],["Poisson préparé sous vide",0]],
+"Conditionnés":[["Sauce conditionnée",0],["Préparation portionnée / conditionnée",0],["Produit cuit conditionné",0]]
+},
+"Production conservée / restes maîtrisés":{
+"Production cuisine":[["Sauce conservée",0],["Garniture conservée",0],["Plat cuisiné conservé",0],["Composant de buffet conservé",0],["Préparation refroidie conservée",0],["Autre production conservée",0]]
+}
+};
+let C='',SUB='',P='',DAYS=0,outDate='';
+const LABEL_AUTO_RULES=[
+ {re:/Viande hachée|Kefta/i,days:1,temp:'≤ +2 °C',basis:'Règle interne prudente — viande hachée'},
+ {re:/Merguez|marinée/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — préparation de viande'},
+ {re:/Bœuf|Veau|Agneau|Mouton|Entrecôte|Faux-filet|Filet|Steak|Gigot|Épaule|Côtelettes/i,days:3,temp:'≤ +4 °C',basis:'Règle interne prudente — viande préparée'},
+ {re:/Foie|Cœur|Rognons|Tripes/i,days:2,temp:'≤ +3 °C',basis:'Règle interne prudente — abats'},
+ {re:/Poulet|Dinde|Canard|Caille|volaille/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — volaille préparée'},
+ {re:/Daurade|Loup|Bar|Mérou|Sole|Rouget|Thon préparé|Espadon|Saumon|Sardine|Maquereau|Merlan|Anchois|Poisson du jour|Crevettes|Gambas|Calamars|Poulpe|Seiche|Moules|Palourdes|Fruits de mer/i,days:1,temp:'0 à +2 °C',basis:'Règle interne prudente — produits de la mer'},
+ {re:/Mayonnaise maison/i,days:1,temp:'≤ +5 °C',basis:'Règle interne renforcée — préparation maison à base d’œufs'},
+ {re:/Œufs durs|Œufs préparés/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — œufs préparés'},
+ {re:/Blanc d'œuf liquide|Jaune d'œuf liquide|Œuf liquide pasteurisé/i,days:2,temp:'≤ +4 °C',basis:'Règle interne prudente — ovoproduit ouvert'},
+ {re:/Riz cuit|Pâtes cuites|Couscous cuit|Légumes cuits|Pommes de terre cuites|Viande cuite|Volaille cuite|Poisson cuit|Sauce chaude|Sauce tomate préparée|Soupe|Potage|Fond de cuisine|Bouillon|Jus de viande/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — préparation cuite refroidie'},
+ {re:/Salade composée|Salade tunisienne|Salade méchouia|Tartare|Carpaccio|Ceviche|Garniture froide|Sandwich préparé|Sauce froide maison|Vinaigrette préparée/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — préparation froide'},
+ {re:/Salade lavée|Tomates coupées|Carottes préparées|Concombre préparé|Poivrons préparés|Oignons préparés|Pommes de terre épluchées|Légumes découpés|Herbes préparées|Fruits coupés|Salade de fruits|Jus frais/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — végétal préparé'},
+ {re:/Gâteau à la crème|Tarte|Mille-feuille|Éclair|Tiramisu|Mousse|Crème pâtissière|Crème anglaise|Chantilly|Panna cotta|Flan|Dessert à base d'œufs|Fruits préparés pour dessert/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — pâtisserie/dessert réfrigéré'},
+ {re:/Pâte à pizza|Pâte fraîche|Pâte à pain|Pâte feuilletée|Pâte brisée|Pâte à crêpes|Appareil préparé/i,days:2,temp:'≤ +5 °C',basis:'Règle interne prudente — pâte/appareil préparé'},
+ {re:/décongelé|décongelée/i,days:1,temp:'≤ +5 °C',basis:'Règle interne prudente — produit décongelé, ne pas recongeler'},
+ {re:/Lait ouvert|Crème fraîche ouverte|Crème liquide ouverte|Crème à cuisson ouverte|Fromage frais ouvert|Mozzarella ouverte|Ricotta ouverte|Mascarpone ouvert|Yaourt ouvert|Beurre ouvert|Jambon|Mortadelle|Salami|Saucisson|Bacon|Charcuterie|conserve ouvert|conserve ouverte|Olives ouvertes|Mayonnaise ouverte|Ketchup ouvert|Moutarde ouverte|Harissa ouverte|Pesto ouvert|Sauce industrielle ouverte|Sauce asiatique ouverte|Concentré de tomate ouvert/i,days:7,temp:'≤ +5 °C',basis:'Plafond automatique par défaut pour aliment réfrigéré prêt à consommer; instruction fabricant après ouverture prioritaire',manufacturer:true},
+ {re:/sous vide|conditionnée|conditionné/i,days:0,temp:'Selon procédé validé',basis:'Durée automatique désactivée : sous-vide/conditionnement nécessite un procédé HACCP validé',manual:true},
+ {re:/conservée|conservé|Préparation refroidie/i,days:3,temp:'≤ +5 °C',basis:'Règle interne prudente — production refroidie et conservée'}
+];
+function labelAutoRule(product,action){
+ let r=LABEL_AUTO_RULES.find(x=>x.re.test(product||''));
+ if(!r)return {days:7,temp:'≤ +5 °C',basis:'Plafond automatique par défaut pour préparation réfrigérée prête à consommer; à réduire si le plan HACCP, le procédé ou le fabricant l’exige',manufacturer:false};
+ return r;
+}
+
+function dlcCats(){app.innerHTML='<h1>Étiquetage HACCP</h1><div class="panel"><h2>Créer une étiquette interne</h2><p>Choisissez une catégorie.</p><div class="grid">'+Object.keys(LABEL_CAT).map(function(c){return '<button type="button" class="btn" onclick="dlcSubsByName(this)" data-name="'+encodeURIComponent(c)+'">'+c+'</button>'}).join('')+'</div><p class="note" style="margin-top:16px">Cette rubrique est réservée aux produits préparés, ouverts ou déconditionnés nécessitant une étiquette interne. Les produits fermés conservent la DLC / DDM du fabricant.</p></div>'}
+function dlcSubsByName(el){C=decodeURIComponent(el.getAttribute('data-name'));let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
+function dlcProductsByName(el){SUB=decodeURIComponent(el.getAttribute('data-name'));let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
+function dlcSubsByCurrent(){let subs=Object.keys(LABEL_CAT[C]);app.innerHTML='<button class="btn back" onclick="dlcCats()">← Catégories</button><h1>'+C+'</h1><div class="panel"><div class="grid">'+subs.map(function(s){return '<button type="button" class="btn" onclick="dlcProductsByName(this)" data-name="'+encodeURIComponent(s)+'">'+s+'</button>'}).join('')+'</div></div>'}
+function dlcProductsCurrent(){let products=LABEL_CAT[C][SUB];app.innerHTML='<button class="btn back" onclick="dlcSubsByCurrent()">← Sous-catégories</button><h1>'+SUB+'</h1><div class="panel"><div class="grid">'+products.map(function(p,i){return '<button type="button" class="btn" onclick="ticket('+i+')">'+p[0]+'</button>'}).join('')+'</div></div>'}
+function ticket(i){
+ let item=LABEL_CAT[C][SUB][i];P=item[0];
+ let now=new Date(),date=now.toISOString().slice(0,10),time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+ let rule=labelAutoRule(P,'Préparation');DAYS=rule.days;
+ app.innerHTML='<button class="btn back print-hide" onclick="dlcProductsCurrent()">← Produits</button><h1>Étiquette HACCP</h1><div class="panel"><h2>'+P+'</h2>'+
+ '<div class="row print-hide"><div><label>Type d’opération</label><select id="labelAction" onchange="applyLabelAutoRule()"><option>Préparation</option><option>Ouverture</option><option>Déconditionnement</option><option>Portionnement</option><option>Décongélation</option><option>Cuisson / refroidissement</option></select></div><div></div></div>'+
+ '<div class="row print-hide"><div><label>Date</label><input id="labelDate" type="date" value="'+date+'" onchange="calcLabel()"></div><div><label>Heure</label><input id="labelTime" type="time" value="'+time+'" onchange="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Recommandation HACCP</label><div id="labelSuggestion" class="metric" style="padding:12px;margin-top:6px"></div><div id="labelRuleNote" class="note"></div></div><div><label>DLC en jours <b>*</b></label><input id="labelDays" type="number" min="0" step="1" placeholder="Ex. 1, 2, 3…" oninput="calcLabel()"><div class="note">L’opérateur indique le nombre de jours. La date limite est calculée automatiquement sur l’étiquette.</div><div id="labelDlcAlert" style="display:none;margin-top:10px;padding:12px;border-radius:10px;font-weight:800"></div></div></div><div class="row print-hide"><div><label>Conservation</label><input id="labelTemp" oninput="calcLabel()"></div><div></div></div>'+
+ '<div class="row print-hide"><div><label>Emplacement / équipement</label><select id="labelStorage" onchange="calcLabel()"><option value="">Choisir un équipement</option>'+S.equipment.map(function(e){return '<option value="'+String(e.name||'').replace(/"/g,'&quot;')+'">'+e.name+'</option>'}).join('')+'</select><div class="note">Liste synchronisée avec les équipements du module Températures.</div></div><div><label>Opérateur</label><input id="labelOperator" oninput="calcLabel()"></div></div>'+
+ '<div class="row print-hide"><div><label>Instruction fabricant après ouverture (si applicable)</label><input id="labelManufacturer" oninput="calcLabel()" placeholder="Ex. à consommer sous 3 jours après ouverture"><div class="note">Si le fabricant indique une durée plus courte, elle est prioritaire.</div></div><div></div></div>'+
+ '<h2 class="print-hide">Aperçu</h2><div id="labelPreview" style="width:60mm;min-height:40mm;margin:12px auto;border:2px solid #17251f;padding:4mm;background:white;color:#111;font-family:Arial,sans-serif"></div>'+
+ '<div class="row print-hide"><button class="btn primary" onclick="saveLabel(true)">Imprimer l’étiquette</button><button class="btn" onclick="saveLabel(false)">Enregistrer sans imprimer</button></div></div>';
+ applyLabelAutoRule();
+}
+function applyLabelAutoRule(){
+ let a=document.getElementById('labelAction'),r=labelAutoRule(P,a?a.value:'Préparation'),days=document.getElementById('labelDays'),temp=document.getElementById('labelTemp'),note=document.getElementById('labelRuleNote');
+ DAYS=r.days;
+ let suggestion=document.getElementById('labelSuggestion');
+ if(days){days.value='';days.placeholder='Nombre de jours'}
+ if(suggestion)suggestion.innerHTML=r.manual?'⚠ Durée à définir selon une procédure HACCP validée.':('Conseil : à consommer de préférence sous <b>'+r.days+' jour'+(r.days>1?'s':'')+'</b>.');
+ if(temp)temp.value=r.temp||'';
+ if(note)note.innerHTML=r.basis+(r.manufacturer?' — <b>instruction fabricant prioritaire</b>':'');
+ calcLabel();
+}
+function calcLabel(){
+ let d=document.getElementById('labelDate'),days=document.getElementById('labelDays');if(!d||!days)return;
+ let n=Number(days.value),has=days.value!==''&&Number.isFinite(n)&&n>=0;
+ let exp=new Date(d.value+'T12:00:00');if(has)exp.setDate(exp.getDate()+n);
+ outDate=has?exp.toLocaleDateString('fr-FR'):'À définir';
+ let alertBox=document.getElementById('labelDlcAlert');
+ if(alertBox){
+   if(!has){alertBox.style.display='none';}
+   else if(DAYS>0&&n>DAYS){
+     alertBox.style.display='block';alertBox.style.background='#fde8e8';alertBox.style.border='2px solid #b42318';alertBox.style.color='#8a1c13';
+     alertBox.innerHTML='⚠ ALERTE — La durée saisie ('+n+' jour'+(n>1?'s':'')+') dépasse la recommandation HACCP ('+DAYS+' jour'+(DAYS>1?'s':'')+'). Durée conseillée : '+DAYS+' jour'+(DAYS>1?'s':'')+'.';
+   }else{
+     alertBox.style.display='block';alertBox.style.background='#e8f5ed';alertBox.style.border='2px solid #2e6a50';alertBox.style.color='#20543e';
+     alertBox.innerHTML='✓ Conforme à la recommandation HACCP.';
+   }
+ }
+ let v=id=>{let e=document.getElementById(id);return e?e.value:''};
+ document.getElementById('labelPreview').innerHTML='<div style="font-size:15px;font-weight:900;text-align:center;border-bottom:1px solid #111;padding-bottom:3px">'+P+'</div>'+
+ '<div style="font-size:11px;margin-top:4px">Opération : '+v('labelAction')+'</div>'+
+ '<div style="font-size:11px">Date : '+new Date(d.value+'T12:00:00').toLocaleDateString('fr-FR')+' · '+v('labelTime')+'</div>'+
+ '<div style="font-size:15px;font-weight:900;margin:5px 0">À consommer avant : '+outDate+'</div>'+
+ (v('labelTemp')?'<div style="font-size:11px">Conservation : '+v('labelTemp')+'</div>':'')+
+ (v('labelStorage')?'<div style="font-size:11px">Emplacement : '+v('labelStorage')+'</div>':'')+
+ (v('labelOperator')?'<div style="font-size:11px">Opérateur : '+v('labelOperator')+'</div>':'');
+}
+function saveLabel(printIt){
+ let v=id=>{let e=document.getElementById(id);return e?e.value:''};
+ if(!v('labelDays')){alert('Indiquez la DLC en nombre de jours avant d’enregistrer cette étiquette.');return}
+ let enteredDays=Number(v('labelDays')),overRecommendation=DAYS>0&&enteredDays>DAYS;
+ if(overRecommendation&&!confirm('ALERTE HACCP : la durée saisie ('+enteredDays+' jours) dépasse la recommandation ('+DAYS+' jours).\n\nVoulez-vous maintenir cette durée ?'))return;
+ S.trace.unshift({type:'Étiquette HACCP',overRecommendation:overRecommendation,recommendedDays:DAYS,product:P,category:C,subCategory:SUB,action:v('labelAction'),preparedAt:v('labelDate')+' '+v('labelTime'),durationDays:Number(v('labelDays')),dlc:outDate,temperature:v('labelTemp'),storage:v('labelStorage'),operator:v('labelOperator'),manufacturerInstruction:v('labelManufacturer'),date:new Date().toLocaleString('fr-FR')});
+ save();if(printIt){window.print()}else{alert('Étiquette enregistrée dans la traçabilité.');dlcCats()}
+}
+
+reception();
+initCloudSync();
+</script></body></html>));
+  if(m)used.add(Number(m[1]))
+ });
+ let next=1;while(used.has(next))next++;
+ document.getElementById('en').value=base+' '+next;
  document.getElementById('emin').value=x.min;
  document.getElementById('emax').value=x.max;
  if(ideal)ideal.innerHTML='<b>Température idéale : '+esc(x.min)+' °C à '+esc(x.max)+' °C</b>';
