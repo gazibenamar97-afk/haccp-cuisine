@@ -674,7 +674,7 @@ function applyEquipmentPreset(){
   if(normalized===normalizedBase)used.add(1);
   if(normalized.indexOf(normalizedBase+' ')===0){
    let suffix=normalized.slice(normalizedBase.length+1);
-   if(/^\\d+$/.test(suffix))used.add(Number(suffix))
+   if(/^\d+$/.test(suffix))used.add(Number(suffix))
   }
  });
  let next=1;
@@ -709,6 +709,7 @@ function checkEquipmentTemperature(){let sel=document.getElementById('te'),input
 
 function saveTemp(){if(!te||te.value===''){alert('Choisissez votre équipement.');return}let e=S.equipment[+te.value],v=+tv.value,ok=v>=e.min&&v<=e.max,operator=to.value.trim(),note=(document.getElementById('tn')||{}).value||'';note=note.trim();if(!operator){alert('Le nom de l’opérateur est obligatoire.');to.focus();return}if(!ok&&!note){alert('Température non conforme : indiquez obligatoirement l’observation ou l’action corrective.');document.getElementById('tn').focus();return}let id='temp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),x={id,equipment:e.name,value:v,ok,operator,note,observation:note,date:new Date().toLocaleString('fr-FR'),createdAt:new Date().toISOString()};S.temps.unshift(x);S.trace.unshift({type:'Température',...x});save();temperatures()}
 function addEq(){
+ let itemNameAdjusted=false;
  let name=(document.getElementById('en')||{}).value||'',min=(document.getElementById('emin')||{}).value,max=(document.getElementById('emax')||{}).value,operator=((document.getElementById('eqOperator')||{}).value||'').trim();
  name=name.trim().replace(/\s+/g,' ');
  if(!name){alert('Le nom de l’équipement est obligatoire.');document.getElementById('en').focus();return}
@@ -728,8 +729,11 @@ function addEq(){
   return existing===normalized
  });
  if(duplicate){
-  alert('Cet équipement existe déjà. Pour plusieurs équipements similaires, utilisez un nom distinct, par exemple : '+name+' 1, '+name+' 2.');
-  return
+  let base=ref?ref.name:name.replace(/\s+\d+$/,'').trim(),normalize=v=>String(v||'').trim().toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,''),nb=normalize(base),used=new Set();
+  S.equipment.forEach(e=>{let n=normalize(e&&e.name);if(n===nb)used.add(1);if(n.indexOf(nb+' ')===0){let s=n.slice(nb.length+1);if(/^\d+$/.test(s))used.add(Number(s))}});
+  let next=1;while(used.has(next))next++;
+  name=base+' '+next;
+  itemNameAdjusted=true
  }
  let ref=preset&&preset.value!==''?EQUIPMENT_PRESETS[Number(preset.value)]:null;
  let referenceOk=!ref||(minValue>=ref.min&&maxValue<=ref.max);
