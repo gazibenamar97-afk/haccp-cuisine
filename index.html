@@ -202,7 +202,7 @@ const PHOTO_PRODUCT={
  "Merguez":"assets/products/merguez.webp",
  "Kefta":"assets/products/kefta.webp"
 };
-function foodThumb(cat,p,size){size=size||42;var src=PHOTO_PRODUCT[p];if(!src)return '';return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'?v=filet-final-1" alt="'+esc(p)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
+function foodThumb(cat,p,size){size=size||42;var src=PHOTO_PRODUCT[p];if(!src)return '';var v=(cat==='Volailles'?'volailles-2':'filet-final-1');return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'?v='+v+'" alt="'+esc(p)+'" loading="eager" decoding="async" onerror="this.closest(\'.food-thumb\').style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
 
 const BRANDS=["Délice","Vitalait","Land'Or","Président","El Mazraa","Mliha","Jadida","Randa","Warda","Spiga","L'Épi d'Or","La Rose Blanche","Saïda","Moulin d'Or","Boga","Safia","Marwa","Melliti","Garci","Oktor","Cristalline","Stil","Beldi","Matinel","El Maraa","Natilait","Montrégal","Majesté","Poulina"];
 const OCR_PRODUCT_ALIASES=[
