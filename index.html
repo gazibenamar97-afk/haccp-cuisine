@@ -91,6 +91,21 @@ input:focus,select:focus,textarea:focus{border-color:#1685d1;box-shadow:0 0 0 3p
 .photo-product:hover{border-color:#1685d1;background:#f1f8fe}
 .photo-product span:last-child{font-size:11px;line-height:1.15;text-align:center}
 @media(max-width:700px){.photo-product-grid{grid-template-columns:repeat(3,1fr);max-height:360px}.photo-product{padding:6px}.photo-catalogue{margin-top:10px}}
+</style><style>
+/* PC / mobile parity: aucun contenu fonctionnel n'est masqué selon la largeur.
+   Le responsive ne change que la disposition et la taille. */
+@media(max-width:950px){
+ nav .brand{display:flex!important}
+ .rec-steps span{display:block!important}
+ .rec-side{display:grid!important}
+ .side-card{display:block!important}
+ .photo-catalogue{display:block!important}
+ #rpnote{display:block!important}
+}
+@media(max-width:430px){
+ nav .brand{display:flex!important}
+ .rec-steps span{display:block!important;font-size:9px!important;line-height:1.15}
+}
 </style></head><body>
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="dashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
