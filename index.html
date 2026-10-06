@@ -638,7 +638,11 @@ function saveTemp(){if(!te||te.value===''){alert('Choisissez votre équipement.'
 function addEq(){
  let name=(document.getElementById('en')||{}).value||'',min=(document.getElementById('emin')||{}).value,max=(document.getElementById('emax')||{}).value;
  name=name.trim().replace(/\s+/g,' ');
- if(!name){alert('Indiquez le nom de l’équipement.');return}
+ if(!name){alert('Le nom de l’équipement est obligatoire.');document.getElementById('en').focus();return}
+ if(min===''||max===''){alert('Les températures minimum et maximum sont obligatoires.');(min===''?document.getElementById('emin'):document.getElementById('emax')).focus();return}
+ let minValue=Number(min),maxValue=Number(max);
+ if(!Number.isFinite(minValue)||!Number.isFinite(maxValue)){alert('Saisissez des températures minimum et maximum valides.');return}
+ if(minValue>maxValue){alert('La température minimum ne peut pas être supérieure à la température maximum.');document.getElementById('emin').focus();return}
  let normalized=name.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  let duplicate=S.equipment.some(e=>{
   let existing=String(e&&e.name||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -648,7 +652,7 @@ function addEq(){
   alert('Cet équipement existe déjà. Pour plusieurs équipements similaires, utilisez un nom distinct, par exemple : '+name+' 1, '+name+' 2.');
   return
  }
- let item={name:name,min:Number(min),max:Number(max)};
+ let item={name:name,min:minValue,max:maxValue};
  S.equipment.push(item);
  save();
  temperatures();
