@@ -180,15 +180,27 @@ const PHOTO_PRODUCT={
  "Bœuf frais":"assets/products/boeuf-frais.webp",
  "Entrecôte de bœuf":"assets/products/entrecote-boeuf.webp",
  "Faux-filet de bœuf":"assets/products/faux-filet-boeuf.webp",
- "Escalope de veau":"assets/products/escalope-veau.webp",
- "Côtelettes d'agneau":"assets/products/cotelettes-agneau.webp",
- "Foie":"assets/products/foie.webp",
+ "Filet de bœuf":"assets/products/filet-boeuf.webp",
+ "Jarret de bœuf":"assets/products/jarret-boeuf.webp",
  "Foie de bœuf":"assets/products/foie.webp",
+ "Veau frais":"assets/products/veau-frais.webp",
+ "Escalope de veau":"assets/products/escalope-veau.webp",
  "Foie de veau":"assets/products/foie.webp",
+ "Agneau frais":"assets/products/agneau-frais.webp",
+ "Gigot d'agneau":"assets/products/gigot-agneau.webp",
+ "Épaule d'agneau":"assets/products/epaule-agneau.webp",
+ "Côtelettes d'agneau":"assets/products/cotelettes-agneau.webp",
+ "Mouton":"assets/products/mouton.webp",
  "Foie d'agneau":"assets/products/foie.webp",
- "Viande hachée":"assets/products/viande-hachee.webp"
+ "Foie":"assets/products/foie.webp",
+ "Cœur":"assets/products/coeur.webp",
+ "Rognons":"assets/products/rognons.webp",
+ "Tripes":"assets/products/tripes.webp",
+ "Viande hachée":"assets/products/viande-hachee.webp",
+ "Merguez":"assets/products/merguez.webp",
+ "Kefta":"assets/products/kefta.webp"
 };
-function foodThumb(cat,p,size){size=size||42;var src=PHOTO_PRODUCT[p];if(!src)return '';return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'?v=individual-2" alt="'+esc(p)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
+function foodThumb(cat,p,size){size=size||42;var src=PHOTO_PRODUCT[p];if(!src)return '';return '<span class="food-thumb photo" style="width:'+size+'px;height:'+size+'px"><img src="'+src+'?v=viandes-complete-1" alt="'+esc(p)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>'}
 
 const BRANDS=["Délice","Vitalait","Land'Or","Président","El Mazraa","Mliha","Jadida","Randa","Warda","Spiga","L'Épi d'Or","La Rose Blanche","Saïda","Moulin d'Or","Boga","Safia","Marwa","Melliti","Garci","Oktor","Cristalline","Stil","Beldi","Matinel","El Maraa","Natilait","Montrégal","Majesté","Poulina"];
 const OCR_PRODUCT_ALIASES=[
