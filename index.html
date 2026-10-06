@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v110-auth-login-role-site-20261006">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v111-session-auth-logout-20261006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -482,6 +482,7 @@ async function loginAppUser(btn){
  if(!email||!password){say('Saisissez votre e-mail et votre mot de passe.');return}
  if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
+  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
   const cred=await firebase.auth().signInWithEmailAndPassword(email,password);
   await authorizeAppUser(cred.user);
  }catch(e){
@@ -506,7 +507,7 @@ function renderUserSessionBar(){
  let old=document.getElementById('userSessionBar');if(old)old.remove();
  if(!currentUserProfile)return;
  let d=document.createElement('div');d.id='userSessionBar';d.style.cssText='position:fixed;right:14px;bottom:14px;z-index:40;background:#fff;border:1px solid #c7d2cc;border-radius:12px;padding:8px 10px;box-shadow:0 4px 16px #0002;font-size:12px';
- d.innerHTML='<b>'+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'</b> · '+esc(SITE_NAME)+' <button type="button" onclick="logoutAppUser()" style="margin-left:8px;border:0;background:#eef3f0;border-radius:8px;padding:6px 9px;cursor:pointer">Déconnexion</button>';
+ d.innerHTML='<b>'+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'</b> · '+esc(SITE_NAME)+' <button type="button" onclick="logoutAppUser()" style="margin-left:10px;border:1px solid #b96b6b;background:#fff;color:#8b3030;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800">⎋ Déconnexion</button>';
  document.body.appendChild(d);
 }
 async function logoutAppUser(){try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
