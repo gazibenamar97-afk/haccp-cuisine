@@ -579,7 +579,7 @@ function refreshCurrentView(){try{
   if(sessionStorage.getItem('haccpDashboardUnlocked')==='1')renderDashboard();
   return
  }
- if(CURRENT_VIEW==='trace-detail')return;
+ if(CURRENT_VIEW==='trace-detail'||CURRENT_VIEW==='establishments-manager'||CURRENT_VIEW==='establishment-edit'||CURRENT_VIEW==='users-manager')return;
  let h=(document.querySelector('#app h1')||{}).textContent||'';
  if(/^Historique /i.test(h))return;
  if(CURRENT_VIEW==='trace'){trace();return}
