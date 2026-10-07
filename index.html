@@ -1326,8 +1326,10 @@ async function loadAppUsers(){
    const snap=await cloudDb.collection('users').get();
    snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
   }else{
-   const snap=await cloudDb.collection('users').where('site','==',currentUserProfile.site).get();
-   snap.forEach(d=>rows.push({...(d.data()||{}),uid:d.id}))
+   // Establishment view: use the merged per-site loader. It combines the appUsers
+   // registry, the Firestore users query and the signed-in profile, so a newly
+   // created account remains visible even when one Firestore read is delayed/denied.
+   rows=await getSiteUsers(currentUserProfile.site);
   }
   if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});
   rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));
