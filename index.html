@@ -1194,21 +1194,9 @@ async function usersManager(){
  await usersPromise;
 }
 async function loadOtherAppUsers(){
- const box=document.getElementById('usersList');if(!box||!cloudDb||!currentUserProfile)return;
- const isAdmin=currentUserProfile.site==='main',site=currentUserProfile.site;
- const draw=snap=>{
-  const live=document.getElementById('usersList');if(!live)return;
-  let rows=[];snap.forEach(doc=>{const u={...(doc.data()||{}),uid:doc.id};if((isAdmin||u.site===site)&&u.uid!==currentUserProfile.uid)rows.push(u)});
-  rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));
-  if(!rows.length){live.innerHTML='<div class="note" style="padding:10px 0;display:block!important">Aucun autre compte enregistré.</div>';return}
-  const label=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');
-  live.innerHTML=rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(label(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+(isAdmin&&u.site?' · '+esc(u.site):'')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
- };
- try{
-  const snap=await cloudDb.collection('users').get();draw(snap);
-  if(window._mtUsersUnsub)window._mtUsersUnsub();
-  window._mtUsersUnsub=cloudDb.collection('users').onSnapshot(s=>{if(CURRENT_VIEW==='users-manager')draw(s)},e=>console.warn('Users live list',e));
- }catch(e){console.error('loadOtherAppUsers',e);const live=document.getElementById('usersList');if(live)live.innerHTML='<div style="padding:10px;color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e.code||e.message||String(e))+'</div>'}
+ // Use the robust account loader for both administrator and establishment profiles.
+ // It queries the current establishment directly and falls back to the signed-in profile.
+ return loadAppUsers();
 }
 async function loadMigrationUsers(){
  const s=document.getElementById('migrationOldUser');if(!s||!cloudDb||currentUserProfile?.site!=='main')return;
