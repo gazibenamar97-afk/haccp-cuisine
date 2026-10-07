@@ -1143,7 +1143,7 @@ async function loadAdminEstablishmentButtons(){const box=document.getElementById
 async function loadSupervisionSiteOptions(){const el=document.getElementById('supervisionSite');if(!el)return;const items=(await getEstablishments()).filter(x=>x.active!==false).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fr',{sensitivity:'base'}));el.innerHTML='<option value="">Choisir un établissement…</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');}
 function openSelectedSupervision(){const el=document.getElementById('supervisionSite'),site=el?.value||'';if(!site)return;adminSelectSite(site)}
 async function loadSupervisionUsersSiteOptions(){const el=document.getElementById('supervisionUsersSite');if(!el)return;const items=(await getEstablishments()).filter(x=>x.active!==false).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fr',{sensitivity:'base'}));el.innerHTML='<option value="">Choisir un établissement…</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');}
-async function loadSupervisionUsers(){const site=document.getElementById('supervisionUsersSite')?.value||'',box=document.getElementById('supervisionUsersList');if(!box)return;if(!site){box.innerHTML='Sélectionnez un établissement.';return}box.innerHTML='Chargement des utilisateurs…';try{const snap=await cloudDb.collection('users').get();let rows=[];snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site===site)rows.push(u)});rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');box.className='';box.innerHTML=rows.length?rows.map(u=>'<div class="record"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div></div>').join(''):'<div class="note">Aucun utilisateur enregistré pour cet établissement.</div>'}catch(e){box.innerHTML='<div style="color:#8b2f2f">Erreur de chargement : '+esc(e.code||e.message||String(e))+'</div>'}}
+async function loadSupervisionUsers(){const site=document.getElementById('supervisionUsersSite')?.value||'',box=document.getElementById('supervisionUsersList');if(!box)return;if(!site){box.innerHTML='Sélectionnez un établissement.';return}box.innerHTML='Chargement des utilisateurs…';try{const snap=await cloudDb.collection('users').where('site','==',site).get();let rows=[];snap.forEach(d=>rows.push({...(d.data()||{}),uid:d.id}));rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));renderManagedUsers(box,rows,true)}catch(e){console.error('loadSupervisionUsers',e);box.innerHTML='<div style="color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e.code||e.message||String(e))+'</div>'}}
 async function editSupervisionUser(uid){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;let role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();if(!['responsable','haccp','employe'].includes(role)){alert('Rôle invalide.');return}await ref.update({name:name.trim(),role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 async function toggleSupervisionUser(uid,isActive){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid);await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 
@@ -1253,60 +1253,8 @@ async function createAppUser(btn){
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
-async function loadAppUsers(){
- const box=document.getElementById('usersList');
- if(!box)return;
- box.innerHTML='<div style="padding:10px 0;color:#52677a">Chargement des comptes…</div>';
- if(!cloudDb||!currentUserProfile){
-  box.innerHTML='<div style="padding:10px 0;color:#9e4545">Service utilisateurs indisponible.</div>';
-  return;
- }
- const isAdmin=currentUserProfile.site==='main';
- const site=currentUserProfile.site;
- let rows=[],loadError=null;
- try{
-  let snap;
-  try{
-   snap=isAdmin
-    ? await cloudDb.collection('users').get({source:'server'})
-    : await cloudDb.collection('users').where('site','==',site).get({source:'server'});
-  }catch(serverErr){
-   console.warn('loadAppUsers server fallback',serverErr);
-   snap=isAdmin
-    ? await cloudDb.collection('users').get()
-    : await cloudDb.collection('users').where('site','==',site).get();
-  }
-  snap.forEach(doc=>{
-   const u={...(doc.data()||{}),uid:doc.id};
-   if(isAdmin||u.site===site)rows.push(u);
-  });
- }catch(e){
-  console.error('loadAppUsers query',e);
-  loadError=e;
- }
- // The signed-in manager must always be visible in their own establishment.
- // Fetch that profile directly as a reliable fallback if the site query is empty or rejected.
- if(!isAdmin&&!rows.some(u=>u.uid===currentUserProfile.uid)){
-  try{
-   const own=await cloudDb.collection('users').doc(currentUserProfile.uid).get();
-   if(own.exists){
-    const u={...(own.data()||{}),uid:own.id};
-    if(u.site===site)rows.unshift(u);
-   }
-  }catch(e){console.error('loadAppUsers own profile',e);if(!loadError)loadError=e}
- }
- rows.sort((a,b)=>String(a.name||a.email||'').localeCompare(String(b.name||b.email||''),'fr'));
- const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');
- let html='';
- if(loadError)html+='<div style="padding:10px 12px;margin:6px 0 12px;border:1px solid #e1b7b7;border-radius:8px;color:#8b2f2f;background:#fff7f7"><b>Chargement partiel.</b> '+esc(loadError.code||loadError.message||String(loadError))+'</div>';
- if(!rows.length){
-  html+='<div style="padding:12px 0;color:#52677a">Aucun compte trouvé pour '+esc(isAdmin?'les établissements':SITE_NAME)+'.</div>';
- }else{
-  html+='<div style="padding:4px 0 10px;color:#52677a"><b>'+rows.length+'</b> compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>';
-  html+=rows.map(u=>'<div class="record" style="display:block;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span style="color:#52677a">'+esc(u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
- }
- box.innerHTML=html;
-}
+function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');if(!rows.length){box.innerHTML='<div class="note" style="padding:12px 0">Aucun compte enregistré.</div>';return}box.innerHTML='<div class="note" style="padding:4px 0 10px"><b>'+rows.length+'</b> compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(adminMode?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':(canManageUserProfile(u)&&u.uid!==currentUserProfile.uid?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':''))+'</div>').join('')}
+async function loadAppUsers(){const box=document.getElementById('usersList');if(!box)return;box.innerHTML='<div class="note" style="padding:10px 0">Chargement des comptes…</div>';if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}const site=currentUserProfile.site;try{const snap=await cloudDb.collection('users').where('site','==',site).get();let rows=[];snap.forEach(d=>rows.push({...(d.data()||{}),uid:d.id}));if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));renderManagedUsers(box,rows,false)}catch(err){console.error('loadAppUsers',err);try{const own=await cloudDb.collection('users').doc(currentUserProfile.uid).get();let rows=own.exists?[{...(own.data()||{}),uid:own.id}]:[{...currentUserProfile}];renderManagedUsers(box,rows,false);box.insertAdjacentHTML('afterbegin','<div style="padding:8px;margin-bottom:8px;color:#8b2f2f"><b>Liste partielle :</b> '+esc(err.code||err.message||String(err))+'</div>')}catch(e2){box.innerHTML='<div style="color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e2.code||e2.message||String(e2))+'</div>'}}}
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
  const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;
