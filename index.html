@@ -1129,10 +1129,10 @@ function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('h
 
 
 const DEFAULT_ESTABLISHMENTS=[];
+function clearEstablishmentCache(){try{localStorage.removeItem('mtEstablishmentsCache');localStorage.setItem('mtEstablishmentsResetAt',String(Date.now()))}catch(_){}}
 function establishmentSlug(name){return String(name||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)}
 async function getEstablishments(){
- // The establishments registry is now the single source of truth.
- // Old disabled users and reset appState documents must never recreate deleted establishments.
+ // Firestore registry is the single source of truth. A completed global reset must win over every old browser cache.
  let cached=[];
  try{const x=JSON.parse(localStorage.getItem('mtEstablishmentsCache')||'[]');if(Array.isArray(x))cached=x}catch(_){}
  if(!cloudDb)return cached;
@@ -1140,6 +1140,7 @@ async function getEstablishments(){
   const snap=await cloudDb.collection('appState').doc('establishments').get({source:'server'});
   const d=snap.exists?(snap.data()||{}):{};
   const items=Array.isArray(d.items)?d.items.filter(x=>x&&x.id&&x.id!=='main'&&x.id!=='establishments'):[];
+  if(d.globalResetAt&&items.length===0)clearEstablishmentCache();
   localStorage.setItem('mtEstablishmentsCache',JSON.stringify(items));
   return items;
  }catch(e){
@@ -1344,8 +1345,8 @@ async function loadResetSiteOptions(){
  const s=document.getElementById('resetSite');if(!s||s.dataset.loading==='1')return;
  s.dataset.loading='1';const previous=s.value;
  const draw=items=>{if(!s.isConnected)return;const active=(items||[]).filter(x=>x&&x.id&&x.id!=='main'&&x.id!=='establishments'&&x.active!==false);s.innerHTML='<option value="">Choisir un établissement…</option><option value="main">Espace administrateur</option>'+active.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(previous&&active.some(x=>x.id===previous))s.value=previous};
- try{const cached=JSON.parse(localStorage.getItem('mtEstablishmentsCache')||'[]');if(Array.isArray(cached)&&cached.length)draw(cached)}catch(_){}
- try{draw(await getEstablishments())}catch(e){console.warn('Reset establishments',e)}
+ s.innerHTML='<option value="">Chargement…</option>';
+ try{draw(await getEstablishments())}catch(e){console.warn('Reset establishments',e);draw([])}
  finally{if(s.isConnected)s.dataset.loading='0'}
 }
 async function resetEstablishmentData(){
@@ -1403,8 +1404,11 @@ async function globalResetEstablishments(btn){
    await cloudDb.collection('appState').doc(site).set({stock:[],temps:[],clean:[],trace:[],suppliers:[],customProducts:[],equipment:[],productOverrides:{},disabledBaseProducts:{},_cloudUpdatedAt:new Date().toISOString(),_globalReset:true,_resetBy:adminUid});
    try{await cloudDb.collection('appUsers').doc(site).set({users:[],updatedAt:new Date().toISOString(),resetBy:adminUid})}catch(e){console.warn('appUsers reset',site,e)}
   }
+  clearEstablishmentCache();
   await cloudDb.collection('appState').doc('establishments').set({items:[],updatedAt:new Date().toISOString(),updatedBy:adminUid,globalResetAt:new Date().toISOString()});
+  clearEstablishmentCache();
   try{localStorage.setItem('mtEstablishmentsCache','[]')}catch(_){}
+  await Promise.all([loadSupervisionSiteOptions(),loadSupervisionUsersSiteOptions(),loadResetSiteOptions()]);
   say('Remise à zéro terminée. La structure M&T HACCP et le compte administrateur sont conservés. Vous pouvez ajouter immédiatement un nouvel établissement.');
   setTimeout(()=>establishmentsManager(),900);
  }catch(e){console.error('globalResetEstablishments',e);say('Échec de la remise à zéro : '+(e.code||e.message||e),true)}
