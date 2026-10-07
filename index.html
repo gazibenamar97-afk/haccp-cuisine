@@ -259,13 +259,37 @@ body.on-home .home-card:nth-child(8){background-image:url("./assets/home/setting
 }
 </style><style id="home-supervision-photo-v136">
 body.on-home .home-grid > .home-card:last-child{background-image:url("https://d2jqrm6oza8nb6.cloudfront.net/datasets/d5ec581b-9358-4e0d-870c-fac1759aad91.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZjRhOTk2MzE4YTExYTZlNCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTU2NzUzN30.yTy9Cg1940kscgXtfkwlRi2pSx7C1YdvuzvL7iNma1I")!important;background-position:right center!important;background-size:50% 100%!important;background-repeat:no-repeat!important}
-</style><style id="direction-photo-natural-v142">
-/* Establishments only: preserve the Direction photo's natural proportions.
-   Full-width card stays unchanged; only the image sizing is corrected. */
+</style><style id="direction-container-v143">
+/* Establishments: professional full-width Direction card.
+   The photo has its own container and uses object-fit:cover semantics via background cover. */
 body.on-home .home-direction{
-  background-size:auto 100%!important;
-  background-position:right center!important;
-  background-repeat:no-repeat!important;
+  position:relative!important;display:flex!important;align-items:center!important;
+  height:120px!important;min-height:120px!important;padding:18px 50% 18px 18px!important;
+  overflow:hidden!important;background-image:none!important;border-radius:28px!important;
+}
+body.on-home .home-direction:after{display:none!important}
+body.on-home .home-direction .home-icon{position:relative!important;z-index:2!important;flex:0 0 46px!important;margin:0 12px 0 0!important}
+body.on-home .home-direction .direction-copy{
+  position:relative!important;z-index:2!important;display:flex!important;flex-direction:column!important;
+  justify-content:center!important;align-items:flex-start!important;min-width:0!important;
+}
+body.on-home .home-direction .direction-copy b{font-size:17px!important;line-height:1.15!important;white-space:nowrap!important}
+body.on-home .home-direction .direction-copy small{display:block!important;font-size:12px!important;line-height:1.2!important;margin-top:5px!important;white-space:nowrap!important}
+body.on-home .home-direction .direction-photo{
+  position:absolute!important;z-index:1!important;top:0!important;right:0!important;bottom:0!important;width:50%!important;
+  background-image:url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=82")!important;
+  background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;
+  border-radius:0 28px 28px 0!important;
+}
+body.on-home .home-direction .direction-photo:before{
+  content:""!important;position:absolute!important;inset:0!important;
+  background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,0) 18%)!important;
+}
+@media(max-width:700px){
+ body.on-home .home-direction{padding-right:48%!important}
+ body.on-home .home-direction .direction-photo{width:48%!important}
+ body.on-home .home-direction .direction-copy b{white-space:normal!important}
+ body.on-home .home-direction .direction-copy small{white-space:normal!important}
 }
 </style></head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
@@ -289,7 +313,7 @@ function home(){
    <button class="home-card" onclick="suppliers()"><span class="home-icon">🚚</span><b>Fournisseurs</b><small>Gérez vos fournisseurs</small><span class="home-arrow">›</span></button>
    <button class="home-card" onclick="trace()"><span class="home-icon">▤</span><b>Traçabilité</b><small>Consultez l'historique des opérations</small><span class="home-arrow">›</span></button>
    <button class="home-card" onclick="settings()"><span class="home-icon">⚙</span><b>Paramètres</b><small>Configuration de l'application</small><span class="home-arrow">›</span></button>
-   <button class="${SITE_ID==='main'?'home-card':'home-card home-direction'}" onclick="openDashboard()"><span class="home-icon">▥</span><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small><span class="home-arrow">›</span></button>
+   <button class="${SITE_ID==='main'?'home-card':'home-card home-direction'}" onclick="openDashboard()"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span>${SITE_ID==='main'?'':'<span class="direction-photo" aria-hidden="true"></span>'}<span class="home-arrow">›</span></button>
    ${SITE_ID==='main'?'<button class="home-card" onclick="openEstablishmentSupervision()"><span class="home-icon">🏢</span><b>Supervision des établissements</b><small>Consultez chaque établissement en temps réel</small><span class="home-arrow">›</span></button>':''}
   </div>
  </div>`
