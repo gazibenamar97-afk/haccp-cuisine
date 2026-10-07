@@ -1056,7 +1056,7 @@ async function usersManager(){
  app.innerHTML=`${B('← Paramètres','settings()','back')}<h1>Gestion des utilisateurs</h1>
  <div class="panel"><h2>Créer un utilisateur</h2>
  <div class="row"><div><label>Nom complet</label><input id="userName" name="mt_new_user_name" value="" autocomplete="off"></div><div><label>E-mail</label><input id="userEmail" name="mt_new_user_email" type="email" value="" autocomplete="new-password" autocapitalize="none" spellcheck="false"></div></div>
- <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole">${isAdmin?'<option value="responsable">Responsable établissement</option>':''}<option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
+ <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
  <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div>
  <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList"><p class="note">Chargement…</p></div></div>`;
@@ -1066,7 +1066,7 @@ async function usersManager(){
  setTimeout(()=>['userName','userEmail','userPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''}),120);
  await loadAppUsers();
 }
-function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'&&u.role!=='responsable'}
+function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'&&u.uid!==currentUserProfile.uid}
 async function createAppUser(btn){
  const status=document.getElementById('createUserStatus'),say=(m,bad)=>{if(status){status.textContent=m;status.style.color=bad?'#a12622':'#20543e'}};
  if(!cloudDb||!currentUserProfile){say('Service indisponible.',true);return}
@@ -1074,7 +1074,7 @@ async function createAppUser(btn){
  if(!isAdmin&&!isManager){say('Accès non autorisé.',true);return}
  const name=(userName.value||'').trim(),email=(userEmail.value||'').trim().toLowerCase(),password=userPassword.value||'';
  let role=userRole.value,site=isManager?SITE_ID:userSite.value;
- if(isManager&&!['haccp','employe'].includes(role)){say('Rôle non autorisé.',true);return}
+ if(isManager&&!['responsable','haccp','employe'].includes(role)){say('Rôle non autorisé.',true);return}
  if(!name||!userEmail.checkValidity()||password.length<8){say('Vérifiez le nom, l’e-mail et le mot de passe (8 caractères minimum).',true);return}
  if(btn){btn.disabled=true;btn.textContent='Création…'}
  try{
@@ -1105,9 +1105,9 @@ async function loadAppUsers(){
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
  const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;
- let role=prompt('Rôle : haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();
+ let role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();
  if(currentUserProfile.site==='main'&&!['responsable','haccp','employe','admin'].includes(role)){alert('Rôle invalide.');return}
- if(currentUserProfile.site!=='main'&&!['haccp','employe'].includes(role)){alert('Rôle non autorisé.');return}
+ if(currentUserProfile.site!=='main'&&!['responsable','haccp','employe'].includes(role)){alert('Rôle non autorisé.');return}
  await ref.update({name:name.trim(),role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadAppUsers();
 }
 async function toggleAppUser(uid,isActive){
