@@ -504,13 +504,11 @@ async function loginAppUser(btn){
   if(SITE_ID==='main'&&login.includes('@')){
    cred=await firebase.auth().signInWithEmailAndPassword(login,password);
   }else{
+   // Restaurant usernames are global entry credentials. Try the current site last:
+   // Firebase may rate-limit repeated failed attempts, so prioritize likely site from username.
    let sites=['restaurant-1','restaurant-2','restaurant-3'];
-   try{
-    const reg=await cloudDb.collection('appState').doc('establishments').get();
-    const data=reg.exists?(reg.data()||{}):{};
-    const items=Array.isArray(data.items)?data.items:(Array.isArray(data.establishments)?data.establishments:[]);
-    items.forEach(x=>{const id=String(x.id||'').trim();if(id&&id!=='main'&&!sites.includes(id))sites.push(id)});
-   }catch(_e){}
+   const m=login.match(/^restaurant[-_. ]?(\d+)$/);
+   if(m){const preferred='restaurant-'+m[1];sites=[preferred,...sites.filter(s=>s!==preferred)]}
    let lastErr=null;
    for(const site of sites){
     try{cred=await firebase.auth().signInWithEmailAndPassword(login+'@'+site+'.mt-haccp.local',password);break}catch(e){lastErr=e}
