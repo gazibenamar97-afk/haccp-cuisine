@@ -1065,6 +1065,8 @@ async function usersManager(){
  <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList" style="display:block!important;visibility:visible!important;opacity:1!important;min-height:90px!important;padding:12px!important;background:#fff3cd!important;border:3px solid #d39e00!important;color:#111!important;font-size:16px!important"><b>TEST LISTE UTILISATEURS V3</b><br>Si vous voyez ce texte, la zone fonctionne.</div></div>`;
  // Start account loading immediately. Do not wait for the establishment selector,
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
+ const listBox=document.getElementById('usersList');
+ if(listBox)listBox.innerHTML='<b>DIAGNOSTIC V4 :</b> JavaScript usersManager actif — chargement Firestore en cours…';
  const usersPromise=loadAppUsers();
  if(isAdmin){
   try{await loadUserSiteOptions('userSite')}catch(e){console.error('loadUserSiteOptions',e)}
@@ -1142,6 +1144,7 @@ async function loadAppUsers(){
   html+=rows.map(u=>'<div class="record" style="display:block;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span style="color:#52677a">'+esc(u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
  }
  box.innerHTML=html;
+ if(!box.innerHTML.trim())box.innerHTML='<b>DIAGNOSTIC V4 :</b> loadAppUsers terminé mais aucun contenu rendu.';
 }
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
