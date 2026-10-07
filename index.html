@@ -1215,7 +1215,7 @@ async function usersManager(){
  <div class="row"><div><label>Nom complet</label><input id="userName" name="mt_new_user_name" value="" autocomplete="off"></div><div><label>Nom d’utilisateur</label><input id="userEmail" name="mt_new_username" type="text" value="" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="ex. chef01"></div></div>
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
- <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div><div class="panel"><h2>Comptes enregistrés</h2><div id="signedInAccount"></div><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
+ <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div><div class="panel"><h2>Comptes enregistrés</h2><div id="signedInAccount"></div><div style="margin:8px 0"><button class="btn" style="width:auto" onclick="loadAppUsers()">Actualiser la liste</button></div><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
  // Start account loading immediately. Do not wait for the establishment selector,
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
  const ownBox=document.getElementById('signedInAccount');
@@ -1286,22 +1286,23 @@ async function createAppUser(btn){
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);
   const saved=await cloudDb.collection('users').doc(cred.user.uid).get();
   if(!saved.exists)throw new Error('Le profil utilisateur n’a pas été enregistré dans Firestore.');
-  // Keep the establishment registry in sync, without using arrayUnion (which can retain stale partial lists).
-  let siteUsers=await getSiteUsers(site);
-  if(!siteUsers.some(u=>u.uid===profile.uid))siteUsers.push(profile);
-  await cloudDb.collection('appUsers').doc(site).set({site,users:siteUsers,updatedAt:new Date().toISOString()},{merge:true});
-  // Mirror the directory in appState/<site>. Establishment accounts already have
-  // reliable read access to their own appState document for HACCP synchronization.
-  // This avoids Firestore collection-query/list permission edge cases.
-  try{
-   const stateRef=cloudDb.collection('appState').doc(site);
-   const stateSnap=await stateRef.get();
+  // The establishment's own appState document is the canonical directory for its account list.
+  // Update it directly and atomically; do not depend on a collection query to make the new account visible.
+  const stateRef=cloudDb.collection('appState').doc(site);
+  await cloudDb.runTransaction(async tx=>{
+   const stateSnap=await tx.get(stateRef);
    const stateData=stateSnap.exists?(stateSnap.data()||{}):{};
    const dir=Array.isArray(stateData.userDirectory)?stateData.userDirectory.filter(u=>u&&u.uid):[];
    const pos=dir.findIndex(u=>u.uid===profile.uid);
    if(pos>=0)dir[pos]=profile;else dir.push(profile);
-   await stateRef.set({userDirectory:dir,_cloudUpdatedAt:new Date().toISOString()},{merge:true});
-  }catch(e){console.warn('User directory mirror',e)}
+   tx.set(stateRef,{userDirectory:dir,_cloudUpdatedAt:new Date().toISOString()},{merge:true});
+  });
+  // appUsers remains a compatibility mirror only; failure here must never break the account list.
+  try{
+   const stateCheck=await stateRef.get({source:'server'});
+   const siteUsers=Array.isArray(stateCheck.data()?.userDirectory)?stateCheck.data().userDirectory:[profile];
+   await cloudDb.collection('appUsers').doc(site).set({site,users:siteUsers,updatedAt:new Date().toISOString()},{merge:true});
+  }catch(e){console.warn('Compatibility user registry',e)}
   await creator.auth().signOut();
   say('Compte créé avec succès et vérifié.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
@@ -1311,29 +1312,26 @@ function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsa
 async function getSiteUsers(site){
  if(!cloudDb||!site)return[];
  const by=new Map(),add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
- // Source 0: directory mirrored in appState/<site>. This document uses the same
- // access path as the establishment's HACCP data and is therefore the most reliable.
+ // Canonical source: appState/<site>/userDirectory. Same document already used by the
+ // HACCP real-time sync, so it follows the proven establishment access path.
  try{
-  const s=await cloudDb.collection('appState').doc(site).get();
+  const s=await cloudDb.collection('appState').doc(site).get({source:'server'});
   if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)
- }catch(e){console.warn('User directory read',e)}
- // Source 1: per-establishment registry (may be partial on older versions).
+ }catch(e){console.warn('Canonical user directory read',e)}
+ if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
+ // Compatibility sources are best-effort. Never block or erase the canonical directory.
  try{
   const r=await cloudDb.collection('appUsers').doc(site).get();
   if(r.exists&&Array.isArray(r.data()?.users))r.data().users.forEach(add)
- }catch(e){console.warn('User registry read',e)}
- // Source 2: authoritative user profiles. Always run this query even if registry is non-empty.
+ }catch(e){console.warn('Compatibility user registry read',e)}
  try{
   const snap=await cloudDb.collection('users').where('site','==',site).get();
   snap.forEach(d=>add({...(d.data()||{}),uid:d.id}))
  }catch(e){console.warn('User site query',e)}
- // Source 3: current signed-in account, so its establishment never renders empty.
- if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
  const rows=[...by.values()];
- // Repair the per-site registry with the complete merged list when possible.
+ // Backfill the canonical directory whenever older accounts are discovered.
  if(rows.length){
-  try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(e){console.warn('User registry repair',e)}
-  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('User directory repair',e)}
+  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('Canonical user directory repair',e)}
  }
  return rows
 }
