@@ -1330,50 +1330,43 @@ function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsa
 async function getSiteUsers(site){
  if(!cloudDb||!site)return[];
  const by=new Map(),add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
- // Canonical source: appState/<site>/userDirectory. Same document already used by the
- // HACCP real-time sync, so it follows the proven establishment access path.
- try{
-  const s=await cloudDb.collection('appState').doc(site).get({source:'server'});
-  if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)
- }catch(e){console.warn('Canonical user directory read',e)}
  if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
- // Compatibility sources are best-effort. Never block or erase the canonical directory.
- try{
-  const r=await cloudDb.collection('appUsers').doc(site).get();
-  if(r.exists&&Array.isArray(r.data()?.users))r.data().users.forEach(add)
- }catch(e){console.warn('Compatibility user registry read',e)}
- try{
-  const snap=await cloudDb.collection('users').where('site','==',site).get();
-  snap.forEach(d=>add({...(d.data()||{}),uid:d.id}))
- }catch(e){console.warn('User site query',e)}
+ // Run every source independently and in parallel. One blocked/slow source must never
+ // prevent the other authorized sources from returning the establishment directory.
+ const jobs=[
+  cloudDb.collection('appState').doc(site).get().then(s=>{if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)}),
+  cloudDb.collection('appUsers').doc(site).get().then(r=>{if(r.exists&&Array.isArray(r.data()?.users))r.data().users.forEach(add)}),
+  cloudDb.collection('users').where('site','==',site).get().then(s=>s.forEach(d=>add({...(d.data()||{}),uid:d.id})))
+ ];
+ const settled=await Promise.allSettled(jobs);
+ settled.forEach((r,i)=>{if(r.status==='rejected')console.warn('User directory source '+i,r.reason)});
  const rows=[...by.values()];
- // Backfill the canonical directory whenever older accounts are discovered.
- if(rows.length){
-  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('Canonical user directory repair',e)}
+ if(rows.length>1){
+  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('User directory repair',e)}
  }
  return rows
 }
 async function loadAppUsers(){
  const box=document.getElementById('usersList');if(!box)return;
- box.innerHTML='<div class="note" style="padding:10px 0">Chargement des utilisateurs…</div>';
  if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}
+ // Show the signed-in profile immediately; never leave this area visually blank.
+ let rows=[{...currentUserProfile}];
+ renderManagedUsers(box,rows,false);
  try{
-  let rows=[];
   if(currentUserProfile.site==='main'){
    const snap=await cloudDb.collection('users').get();
-   snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
+   rows=[];snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
   }else{
-   // Establishment view: use the merged per-site loader. It combines the appUsers
-   // registry, the Firestore users query and the signed-in profile, so a newly
-   // created account remains visible even when one Firestore read is delayed/denied.
    rows=await getSiteUsers(currentUserProfile.site);
   }
   if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});
-  rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));
+  rows.sort((x,y)=>String(x.name||x.username||x.email||'').localeCompare(String(y.name||y.username||y.email||''),'fr'));
   renderManagedUsers(box,rows,false)
  }catch(e){
   console.error('loadAppUsers',e);
-  box.innerHTML='<div style="color:#8b2f2f;padding:10px 0"><b>Erreur Firestore :</b> '+esc(e.code||e.message||String(e))+'</div>'
+  // Keep the current user visible and expose the real Firebase error instead of an empty panel.
+  renderManagedUsers(box,[{...currentUserProfile}],false);
+  box.insertAdjacentHTML('beforeend','<div style="color:#8b2f2f;padding:10px 0"><b>Lecture des autres utilisateurs impossible :</b> '+esc(e.code||e.message||String(e))+'</div>')
  }
 }
 async function editAppUser(uid){
