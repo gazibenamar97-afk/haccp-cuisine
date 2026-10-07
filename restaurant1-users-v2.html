@@ -1066,7 +1066,7 @@ async function usersManager(){
  // Start account loading immediately. Do not wait for the establishment selector,
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
  const listBox=document.getElementById('usersList');
- if(listBox)listBox.innerHTML='<b>DIAGNOSTIC V4 :</b> JavaScript usersManager actif — chargement Firestore en cours…';
+ if(listBox)listBox.innerHTML='<b>Compte connecté :</b> '+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'<br><span style="color:#52677a">'+esc(currentUserProfile.email||'')+' · '+esc(currentUserProfile.role==='responsable'?'Responsable établissement':currentUserProfile.role||'')+' · Actif</span><div id="otherUsersStatus" style="margin-top:10px;color:#52677a">Recherche des autres comptes de '+esc(SITE_NAME)+'…</div>';
  const usersPromise=loadAppUsers();
  if(isAdmin){
   try{await loadUserSiteOptions('userSite')}catch(e){console.error('loadUserSiteOptions',e)}
@@ -1100,51 +1100,23 @@ async function createAppUser(btn){
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
 async function loadAppUsers(){
- const box=document.getElementById('usersList');
- if(!box)return;
- box.innerHTML='<div style="padding:10px 0;color:#52677a">Chargement des comptes…</div>';
- if(!cloudDb||!currentUserProfile){
-  box.innerHTML='<div style="padding:10px 0;color:#9e4545">Service utilisateurs indisponible.</div>';
+ const box=document.getElementById('usersList');if(!box||!currentUserProfile)return;
+ const isAdmin=currentUserProfile.site==='main',site=currentUserProfile.site;
+ let rows=[];
+ // Always render the authenticated profile first; it is already authorized and verified at login.
+ if(!isAdmin)rows.push({...currentUserProfile,uid:currentUserProfile.uid});
+ try{
+  const snap=isAdmin?await cloudDb.collection('users').get():await cloudDb.collection('users').where('site','==',site).get();
+  snap.forEach(doc=>{const u={...(doc.data()||{}),uid:doc.id};if((isAdmin||u.site===site)&&!rows.some(x=>x.uid===u.uid))rows.push(u)});
+ }catch(e){
+  console.error('loadAppUsers',e);
+  box.innerHTML='<div style="padding:10px;border:1px solid #e1b7b7;border-radius:8px;background:#fff7f7;color:#8b2f2f"><b>Erreur Firestore :</b> '+esc(e.code||e.message||String(e))+'</div>';
+  if(!isAdmin)box.innerHTML+='<div class="record"><b>'+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'</b><br><span class="note">'+esc(currentUserProfile.email||'')+' · Responsable établissement · Actif</span></div>';
   return;
  }
- const isAdmin=currentUserProfile.site==='main';
- const site=currentUserProfile.site;
- let rows=[],loadError=null;
- try{
-  const snap=isAdmin
-   ? await cloudDb.collection('users').get()
-   : await cloudDb.collection('users').where('site','==',site).get();
-  snap.forEach(doc=>{
-   const u={...(doc.data()||{}),uid:doc.id};
-   if(isAdmin||u.site===site)rows.push(u);
-  });
- }catch(e){
-  console.error('loadAppUsers query',e);
-  loadError=e;
- }
- // The signed-in manager must always be visible in their own establishment.
- // Fetch that profile directly as a reliable fallback if the site query is empty or rejected.
- if(!isAdmin&&!rows.some(u=>u.uid===currentUserProfile.uid)){
-  try{
-   const own=await cloudDb.collection('users').doc(currentUserProfile.uid).get();
-   if(own.exists){
-    const u={...(own.data()||{}),uid:own.id};
-    if(u.site===site)rows.unshift(u);
-   }
-  }catch(e){console.error('loadAppUsers own profile',e);if(!loadError)loadError=e}
- }
  rows.sort((a,b)=>String(a.name||a.email||'').localeCompare(String(b.name||b.email||''),'fr'));
- const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');
- let html='';
- if(loadError)html+='<div style="padding:10px 12px;margin:6px 0 12px;border:1px solid #e1b7b7;border-radius:8px;color:#8b2f2f;background:#fff7f7"><b>Chargement partiel.</b> '+esc(loadError.code||loadError.message||String(loadError))+'</div>';
- if(!rows.length){
-  html+='<div style="padding:12px 0;color:#52677a">Aucun compte trouvé pour '+esc(isAdmin?'les établissements':SITE_NAME)+'.</div>';
- }else{
-  html+='<div style="padding:4px 0 10px;color:#52677a"><b>'+rows.length+'</b> compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>';
-  html+=rows.map(u=>'<div class="record" style="display:block;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span style="color:#52677a">'+esc(u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
- }
- box.innerHTML=html;
- if(!box.innerHTML.trim())box.innerHTML='<b>DIAGNOSTIC V4 :</b> loadAppUsers terminé mais aucun contenu rendu.';
+ const label=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');
+ box.innerHTML='<div style="padding:4px 0 10px;color:#52677a"><b>'+rows.length+'</b> compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.email||'')+' · '+esc(label(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
 }
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
