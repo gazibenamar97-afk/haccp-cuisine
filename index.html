@@ -494,13 +494,29 @@ function authLoginScreen(message=''){
 }
 let loginInProgress=false;
 async function loginAppUser(btn){
- if(loginInProgress)return; const login=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),email=SITE_ID==='main'?login:(login+'@'+SITE_ID+'.mt-haccp.local'),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
+ if(loginInProgress)return; const login=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
  const say=m=>{if(st)st.textContent=m};
  if(!login||!password){say(SITE_ID==='main'?'Saisissez votre e-mail et votre mot de passe.':'Saisissez votre nom d’utilisateur et votre mot de passe.');return}
  loginInProgress=true;if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
   await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
-  const cred=await firebase.auth().signInWithEmailAndPassword(email,password);
+  let cred=null;
+  if(SITE_ID==='main'&&login.includes('@')){
+   cred=await firebase.auth().signInWithEmailAndPassword(login,password);
+  }else{
+   let sites=['restaurant-1','restaurant-2','restaurant-3'];
+   try{
+    const reg=await cloudDb.collection('appState').doc('establishments').get();
+    const data=reg.exists?(reg.data()||{}):{};
+    const items=Array.isArray(data.items)?data.items:(Array.isArray(data.establishments)?data.establishments:[]);
+    items.forEach(x=>{const id=String(x.id||'').trim();if(id&&id!=='main'&&!sites.includes(id))sites.push(id)});
+   }catch(_e){}
+   let lastErr=null;
+   for(const site of sites){
+    try{cred=await firebase.auth().signInWithEmailAndPassword(login+'@'+site+'.mt-haccp.local',password);break}catch(e){lastErr=e}
+   }
+   if(!cred)throw lastErr||new Error('Identifiants incorrects');
+  }
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
