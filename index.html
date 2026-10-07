@@ -516,7 +516,7 @@ async function authorizeAppUser(user){
   const p=snap.data()||{};currentUserProfile={...p,uid:user.uid};
   if(p.active===false){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Ce compte a été désactivé par l’administrateur.');return false}
   const isAdmin=p.role==='admin'&&p.site==='main';
-  if(!isAdmin&&(!p.site||!['restaurant-1','restaurant-2','restaurant-3'].includes(p.site))){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Aucun établissement valide n’est affecté à ce compte.');return false}
+  if(!isAdmin&&!p.site){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Aucun établissement valide n’est affecté à ce compte.');return false}
   if(SITE_ID==='main'&&!isAdmin){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
   if(SITE_ID!=='main'&&isAdmin){location.replace(location.pathname+'?site=main&auth=1');return false}
   if(SITE_ID!==p.site){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
