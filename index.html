@@ -556,6 +556,9 @@ function dedupeArray(a){let out=[],seen=new Set();(Array.isArray(a)?a:[]).forEac
 function sanitizeCloudState(data){let d=JSON.parse(JSON.stringify(data||{}));['stock','temps','clean','trace','suppliers','customProducts','equipment'].forEach(k=>{if(Array.isArray(d[k]))d[k]=dedupeArray(d[k])});return d}
 function cloudApply(data){if(!data||typeof data!=='object')return;data=sanitizeCloudState(data);cloudApplying=true;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,JSON.parse(JSON.stringify(data)));delete S._cloudUpdatedAt;if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));localStorage.setItem('haccpCloudLinked','1');syncStateSettingsToLocal();cloudApplying=false;refreshCurrentView()}
 function refreshCurrentView(){try{
+ // User management is an account screen, not an appState screen.
+ // Never let a Firestore appState snapshot replace or disturb it.
+ if(CURRENT_VIEW==='users-manager')return;
  if(CURRENT_VIEW==='dashboard'){
   let h=(document.querySelector('#app h1')||{}).textContent||'';
   if(/Fiche non-conformité|Non-conformités|Points à surveiller/i.test(h))return;
