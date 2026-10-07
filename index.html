@@ -1143,7 +1143,20 @@ async function loadAdminEstablishmentButtons(){const box=document.getElementById
 async function loadSupervisionSiteOptions(){const el=document.getElementById('supervisionSite');if(!el)return;const items=(await getEstablishments()).filter(x=>x.active!==false).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fr',{sensitivity:'base'}));el.innerHTML='<option value="">Choisir un établissement…</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');}
 function openSelectedSupervision(){const el=document.getElementById('supervisionSite'),site=el?.value||'';if(!site)return;adminSelectSite(site)}
 async function loadSupervisionUsersSiteOptions(){const el=document.getElementById('supervisionUsersSite');if(!el)return;const items=(await getEstablishments()).filter(x=>x.active!==false).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fr',{sensitivity:'base'}));el.innerHTML='<option value="">Choisir un établissement…</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');}
-async function loadSupervisionUsers(){const site=document.getElementById('supervisionUsersSite')?.value||'',box=document.getElementById('supervisionUsersList');if(!box)return;if(!site){box.innerHTML='Sélectionnez un établissement.';return}box.innerHTML='Chargement des utilisateurs…';try{let rows=await getSiteUsers(site);rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));renderManagedUsers(box,rows,true)}catch(e){console.error('loadSupervisionUsers',e);box.innerHTML='<div style="color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e.code||e.message||String(e))+'</div>'}}
+async function loadSupervisionUsers(){
+ const site=document.getElementById('supervisionUsersSite')?.value||'',box=document.getElementById('supervisionUsersList');
+ if(!box)return;if(!site){box.innerHTML='Sélectionnez un établissement.';return}
+ box.innerHTML='Chargement des utilisateurs…';
+ try{
+  const snap=await cloudDb.collection('users').get(),rows=[];
+  snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site===site)rows.push(u)});
+  rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));
+  renderManagedUsers(box,rows,true)
+ }catch(e){
+  console.error('loadSupervisionUsers',e);
+  box.innerHTML='<div style="color:#8b2f2f"><b>Erreur Firestore :</b> '+esc(e.code||e.message||String(e))+'</div>'
+ }
+}
 async function editSupervisionUser(uid){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;let role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();if(!['responsable','haccp','employe'].includes(role)){alert('Rôle invalide.');return}await ref.update({name:name.trim(),role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 async function toggleSupervisionUser(uid,isActive){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid);await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 
@@ -1281,7 +1294,27 @@ async function getSiteUsers(site){
  if(rows.length){try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(e){console.warn('User registry repair',e)}}
  return rows
 }
-async function loadAppUsers(){const box=document.getElementById('usersList');if(!box)return;box.innerHTML='<div class="note" style="padding:10px 0">Chargement des comptes…</div>';if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}try{let rows=await getSiteUsers(currentUserProfile.site);if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));renderManagedUsers(box,rows,false)}catch(e){console.error('loadAppUsers',e);renderManagedUsers(box,[{...currentUserProfile}],false)}}
+async function loadAppUsers(){
+ const box=document.getElementById('usersList');if(!box)return;
+ box.innerHTML='<div class="note" style="padding:10px 0">Chargement des comptes…</div>';
+ if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}
+ try{
+  let rows=[];
+  if(currentUserProfile.site==='main'){
+   const snap=await cloudDb.collection('users').get();
+   snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
+  }else{
+   const snap=await cloudDb.collection('users').where('site','==',currentUserProfile.site).get();
+   snap.forEach(d=>rows.push({...(d.data()||{}),uid:d.id}))
+  }
+  if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});
+  rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));
+  renderManagedUsers(box,rows,false)
+ }catch(e){
+  console.error('loadAppUsers',e);
+  box.innerHTML='<div style="color:#8b2f2f;padding:10px 0"><b>Erreur Firestore :</b> '+esc(e.code||e.message||String(e))+'</div>'
+ }
+}
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
  const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;
