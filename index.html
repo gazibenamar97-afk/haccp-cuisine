@@ -726,7 +726,8 @@ function openEstablishmentSupervision(){
  '<div class="panel"><h2>🏢 Gestion des établissements</h2><p class="note">Ajoutez, modifiez, activez ou désactivez vos établissements depuis ce module.</p>'+B('Gérer les établissements',"establishmentsManager()",'primary')+'</div>'+
  '<div class="panel"><h2>📊 Supervision en temps réel</h2><p class="note">Sélectionnez un établissement pour consulter ses produits, DLC, non-conformités, températures, nettoyages et traçabilité.</p><label>Établissement à superviser</label><div class="row" style="align-items:end"><div><select id="supervisionSite" onchange="openSelectedSupervision()"><option value="">Choisir un établissement…</option></select></div></div><div id="supervisionSiteStatus" class="note"></div></div>'+
  '<div class="panel"><h2>👥 Utilisateurs des établissements</h2><p class="note">Choisissez un établissement pour afficher et gérer ses comptes utilisateurs.</p><div class="row" style="align-items:start"><div><label>Choisir l’établissement</label><select id="supervisionUsersSite" onchange="loadSupervisionUsers()"><option value="">Choisir un établissement…</option></select></div><div><div id="supervisionUsersList" class="note" style="padding-top:28px">Sélectionnez un établissement.</div></div></div></div>'+
- '<div class="panel" style="border-color:#d9b8b8"><h2>🧪 Remise à zéro d’un établissement</h2><p class="note">Efface les données d’exploitation de l’établissement choisi sans supprimer ses comptes ni les autres établissements.</p><label>Établissement à remettre à zéro</label><select id="resetSite"><option value="">Choisir un établissement…</option></select><br><br><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetEstablishmentData()">↺ Remettre cet établissement à zéro</button><div id="resetSiteStatus" class="note"></div></div>';
+ '<div class="panel" style="border-color:#d9b8b8"><h2>🧪 Remise à zéro d’un établissement</h2><p class="note">Efface les données d’exploitation de l’établissement choisi sans supprimer ses comptes ni les autres établissements.</p><label>Établissement à remettre à zéro</label><select id="resetSite"><option value="">Choisir un établissement…</option></select><br><br><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetEstablishmentData()">↺ Remettre cet établissement à zéro</button><div id="resetSiteStatus" class="note"></div></div>'+
+ '<div class="panel" style="border-color:#b96b6b;background:#fffafa"><h2>⚠️ Remise à zéro globale des établissements</h2><p class="note"><b>La structure M&T HACCP est conservée.</b> Cette opération retire tous les établissements et désactive leurs profils utilisateurs dans Firestore. Elle efface leurs données d’exploitation, mais ne supprime ni l’application, ni ses modules, ni le catalogue intégré, ni le compte administrateur principal. Vous pourrez ajouter immédiatement un nouvel établissement après la remise à zéro.</p><button id="globalResetBtn" class="btn danger" style="width:auto" onclick="globalResetEstablishments(this)">Remise à zéro globale</button><div id="globalResetStatus" class="note" style="margin-top:10px"></div></div>';
  loadSupervisionSiteOptions();
  loadSupervisionUsersSiteOptions();
  loadResetSiteOptions();
@@ -1127,7 +1128,7 @@ function isEstablishmentManagerProfile(p){if(!p||p.site==='main')return false;co
 function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1>${currentUserProfile&&(currentUserProfile.site==='main'||isEstablishmentManagerProfile(currentUserProfile))?'<div class="panel"><h2>👥 Utilisateurs</h2><p class="note">'+(currentUserProfile.site==='main'?'Gérez les comptes de tous les établissements.':'Gérez uniquement les utilisateurs de votre établissement.')+'</p>'+B('Gérer les utilisateurs','usersManager()','primary')+'</div>':''}<div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div>`}
 
 
-const DEFAULT_ESTABLISHMENTS=[{id:'restaurant-1',name:'Restaurant 1',active:true},{id:'restaurant-2',name:'Restaurant 2',active:true},{id:'restaurant-3',name:'Restaurant 3',active:true}];
+const DEFAULT_ESTABLISHMENTS=[];
 function establishmentSlug(name){return String(name||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)}
 async function getEstablishments(){
  const byId=new Map();
@@ -1367,6 +1368,41 @@ async function resetEstablishmentData(){
   if(site==='main'){Object.assign(S,{stock:[],temps:[],clean:[],trace:[],suppliers:[]});localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));sessionStorage.removeItem('haccpDashboardUnlocked')}
   if(status){status.textContent='Données de '+est.name+' remises à zéro. Comptes utilisateurs et établissements conservés.';status.style.color='#20543e'}
  }catch(e){if(status){status.textContent='Échec de la remise à zéro : '+(e.code||e.message||e);status.style.color='#9e4545'}}
+}
+
+async function globalResetEstablishments(btn){
+ const status=document.getElementById('globalResetStatus'),say=(m,bad=false)=>{if(status){status.textContent=m;status.style.color=bad?'#9e4545':'#20543e'}};
+ if(!cloudDb||!currentUserProfile||currentUserProfile.role!=='admin'||currentUserProfile.site!=='main'||SITE_ID!=='main'){alert('Remise à zéro globale réservée à l’administrateur principal.');return}
+ if(!confirm('ATTENTION : cette opération va retirer TOUS les établissements, vider leurs données HACCP et désactiver leurs profils utilisateurs. La structure de l’application et votre compte administrateur seront conservés. Continuer ?'))return;
+ const typed=prompt('Pour confirmer, saisissez exactement : REMISE A ZERO');
+ if(typed!=='REMISE A ZERO'){if(typed!==null)say('Confirmation incorrecte. Aucune modification effectuée.',true);return}
+ const adminPassword=prompt('Mot de passe administrateur requis :');if(adminPassword===null)return;
+ try{
+  const authUser=firebase.auth().currentUser;if(!authUser||!authUser.email)throw new Error('Session administrateur invalide.');
+  await authUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(authUser.email,adminPassword));
+ }catch(e){say('Mot de passe administrateur incorrect. Aucune modification effectuée.',true);return}
+ if(btn){btn.disabled=true;btn.textContent='Remise à zéro en cours…'};say('Nettoyage sécurisé en cours…');
+ try{
+  const adminUid=firebase.auth().currentUser.uid;
+  const usersSnap=await cloudDb.collection('users').get();
+  const sites=new Set();
+  const userRefs=[];
+  usersSnap.forEach(d=>{const u=d.data()||{};if(d.id!==adminUid&&u.site&&u.site!=='main'){sites.add(u.site);userRefs.push(d.ref)}});
+  try{const reg=await cloudDb.collection('appState').doc('establishments').get({source:'server'});const rd=reg.exists?(reg.data()||{}):{};(rd.items||[]).forEach(x=>{if(x&&x.id&&x.id!=='main')sites.add(x.id)})}catch(_){}
+  try{const states=await cloudDb.collection('appState').get();states.forEach(d=>{if(d.id!=='main'&&d.id!=='establishments')sites.add(d.id)})}catch(_){}
+  // Keep documents/profile history compatible with the current security rules: disable old profiles instead of deleting them.
+  for(const ref of userRefs)await ref.update({active:false,resetAt:new Date().toISOString(),resetBy:adminUid});
+  // Remove operational data for every establishment. The app code/catalogue itself is untouched.
+  for(const site of sites){
+   await cloudDb.collection('appState').doc(site).set({stock:[],temps:[],clean:[],trace:[],suppliers:[],customProducts:[],equipment:[],productOverrides:{},disabledBaseProducts:{},_cloudUpdatedAt:new Date().toISOString(),_globalReset:true,_resetBy:adminUid});
+   try{await cloudDb.collection('appUsers').doc(site).set({users:[],updatedAt:new Date().toISOString(),resetBy:adminUid})}catch(e){console.warn('appUsers reset',site,e)}
+  }
+  await cloudDb.collection('appState').doc('establishments').set({items:[],updatedAt:new Date().toISOString(),updatedBy:adminUid,globalResetAt:new Date().toISOString()});
+  try{localStorage.setItem('mtEstablishmentsCache','[]')}catch(_){}
+  say('Remise à zéro terminée. La structure M&T HACCP et le compte administrateur sont conservés. Vous pouvez ajouter immédiatement un nouvel établissement.');
+  setTimeout(()=>establishmentsManager(),900);
+ }catch(e){console.error('globalResetEstablishments',e);say('Échec de la remise à zéro : '+(e.code||e.message||e),true)}
+ finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Remise à zéro globale'}}
 }
 
 async function resetDemoData(){if(!currentUserProfile||currentUserProfile.role!=='admin'||currentUserProfile.site!=='main'||SITE_ID!=='main'){alert('Remise à zéro réservée à l’administrateur M&T HACCP.');return}let pin=localStorage.getItem('haccpAdminPin');if(pin){let entered=prompt('Code PIN administrateur requis :');if(entered===null||entered!==pin)return}if(!confirm('Remettre les données à zéro sur tous les appareils ?'))return;if(!cloudDb){alert('Firestore n’est pas disponible. Remise à zéro annulée pour éviter le retour des anciennes données.');return}if(!cloudReady){try{let probe=await cloudDb.collection('appState').doc(SITE_ID).get({source:'server'});if(!probe.exists)throw new Error('Document cloud introuvable');cloudReady=true}catch(e){console.warn('Firestore reset check',e);alert('Connexion Firestore indisponible pour le moment. Vérifiez Internet puis réessayez. Aucune donnée n’a été effacée.');return}}clearTimeout(cloudWriteTimer);let backup=JSON.parse(JSON.stringify(S));cloudApplying=true;let empty=JSON.parse(JSON.stringify(S));empty.stock=[];empty.temps=[];empty.clean=[];empty.trace=[];empty.suppliers=[];syncLocalSettingsIntoState();try{let data=sanitizeCloudState(empty);data._cloudUpdatedAt=new Date().toISOString();let ref=cloudDb.collection('appState').doc(SITE_ID);await ref.set(data);let check=await ref.get({source:'server'});let server=check.data()||{};if((server.stock||[]).length||(server.trace||[]).length)throw new Error('Firestore conserve encore des données');Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,empty);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));cloudApplying=false;sessionStorage.removeItem('haccpDashboardUnlocked');trace();alert('Firestore vérifié : données à zéro sur le serveur.')}catch(e){cloudApplying=false;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,backup);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));console.error(e);alert('Échec de la remise à zéro Firestore : '+(e.code||e.message||'erreur inconnue'))}}
