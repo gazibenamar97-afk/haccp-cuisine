@@ -1080,7 +1080,7 @@ async function saveEstablishmentEdit(id){const items=await getEstablishments(),x
 async function toggleEstablishment(id){const items=await getEstablishments(),x=items.find(e=>e.id===id);if(!x)return;x.active=x.active===false;x.updatedAt=new Date().toISOString();x.updatedBy='M&T Admin';await saveEstablishments(items);await renderEstablishmentsList()}
 function refreshAdminEstablishmentButtons(){if(document.getElementById('adminEstablishmentButtons'))loadAdminEstablishmentButtons()}
 
-async function usersManager(){
+async async function usersManager(){
  const isAdmin=currentUserProfile&&currentUserProfile.site==='main';
  const isManager=currentUserProfile&&currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID;
  if(!isAdmin&&!isManager){settings();return}
