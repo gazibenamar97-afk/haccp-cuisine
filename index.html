@@ -1055,12 +1055,15 @@ async function usersManager(){
  CURRENT_VIEW='users-manager';
  app.innerHTML=`${B('← Paramètres','settings()','back')}<h1>Gestion des utilisateurs</h1>
  <div class="panel"><h2>Créer un utilisateur</h2>
- <div class="row"><div><label>Nom complet</label><input id="userName" autocomplete="off"></div><div><label>E-mail</label><input id="userEmail" type="email" autocomplete="off"></div></div>
- <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" minlength="8"></div><div><label>Rôle</label><select id="userRole">${isAdmin?'<option value="responsable">Responsable établissement</option>':''}<option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
+ <div class="row"><div><label>Nom complet</label><input id="userName" name="mt_new_user_name" value="" autocomplete="off"></div><div><label>E-mail</label><input id="userEmail" name="mt_new_user_email" type="email" value="" autocomplete="new-password" autocapitalize="none" spellcheck="false"></div></div>
+ <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole">${isAdmin?'<option value="responsable">Responsable établissement</option>':''}<option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
  <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div>
  <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList"><p class="note">Chargement…</p></div></div>`;
  if(isAdmin)await loadUserSiteOptions('userSite');else{userSite.innerHTML='<option value="'+esc(SITE_ID)+'">'+esc(SITE_NAME)+'</option>';userSite.value=SITE_ID}
+ // Keep the account-creation form empty even when the browser/password manager tries to autofill it.
+ ['userName','userEmail','userPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+ setTimeout(()=>['userName','userEmail','userPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''}),120);
  await loadAppUsers();
 }
 function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'&&u.role!=='responsable'}
