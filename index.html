@@ -490,13 +490,13 @@ try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e
 function authLoginScreen(message=''){
  document.body.classList.remove('on-home');
  let n=document.querySelector('nav');if(n)n.style.display='none';
- app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>E-mail</label><input id="loginEmail" type="email" autocomplete="username" placeholder="nom@entreprise.com"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
+ app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>\${SITE_ID==='main'?'E-mail administrateur':'Nom d’utilisateur'}</label><input id="loginEmail" type="\${SITE_ID==='main'?'email':'text'}" autocomplete="username" placeholder="\${SITE_ID==='main'?'nom@entreprise.com':'ex. chef01'}"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
 }
 let loginInProgress=false;
 async function loginAppUser(btn){
- if(loginInProgress)return; const email=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
+ if(loginInProgress)return; const login=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),email=SITE_ID==='main'?login:(login+'@'+SITE_ID+'.mt-haccp.local'),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
  const say=m=>{if(st)st.textContent=m};
- if(!email||!password){say('Saisissez votre e-mail et votre mot de passe.');return}
+ if(!login||!password){say(SITE_ID==='main'?'Saisissez votre e-mail et votre mot de passe.':'Saisissez votre nom d’utilisateur et votre mot de passe.');return}
  loginInProgress=true;if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
   await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
@@ -504,7 +504,7 @@ async function loginAppUser(btn){
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
-  let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?'E-mail ou mot de passe incorrect.':(e.message||'Connexion impossible.');
+  let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?(SITE_ID==='main'?'E-mail ou mot de passe incorrect.':'Nom d’utilisateur ou mot de passe incorrect.'):(e.message||'Connexion impossible.');
   say(msg);loginInProgress=false;if(btn){btn.disabled=false;btn.textContent='Se connecter'}
  }
 }
@@ -1058,7 +1058,7 @@ async function usersManager(){
  CURRENT_VIEW='users-manager';
  app.innerHTML=`${B('← Paramètres','settings()','back')}<h1>Gestion des utilisateurs</h1>
  <div class="panel"><h2>Créer un utilisateur</h2>
- <div class="row"><div><label>Nom complet</label><input id="userName" name="mt_new_user_name" value="" autocomplete="off"></div><div><label>E-mail</label><input id="userEmail" name="mt_new_user_email" type="email" value="" autocomplete="new-password" autocapitalize="none" spellcheck="false"></div></div>
+ <div class="row"><div><label>Nom complet</label><input id="userName" name="mt_new_user_name" value="" autocomplete="off"></div><div><label>Nom d’utilisateur</label><input id="userEmail" name="mt_new_username" type="text" value="" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="ex. chef01"></div></div>
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
  <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div>
@@ -1088,7 +1088,7 @@ async function loadOtherAppUsers(){
   rows.sort((a,b)=>String(a.name||a.email||'').localeCompare(String(b.name||b.email||''),'fr'));
   if(!rows.length){box.innerHTML='<div class="note" style="padding:10px 0">Aucun autre compte enregistré.</div>';return}
   const label=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');
-  box.innerHTML=rows.map(u=>'<div class="record"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.email||'')+' · '+esc(label(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
+  box.innerHTML=rows.map(u=>'<div class="record"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(label(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
  }catch(e){console.error('loadOtherAppUsers',e);box.innerHTML='<div style="padding:10px;color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e.code||e.message||String(e))+'</div>'}
 }
 
@@ -1098,17 +1098,19 @@ async function createAppUser(btn){
  if(!cloudDb||!currentUserProfile){say('Service indisponible.',true);return}
  const isAdmin=currentUserProfile.site==='main',isManager=currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID;
  if(!isAdmin&&!isManager){say('Accès non autorisé.',true);return}
- const name=(userName.value||'').trim(),email=(userEmail.value||'').trim().toLowerCase(),password=userPassword.value||'';
+ const name=(userName.value||'').trim(),username=(userEmail.value||'').trim().toLowerCase(),password=userPassword.value||'';
  let role=userRole.value,site=isManager?SITE_ID:userSite.value;
+ const usernameOk=/^[a-z0-9._-]{3,30}$/.test(username);
+ const email=username+'@'+site+'.mt-haccp.local';
  if(isManager&&!['responsable','haccp','employe'].includes(role)){say('Rôle non autorisé.',true);return}
- if(!name||!userEmail.checkValidity()||password.length<8){say('Vérifiez le nom, l’e-mail et le mot de passe (8 caractères minimum).',true);return}
+ if(!name||!usernameOk||password.length<8){say('Vérifiez le nom, le nom d’utilisateur (3 à 30 caractères) et le mot de passe (8 caractères minimum).',true);return}
  if(btn){btn.disabled=true;btn.textContent='Création…'}
  try{
   let creator;try{creator=firebase.app('mtUserCreator')}catch(e){creator=firebase.initializeApp(FIREBASE_CONFIG,'mtUserCreator')}
   const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
-  const profile={uid:cred.user.uid,name,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:currentUserProfile.uid||firebase.auth().currentUser?.uid||''};
+  const profile={uid:cred.user.uid,name,username,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:currentUserProfile.uid||firebase.auth().currentUser?.uid||''};
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);await creator.auth().signOut();
-  say('Compte créé avec succès.',false);await loadAppUsers();
+  say('Compte créé avec succès.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
