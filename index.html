@@ -1085,7 +1085,7 @@ async function usersManager(){
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
  const listBox=document.getElementById('usersList');
  if(listBox)listBox.innerHTML='<div class="note" style="padding:10px 0">Chargement des autres comptes…</div>';
- const usersPromise=loadOtherAppUsers();
+ const usersPromise=loadAppUsers();
  if(isAdmin)loadMigrationUsers();
  if(isAdmin){
   try{await loadUserSiteOptions('userSite')}catch(e){console.error('loadUserSiteOptions',e)}
@@ -1134,7 +1134,7 @@ async function migrateLegacyUser(btn){
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);
   await cloudDb.collection('users').doc(uid).update({active:false,migratedTo:cred.user.uid,migratedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid});
   await creator.auth().signOut();say('Migration réussie : '+username+' peut maintenant se connecter avec son nom d’utilisateur.',false);
-  document.getElementById('migrationUsername').value='';document.getElementById('migrationPassword').value='';await loadMigrationUsers();await loadOtherAppUsers();
+  document.getElementById('migrationUsername').value='';document.getElementById('migrationPassword').value='';await loadMigrationUsers();await loadAppUsers();
  }catch(e){console.error('migrateLegacyUser',e);try{if(creator)await creator.auth().signOut()}catch(_e){}say('Migration impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Migrer le compte'}}
 }
@@ -1156,7 +1156,7 @@ async function createAppUser(btn){
   const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
   const profile={uid:cred.user.uid,name,username,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:currentUserProfile.uid||firebase.auth().currentUser?.uid||''};
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);await creator.auth().signOut();
-  say('Compte créé avec succès.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
+  say('Compte créé avec succès.',false);userName.value='';userEmail.value='';userPassword.value='';await loadAppUsers();
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
