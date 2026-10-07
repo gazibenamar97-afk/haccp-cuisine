@@ -313,6 +313,24 @@ body.on-home .home-direction .direction-photo{
   background-size:cover!important;
   background-position:center!important;
 }
+</style><style id="direction-mobile-single-photo-v168">
+/* On small screens, suppress the original card background behind the dedicated photo panel. */
+@media(max-width:700px){
+ body.on-home .home-direction{
+  background-image:none!important;
+  background-color:#fff!important;
+ }
+ body.on-home .home-direction::before,
+ body.on-home .home-direction::after{
+  background-image:none!important;
+ }
+ body.on-home .home-direction .direction-photo{
+  left:50%!important;
+  right:0!important;
+  width:50%!important;
+  background-image:url("https://cdn.marblism.com/1_erpLjjSTz.webp")!important;
+ }
+}
 </style></head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
