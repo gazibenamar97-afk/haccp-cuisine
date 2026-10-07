@@ -1290,6 +1290,18 @@ async function createAppUser(btn){
   let siteUsers=await getSiteUsers(site);
   if(!siteUsers.some(u=>u.uid===profile.uid))siteUsers.push(profile);
   await cloudDb.collection('appUsers').doc(site).set({site,users:siteUsers,updatedAt:new Date().toISOString()},{merge:true});
+  // Mirror the directory in appState/<site>. Establishment accounts already have
+  // reliable read access to their own appState document for HACCP synchronization.
+  // This avoids Firestore collection-query/list permission edge cases.
+  try{
+   const stateRef=cloudDb.collection('appState').doc(site);
+   const stateSnap=await stateRef.get();
+   const stateData=stateSnap.exists?(stateSnap.data()||{}):{};
+   const dir=Array.isArray(stateData.userDirectory)?stateData.userDirectory.filter(u=>u&&u.uid):[];
+   const pos=dir.findIndex(u=>u.uid===profile.uid);
+   if(pos>=0)dir[pos]=profile;else dir.push(profile);
+   await stateRef.set({userDirectory:dir,_cloudUpdatedAt:new Date().toISOString()},{merge:true});
+  }catch(e){console.warn('User directory mirror',e)}
   await creator.auth().signOut();
   say('Compte créé avec succès et vérifié.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
@@ -1299,6 +1311,12 @@ function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsa
 async function getSiteUsers(site){
  if(!cloudDb||!site)return[];
  const by=new Map(),add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
+ // Source 0: directory mirrored in appState/<site>. This document uses the same
+ // access path as the establishment's HACCP data and is therefore the most reliable.
+ try{
+  const s=await cloudDb.collection('appState').doc(site).get();
+  if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)
+ }catch(e){console.warn('User directory read',e)}
  // Source 1: per-establishment registry (may be partial on older versions).
  try{
   const r=await cloudDb.collection('appUsers').doc(site).get();
@@ -1313,7 +1331,10 @@ async function getSiteUsers(site){
  if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
  const rows=[...by.values()];
  // Repair the per-site registry with the complete merged list when possible.
- if(rows.length){try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(e){console.warn('User registry repair',e)}}
+ if(rows.length){
+  try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(e){console.warn('User registry repair',e)}
+  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('User directory repair',e)}
+ }
  return rows
 }
 async function loadAppUsers(){
