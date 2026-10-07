@@ -490,18 +490,18 @@ try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e
 function authLoginScreen(message=''){
  document.body.classList.remove('on-home');
  let n=document.querySelector('nav');if(n)n.style.display='none';
- app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>${SITE_ID==='main'?'E-mail administrateur':'Nom d’utilisateur'}</label><input id="loginEmail" type="${SITE_ID==='main'?'email':'text'}" autocomplete="username" placeholder="${SITE_ID==='main'?'nom@entreprise.com':'ex. chef01'}"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
+ app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>Nom d’utilisateur ou e-mail administrateur</label><input id="loginEmail" type="text" autocomplete="username" placeholder="restaurant1 ou admin@entreprise.com"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
 }
 let loginInProgress=false;
 async function loginAppUser(btn){
  if(loginInProgress)return; const login=(document.getElementById('loginEmail').value||'').trim().toLowerCase(),password=document.getElementById('loginPassword').value||'',st=document.getElementById('loginStatus');
  const say=m=>{if(st)st.textContent=m};
- if(!login||!password){say(SITE_ID==='main'?'Saisissez votre e-mail et votre mot de passe.':'Saisissez votre nom d’utilisateur et votre mot de passe.');return}
+ if(!login||!password){say('Saisissez votre nom d’utilisateur ou e-mail administrateur et votre mot de passe.');return}
  loginInProgress=true;if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
   await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
   let cred=null;
-  if(SITE_ID==='main'&&login.includes('@')){
+  if(login.includes('@')){
    cred=await firebase.auth().signInWithEmailAndPassword(login,password);
   }else{
    // Restaurant usernames are global entry credentials. Try the current site last:
@@ -518,7 +518,7 @@ async function loginAppUser(btn){
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
-  let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?(SITE_ID==='main'?'E-mail ou mot de passe incorrect.':'Nom d’utilisateur ou mot de passe incorrect.'):(e.message||'Connexion impossible.');
+  let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?'Nom d’utilisateur, e-mail ou mot de passe incorrect.':(e.message||'Connexion impossible.');
   say(msg);loginInProgress=false;if(btn){btn.disabled=false;btn.textContent='Se connecter'}
  }
 }
