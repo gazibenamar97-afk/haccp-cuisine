@@ -1091,7 +1091,7 @@ async function usersManager(){
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
  <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div>
- ${isAdmin?'<div class="panel"><h2>Migration des anciens comptes</h2><p class="note">Convertit un ancien compte e-mail en compte de test avec nom d’utilisateur. L’ancien profil est désactivé après création du nouveau compte.</p><label>Ancien compte</label><select id="migrationOldUser"><option value="">Choisir un compte…</option></select><div class="row"><div><label>Nouveau nom d’utilisateur</label><input id="migrationUsername" autocomplete="off" placeholder="restaurant1"></div><div><label>Nouveau mot de passe</label><input id="migrationPassword" type="password" autocomplete="new-password" minlength="8"></div></div><button class="btn primary" onclick="migrateLegacyUser(this)">Migrer le compte</button><div id="migrationStatus" class="note"></div></div>':''}<div class="panel"><h2>Comptes enregistrés</h2><div class="record"><b>${esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')}</b><br><span class="note">${esc(currentUserProfile.email||'')} · ${esc(currentUserProfile.role==='responsable'?'Responsable établissement':currentUserProfile.role||'')} · Actif</span></div><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
+ ${isAdmin?'<div class="panel"><h2>Migration des anciens comptes</h2><p class="note">Convertit un ancien compte e-mail en compte de test avec nom d’utilisateur. L’ancien profil est désactivé après création du nouveau compte.</p><label>Ancien compte</label><select id="migrationOldUser"><option value="">Choisir un compte…</option></select><div class="row"><div><label>Nouveau nom d’utilisateur</label><input id="migrationUsername" autocomplete="off" placeholder="restaurant1"></div><div><label>Nouveau mot de passe</label><input id="migrationPassword" type="password" autocomplete="new-password" minlength="8"></div></div><button class="btn primary" onclick="migrateLegacyUser(this)">Migrer le compte</button><div id="migrationStatus" class="note"></div></div>':''}<div class="panel"><h2>Comptes enregistrés</h2><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
  // Start account loading immediately. Do not wait for the establishment selector,
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
  const listBox=document.getElementById('usersList');
@@ -1183,9 +1183,17 @@ async function loadAppUsers(){
  const site=currentUserProfile.site;
  let rows=[],loadError=null;
  try{
-  const snap=isAdmin
-   ? await cloudDb.collection('users').get()
-   : await cloudDb.collection('users').where('site','==',site).get();
+  let snap;
+  try{
+   snap=isAdmin
+    ? await cloudDb.collection('users').get({source:'server'})
+    : await cloudDb.collection('users').where('site','==',site).get({source:'server'});
+  }catch(serverErr){
+   console.warn('loadAppUsers server fallback',serverErr);
+   snap=isAdmin
+    ? await cloudDb.collection('users').get()
+    : await cloudDb.collection('users').where('site','==',site).get();
+  }
   snap.forEach(doc=>{
    const u={...(doc.data()||{}),uid:doc.id};
    if(isAdmin||u.site===site)rows.push(u);
