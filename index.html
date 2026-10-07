@@ -1249,17 +1249,38 @@ async function createAppUser(btn){
   const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
   const profile={uid:cred.user.uid,name,username,email,role,site,active:true,createdAt:new Date().toISOString(),createdBy:currentUserProfile.uid||firebase.auth().currentUser?.uid||''};
   await cloudDb.collection('users').doc(cred.user.uid).set(profile);
-  // Maintain a per-establishment user registry. This avoids collection queries being blocked
-  // by Firestore rules and gives each establishment a simple, reliable list of its own users.
-  const registryRef=cloudDb.collection('appUsers').doc(site);
-  await registryRef.set({site,users:firebase.firestore.FieldValue.arrayUnion(profile),updatedAt:new Date().toISOString()},{merge:true});
+  const saved=await cloudDb.collection('users').doc(cred.user.uid).get();
+  if(!saved.exists)throw new Error('Le profil utilisateur n’a pas été enregistré dans Firestore.');
+  // Keep the establishment registry in sync, without using arrayUnion (which can retain stale partial lists).
+  let siteUsers=await getSiteUsers(site);
+  if(!siteUsers.some(u=>u.uid===profile.uid))siteUsers.push(profile);
+  await cloudDb.collection('appUsers').doc(site).set({site,users:siteUsers,updatedAt:new Date().toISOString()},{merge:true});
   await creator.auth().signOut();
-  say('Compte créé avec succès.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
+  say('Compte créé avec succès et vérifié.',false);userName.value='';userEmail.value='';userPassword.value='';await loadOtherAppUsers();
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
 function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');if(!rows.length){box.innerHTML='<div class="note" style="padding:12px 0">Aucun compte enregistré.</div>';return}box.innerHTML='<div class="note" style="padding:4px 0 10px"><b>'+rows.length+'</b> compte'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(adminMode?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':(canManageUserProfile(u)&&u.uid!==currentUserProfile.uid?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':''))+'</div>').join('')}
-async function getSiteUsers(site){if(!cloudDb||!site)return[];let rows=[];try{const r=await cloudDb.collection('appUsers').doc(site).get();if(r.exists&&Array.isArray(r.data()?.users))rows=r.data().users.map(u=>({...u}))}catch(e){console.warn('User registry read',e)}if(!rows.length){try{const snap=await cloudDb.collection('users').where('site','==',site).get();snap.forEach(d=>rows.push({...(d.data()||{}),uid:d.id}));if(rows.length){try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(_){}}}catch(e){console.warn('User site query',e)}}const by=new Map();rows.forEach(u=>{if(u&&u.uid)by.set(u.uid,u)});return[...by.values()]}
+async function getSiteUsers(site){
+ if(!cloudDb||!site)return[];
+ const by=new Map(),add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
+ // Source 1: per-establishment registry (may be partial on older versions).
+ try{
+  const r=await cloudDb.collection('appUsers').doc(site).get();
+  if(r.exists&&Array.isArray(r.data()?.users))r.data().users.forEach(add)
+ }catch(e){console.warn('User registry read',e)}
+ // Source 2: authoritative user profiles. Always run this query even if registry is non-empty.
+ try{
+  const snap=await cloudDb.collection('users').where('site','==',site).get();
+  snap.forEach(d=>add({...(d.data()||{}),uid:d.id}))
+ }catch(e){console.warn('User site query',e)}
+ // Source 3: current signed-in account, so its establishment never renders empty.
+ if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
+ const rows=[...by.values()];
+ // Repair the per-site registry with the complete merged list when possible.
+ if(rows.length){try{await cloudDb.collection('appUsers').doc(site).set({site,users:rows,updatedAt:new Date().toISOString()},{merge:true})}catch(e){console.warn('User registry repair',e)}}
+ return rows
+}
 async function loadAppUsers(){const box=document.getElementById('usersList');if(!box)return;box.innerHTML='<div class="note" style="padding:10px 0">Chargement des comptes…</div>';if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}try{let rows=await getSiteUsers(currentUserProfile.site);if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});rows.sort((a,b)=>String(a.name||a.username||a.email||'').localeCompare(String(b.name||b.username||b.email||''),'fr'));renderManagedUsers(box,rows,false)}catch(e){console.error('loadAppUsers',e);renderManagedUsers(box,[{...currentUserProfile}],false)}}
 async function editAppUser(uid){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
