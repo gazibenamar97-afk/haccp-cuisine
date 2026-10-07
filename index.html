@@ -1087,8 +1087,13 @@ async function loadAppUsers(){
  const box=document.getElementById('usersList');if(!box||!cloudDb)return;
  try{
   const isAdmin=currentUserProfile&&currentUserProfile.site==='main';
-  const snap=isAdmin?await cloudDb.collection('users').get():await cloudDb.collection('users').where('site','==',SITE_ID).get();
-  let rows=[];snap.forEach(doc=>{const u={...(doc.data()||{}),uid:doc.id};if(isAdmin||u.site===SITE_ID)rows.push(u)});
+  // Firestore rules authorize a site manager to read only profiles from the same site.
+  // A collection-wide query would be rejected by Firestore because rules are not filters,
+  // so managers must query their own site explicitly.
+  const snap=isAdmin
+    ? await cloudDb.collection('users').get()
+    : await cloudDb.collection('users').where('site','==',currentUserProfile.site).get();
+  let rows=[];snap.forEach(doc=>{const u={...(doc.data()||{}),uid:doc.id};if(isAdmin||u.site===currentUserProfile.site)rows.push(u)});
   rows.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
   if(!rows.length){box.innerHTML='<p class="note">Aucun utilisateur enregistré.</p>';return}
   box.innerHTML=rows.map(u=>'<div class="record"><b>'+esc(u.name||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.email||'')+' · '+esc(u.role||'')+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':'')+'</div>').join('');
