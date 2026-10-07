@@ -1062,12 +1062,13 @@ async function usersManager(){
  <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" name="mt_new_user_password" type="password" value="" autocomplete="new-password" minlength="8"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option>${isAdmin?'<option value="admin">Administrateur</option>':''}</select></div></div>
  <label>Établissement</label><select id="userSite" ${isManager?'disabled':''}></select><br><br>
  <button id="createUserBtn" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note"></div></div>
- <div class="panel"><h2>Comptes enregistrés</h2><div class="record"><b>${esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')}</b><br><span class="note">${esc(currentUserProfile.email||'')} · ${esc(currentUserProfile.role==='responsable'?'Responsable établissement':currentUserProfile.role||'')} · Actif</span></div><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
+ ${isAdmin?'<div class="panel"><h2>Migration des anciens comptes</h2><p class="note">Convertit un ancien compte e-mail en compte de test avec nom d’utilisateur. L’ancien profil est désactivé après création du nouveau compte.</p><label>Ancien compte</label><select id="migrationOldUser"><option value="">Choisir un compte…</option></select><div class="row"><div><label>Nouveau nom d’utilisateur</label><input id="migrationUsername" autocomplete="off" placeholder="restaurant1"></div><div><label>Nouveau mot de passe</label><input id="migrationPassword" type="password" autocomplete="new-password" minlength="8"></div></div><button class="btn primary" onclick="migrateLegacyUser(this)">Migrer le compte</button><div id="migrationStatus" class="note"></div></div>':''}<div class="panel"><h2>Comptes enregistrés</h2><div class="record"><b>${esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')}</b><br><span class="note">${esc(currentUserProfile.email||'')} · ${esc(currentUserProfile.role==='responsable'?'Responsable établissement':currentUserProfile.role||'')} · Actif</span></div><div id="usersList" style="display:block!important;min-height:40px!important"></div></div>`;
  // Start account loading immediately. Do not wait for the establishment selector,
  // otherwise an unrelated Firestore read can leave the account panel permanently empty.
  const listBox=document.getElementById('usersList');
  if(listBox)listBox.innerHTML='<div class="note" style="padding:10px 0">Chargement des autres comptes…</div>';
  const usersPromise=loadOtherAppUsers();
+ if(isAdmin)loadMigrationUsers();
  if(isAdmin){
   try{await loadUserSiteOptions('userSite')}catch(e){console.error('loadUserSiteOptions',e)}
  }else{
@@ -1092,6 +1093,33 @@ async function loadOtherAppUsers(){
  }catch(e){console.error('loadOtherAppUsers',e);box.innerHTML='<div style="padding:10px;color:#8b2f2f"><b>Erreur de chargement :</b> '+esc(e.code||e.message||String(e))+'</div>'}
 }
 
+async function loadMigrationUsers(){
+ const s=document.getElementById('migrationOldUser');if(!s||!cloudDb||currentUserProfile?.site!=='main')return;
+ try{const snap=await cloudDb.collection('users').get();let a=[];snap.forEach(d=>{const u={...d.data(),uid:d.id};if(u.site&&u.site!=='main'&&u.active!==false&&!u.username)a.push(u)});
+ a.sort((x,y)=>String(x.site).localeCompare(String(y.site)));s.innerHTML='<option value="">Choisir un compte…</option>'+a.map(u=>'<option value="'+esc(u.uid)+'">'+esc((u.name||u.email||'Utilisateur')+' — '+u.site)+'</option>').join('');
+ }catch(e){console.error('loadMigrationUsers',e)}
+}
+async function migrateLegacyUser(btn){
+ const st=document.getElementById('migrationStatus'),say=(m,bad)=>{if(st){st.textContent=m;st.style.color=bad?'#a12622':'#20543e'}};
+ if(currentUserProfile?.site!=='main'){say('Réservé à l’administrateur.',true);return}
+ const uid=document.getElementById('migrationOldUser')?.value||'',username=(document.getElementById('migrationUsername')?.value||'').trim().toLowerCase(),password=document.getElementById('migrationPassword')?.value||'';
+ if(!uid||!/^[a-z0-9._-]{3,30}$/.test(username)||password.length<8){say('Choisissez le compte, un nom d’utilisateur valide et un mot de passe de 8 caractères minimum.',true);return}
+ if(btn){btn.disabled=true;btn.textContent='Migration…'}
+ let creator=null;
+ try{
+  const oldSnap=await cloudDb.collection('users').doc(uid).get();if(!oldSnap.exists)throw new Error('Ancien profil introuvable.');
+  const old=oldSnap.data()||{},site=old.site;if(!site||site==='main')throw new Error('Compte non migrable.');
+  const email=username+'@'+site+'.mt-haccp.local';
+  try{creator=firebase.app('mtUserCreator')}catch(e){creator=firebase.initializeApp(FIREBASE_CONFIG,'mtUserCreator')}
+  const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
+  const profile={...old,uid:cred.user.uid,username,email,active:true,migratedFrom:uid,migratedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid};
+  await cloudDb.collection('users').doc(cred.user.uid).set(profile);
+  await cloudDb.collection('users').doc(uid).update({active:false,migratedTo:cred.user.uid,migratedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid});
+  await creator.auth().signOut();say('Migration réussie : '+username+' peut maintenant se connecter avec son nom d’utilisateur.',false);
+  document.getElementById('migrationUsername').value='';document.getElementById('migrationPassword').value='';await loadMigrationUsers();await loadOtherAppUsers();
+ }catch(e){console.error('migrateLegacyUser',e);try{if(creator)await creator.auth().signOut()}catch(_e){}say('Migration impossible : '+(e.code||e.message||e),true)}
+ finally{if(btn){btn.disabled=false;btn.textContent='Migrer le compte'}}
+}
 function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return currentUserProfile.role==='responsable'&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'&&u.uid!==currentUserProfile.uid}
 async function createAppUser(btn){
  const status=document.getElementById('createUserStatus'),say=(m,bad)=>{if(status){status.textContent=m;status.style.color=bad?'#a12622':'#20543e'}};
