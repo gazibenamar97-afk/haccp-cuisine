@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v126-mobile-logout-home-only-all-app-20261007">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v127-admin-account-transition-20261007">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -515,7 +515,10 @@ async function authorizeAppUser(user){
   if(!snap.exists){await firebase.auth().signOut();authLoginScreen('Ce compte n’est pas autorisé dans M&T HACCP.');return false}
   const p=snap.data()||{};currentUserProfile={...p,uid:user.uid};
   if(p.active===false){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Ce compte a été désactivé par l’administrateur.');return false}
-  if(!p.site||!['restaurant-1','restaurant-2'].includes(p.site)){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Aucun établissement valide n’est affecté à ce compte.');return false}
+  const isAdmin=p.role==='admin'&&p.site==='main';
+  if(!isAdmin&&(!p.site||!['restaurant-1','restaurant-2'].includes(p.site))){await firebase.auth().signOut();currentUserProfile=null;authLoginScreen('Aucun établissement valide n’est affecté à ce compte.');return false}
+  if(SITE_ID==='main'&&!isAdmin){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
+  if(SITE_ID!=='main'&&isAdmin){location.replace(location.pathname+'?site=main&auth=1');return false}
   if(SITE_ID!==p.site){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
   renderUserSessionBar();home();await initCloudSync();return true
  }catch(e){console.error('Authorize',e);authLoginScreen('Impossible de vérifier les droits du compte. '+(e.message||''));return false}
@@ -539,8 +542,14 @@ function renderUserSessionBar(){
 }
 async function logoutAppUser(){try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
 async function startApplication(){
- if(SITE_ID==='main'){home();initCloudSync();return}
- if(!firebase.auth){authLoginScreen('Firebase Authentication indisponible.');return}
+ if(!firebase.auth){if(SITE_ID==='main'){home();initCloudSync();return}authLoginScreen('Firebase Authentication indisponible.');return}
+ if(SITE_ID==='main'){
+  firebase.auth().onAuthStateChanged(async user=>{
+   if(user){const ok=await authorizeAppUser(user);if(!ok&&!currentUserProfile){home();initCloudSync()}}
+   else{home();initCloudSync()}
+  });
+  return
+ }
  firebase.auth().onAuthStateChanged(async user=>{if(user)await authorizeAppUser(user);else authLoginScreen()});
 }
 function cloudComparable(x){let y=JSON.parse(JSON.stringify(x||{}));delete y._cloudUpdatedAt;return JSON.stringify(y)}
@@ -1038,8 +1047,8 @@ async function usersManager(){
  app.innerHTML=`${B('← Paramètres','settings()','back')}<h1>Gestion des utilisateurs</h1>
  <div class="panel"><h2>Créer un utilisateur</h2>
  <div class="row"><div><label>Nom complet</label><input id="userName" autocomplete="off" placeholder="Nom du responsable"></div><div><label>E-mail</label><input id="userEmail" type="email" autocomplete="off" placeholder="utilisateur@restaurant.tn"></div></div>
- <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option></select></div></div>
- <label>Établissement</label><select id="userSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option></select><br><br>
+ <div class="row"><div><label>Mot de passe provisoire</label><input id="userPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum"></div><div><label>Rôle</label><select id="userRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option><option value="admin">Administrateur</option></select></div></div>
+ <label>Établissement</label><select id="userSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option><option value="main">Espace administrateur</option></select><br><br>
  <button id="createUserBtn" type="button" class="btn primary" onclick="createAppUser(this);return false">Créer le compte</button><div id="createUserStatus" class="note" style="margin-top:12px;font-weight:700"></div></div>
  <div class="panel"><h2>Comptes enregistrés</h2><div id="usersList"><p class="note" style="color:#20543e"><b>Module utilisateurs v119 chargé.</b><br>Recherche des comptes Firebase…</p></div></div>`;
  setTimeout(function(){loadAppUsers().catch(function(e){let b=document.getElementById("usersList");if(b)b.innerHTML="<p class=\"note\" style=\"color:#9e4545\">Erreur de chargement : "+esc(e.message||String(e))+"</p>"})},100);
