@@ -1342,8 +1342,16 @@ async function resetEstablishmentData(){
  else{const items=await getEstablishments();est=items.find(x=>x.id===site)}
  if(!est){if(status){status.textContent='Établissement introuvable.';status.style.color='#9e4545'}return}
  if(!confirm('ATTENTION : effacer toutes les données d’exploitation de « '+est.name+' » ? Les comptes utilisateurs et les établissements seront conservés.'))return;
- const typed=prompt('Pour confirmer, saisissez exactement : '+est.name);
- if(typed!==est.name){alert('Confirmation incorrecte. Aucune donnée effacée.');return}
+ const adminPassword=prompt('Mot de passe administrateur requis pour confirmer la remise à zéro :');
+ if(adminPassword===null)return;
+ try{
+  if(!firebase.auth().currentUser||!firebase.auth().currentUser.email){alert('Session administrateur invalide. Reconnectez-vous puis réessayez.');return}
+  const cred=firebase.auth.EmailAuthProvider.credential(firebase.auth().currentUser.email,adminPassword);
+  await firebase.auth().currentUser.reauthenticateWithCredential(cred);
+ }catch(authErr){
+  alert('Mot de passe administrateur incorrect. Aucune donnée effacée.');
+  return
+ }
  try{
   const ref=cloudDb.collection('appState').doc(site),snap=await ref.get({source:'server'}),data=snap.exists?(snap.data()||{}):{};
   data.stock=[];data.temps=[];data.clean=[];data.trace=[];data.suppliers=[];data._cloudUpdatedAt=new Date().toISOString();data._resetBy=currentUserProfile.uid||'';
