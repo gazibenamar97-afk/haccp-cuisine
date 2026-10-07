@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v134-users-direct-panel-render-20261007">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v135-user-edit-modal-20261007">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -490,7 +490,7 @@ try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e
 function authLoginScreen(message=''){
  document.body.classList.remove('on-home');
  let n=document.querySelector('nav');if(n)n.style.display='none';
- app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée v134 — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>E-mail</label><input id="loginEmail" type="email" autocomplete="username" placeholder="nom@entreprise.com"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
+ app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée v135 — ${esc(SITE_NAME)}</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>E-mail</label><input id="loginEmail" type="email" autocomplete="username" placeholder="nom@entreprise.com"><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
 }
 let loginInProgress=false;
 async function loginAppUser(btn){
@@ -1116,15 +1116,27 @@ async function editAppUser(uid){
   const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();
   if(!snap.exists){alert('Utilisateur introuvable.');return}
   const u=snap.data()||{};
-  const name=prompt('Nom complet de l’utilisateur :',u.name||'');if(name===null)return;
-  const cleanName=name.trim();if(!cleanName){alert('Le nom est obligatoire.');return}
-  const role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;
-  const cleanRole=role.trim().toLowerCase();if(!['responsable','haccp','employe'].includes(cleanRole)){alert('Rôle invalide. Utilisez responsable, haccp ou employe.');return}
-  const site=prompt('Établissement : restaurant-1 ou restaurant-2',u.site||'restaurant-1');if(site===null)return;
-  const cleanSite=site.trim().toLowerCase();if(!['restaurant-1','restaurant-2'].includes(cleanSite)){alert('Établissement invalide.');return}
-  await ref.update({name:cleanName,role:cleanRole,site:cleanSite,updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'});
-  S.trace.unshift({type:'Sécurité',product:'Utilisateur modifié : '+cleanName,subjectUid:uid,previousName:u.name||'',newName:cleanName,previousRole:u.role||'',newRole:cleanRole,previousSite:u.site||'',newSite:cleanSite,date:new Date().toLocaleString('fr-FR'),note:'Compte conservé. Historique HACCP lié à l’UID inchangé.'});save();
-  alert('Utilisateur modifié. Son historique est conservé.');await loadAppUsers();
+  let old=document.getElementById('editUserModal');if(old)old.remove();
+  const modal=document.createElement('div');modal.id='editUserModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(15,35,50,.48);display:flex;align-items:center;justify-content:center;padding:18px';
+  modal.innerHTML='<div class="panel" style="width:min(620px,100%);max-height:90vh;overflow:auto;margin:0;box-shadow:0 20px 60px rgba(0,0,0,.25)"><h2 style="margin-top:0">Modifier l’utilisateur</h2><p class="note">Le compte et son historique HACCP seront conservés.</p><label>Nom complet</label><input id="editUserName" value="'+esc(u.name||'')+'"><br><br><label>Rôle</label><select id="editUserRole"><option value="responsable">Responsable établissement</option><option value="haccp">Responsable HACCP / Qualité</option><option value="employe">Employé</option><option value="admin">Administrateur</option></select><br><br><label>Établissement</label><select id="editUserSite"><option value="restaurant-1">Restaurant 1</option><option value="restaurant-2">Restaurant 2</option><option value="main">Espace administrateur</option></select><br><br><label style="display:flex;align-items:center;gap:10px"><input id="editUserActive" type="checkbox" style="width:auto" '+(u.active===false?'':'checked')+'> Compte actif</label><p id="editUserStatus" class="note" style="font-weight:700"></p><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px"><button class="btn" id="cancelEditUser" style="width:auto">Annuler</button><button class="btn primary" id="saveEditUser" style="width:auto">Enregistrer</button></div></div>';
+  document.body.appendChild(modal);
+  document.getElementById('editUserRole').value=u.role||'employe';
+  document.getElementById('editUserSite').value=u.site||'restaurant-1';
+  document.getElementById('cancelEditUser').onclick=()=>modal.remove();
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  document.getElementById('saveEditUser').onclick=async()=>{
+   const name=document.getElementById('editUserName').value.trim(),role=document.getElementById('editUserRole').value,site=document.getElementById('editUserSite').value,active=document.getElementById('editUserActive').checked,status=document.getElementById('editUserStatus'),btn=document.getElementById('saveEditUser');
+   if(!name){status.textContent='Le nom complet est obligatoire.';status.style.color='#9e4545';return}
+   if(role==='admin'&&site!=='main'){status.textContent='Un administrateur doit être affecté à Espace administrateur.';status.style.color='#9e4545';return}
+   if(site==='main'&&role!=='admin'){status.textContent='Espace administrateur nécessite le rôle Administrateur.';status.style.color='#9e4545';return}
+   btn.disabled=true;btn.textContent='Enregistrement…';
+   try{
+    await ref.update({name,role,site,active,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile?.email||'M&T Admin'});
+    S.trace.unshift({type:'Sécurité',product:'Utilisateur modifié : '+name,subjectUid:uid,previousName:u.name||'',newName:name,previousRole:u.role||'',newRole:role,previousSite:u.site||'',newSite:site,date:new Date().toLocaleString('fr-FR'),note:'Compte conservé. Historique HACCP lié à l’UID inchangé.'});save();
+    modal.remove();await loadAppUsers();
+   }catch(e){status.textContent='Modification impossible : '+(e.message||'erreur');status.style.color='#9e4545';btn.disabled=false;btn.textContent='Enregistrer'}
+  };
  }catch(e){console.error(e);alert('Modification impossible : '+(e.message||'erreur'))}
 }
 async function toggleAppUser(uid,isActive){
