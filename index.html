@@ -1131,17 +1131,21 @@ function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('h
 const DEFAULT_ESTABLISHMENTS=[];
 function establishmentSlug(name){return String(name||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)}
 async function getEstablishments(){
- const byId=new Map();
- const add=(id,name,extra={})=>{if(!id||id==='main'||id==='establishments')return;const old=byId.get(id)||{};byId.set(id,{active:true,...old,...extra,id,name:name||old.name||extra.siteName||extra.establishmentName||id})};
- try{const cached=JSON.parse(localStorage.getItem('mtEstablishmentsCache')||'[]');if(Array.isArray(cached))cached.forEach(x=>x&&add(x.id,x.name,x))}catch(_){}
- if(!cloudDb){DEFAULT_ESTABLISHMENTS.forEach(x=>add(x.id,x.name,x));return [...byId.values()]}
- try{const snap=await cloudDb.collection('appState').doc('establishments').get();const d=snap.exists?snap.data():null;if(d&&Array.isArray(d.items))d.items.forEach(x=>x&&add(x.id,x.name,x))}catch(e){console.warn('Establishments registry',e)}
- try{const us=await cloudDb.collection('users').get();us.forEach(doc=>{const u=doc.data()||{};if(u.site&&u.site!=='main')add(u.site,u.siteName||u.establishmentName||u.restaurantName||'')})}catch(e){console.warn('Establishments users',e)}
- try{const states=await cloudDb.collection('appState').get();states.forEach(doc=>{if(doc.id!=='main'&&doc.id!=='establishments'){const d=doc.data()||{};add(doc.id,d.siteName||d.establishmentName||d.restaurantName||'')}})}catch(e){console.warn('Establishments states',e)}
- DEFAULT_ESTABLISHMENTS.forEach(x=>add(x.id,x.name,x));
- const items=[...byId.values()].filter(x=>x.id&&x.name);
- try{localStorage.setItem('mtEstablishmentsCache',JSON.stringify(items))}catch(_){}
- return items
+ // The establishments registry is now the single source of truth.
+ // Old disabled users and reset appState documents must never recreate deleted establishments.
+ let cached=[];
+ try{const x=JSON.parse(localStorage.getItem('mtEstablishmentsCache')||'[]');if(Array.isArray(x))cached=x}catch(_){}
+ if(!cloudDb)return cached;
+ try{
+  const snap=await cloudDb.collection('appState').doc('establishments').get({source:'server'});
+  const d=snap.exists?(snap.data()||{}):{};
+  const items=Array.isArray(d.items)?d.items.filter(x=>x&&x.id&&x.id!=='main'&&x.id!=='establishments'):[];
+  localStorage.setItem('mtEstablishmentsCache',JSON.stringify(items));
+  return items;
+ }catch(e){
+  console.warn('Establishments registry',e);
+  return cached;
+ }
 }
 async function saveEstablishments(items){if(!cloudDb)throw new Error('Firestore indisponible');await cloudDb.collection('appState').doc('establishments').set({items,updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'},{merge:true});try{localStorage.setItem('mtEstablishmentsCache',JSON.stringify(items))}catch(_){}}
 async function loadUserSiteOptions(selectId,selected){const el=document.getElementById(selectId);if(!el)return;const items=await getEstablishments();el.innerHTML=items.filter(x=>x.active!==false).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'<option value="main">Espace administrateur</option>';if(selected&&[...el.options].some(o=>o.value===selected))el.value=selected}
