@@ -1,7 +1,7 @@
 <!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v129-live-establishments-users-lists-20261007">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
+<meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
 <style>
 :root{--ink:#17251f;--muted:#52615a;--line:#c7d2cc;--bg:#f3f7f5;--card:#fff;--active:#e2ece7;--accent:#2e6a50;--danger:#9e4545}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}nav{height:88px;background:#fff;border-bottom:2px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:0;z-index:5}
@@ -413,6 +413,16 @@ body.on-home .home-direction .direction-photo{
   display:none!important;
  }
 }
+<style id="ios-safe-area-login-fix">
+/* iOS PWA: garder la zone de statut hors de la navigation. */
+html{background:#f3f7f5}
+body{padding-top:env(safe-area-inset-top,0px)}
+body.on-login nav,body.on-login .mobile-home-btn{display:none!important}
+body.on-login main{padding-top:12px!important}
+@media(max-width:850px){
+ body.on-login #app>div{margin-top:24px!important}
+ body.on-login .panel{max-width:100%}
+}
 </style></head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
@@ -420,6 +430,7 @@ body.on-home .home-direction .direction-photo{
 <script>
 function home(){
  CURRENT_VIEW='home';
+ document.body.classList.remove('on-login');
  document.body.classList.add('on-home');
  let mainNav=document.querySelector('nav');if(mainNav)mainNav.style.display='none';
  app.innerHTML=`<div class="home-shell">
@@ -637,6 +648,7 @@ let cloudDb=null,cloudReady=false,cloudApplying=false,cloudWriteTimer=null,curre
 try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e){console.warn('Firebase init',e)}
 function authLoginScreen(message=''){
  document.body.classList.remove('on-home');
+ document.body.classList.add('on-login');
  let n=document.querySelector('nav');if(n)n.style.display='none';
  app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — M&T HACCP</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>Nom d’utilisateur ou e-mail</label><input id="loginEmail" type="text" autocomplete="username" placeholder=""><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
 }
