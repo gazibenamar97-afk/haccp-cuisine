@@ -679,12 +679,13 @@ async function loginAppUser(btn){
    for(const site of sites){
     try{cred=await firebase.auth().signInWithEmailAndPassword(login+'@'+site+'.mt-haccp.local',password);break}catch(e){lastErr=e}
    }
-   if(!cred)throw lastErr||new Error('Identifiants incorrects');
+   if(!cred){const err=lastErr||new Error('Identifiants incorrects');err.siteDiagnostic=sites.join(', ');throw err;}
   }
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
   let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?'Nom d’utilisateur, e-mail ou mot de passe incorrect.':(e.message||'Connexion impossible.');
+  if(e.siteDiagnostic)msg+=' Diagnostic : espace ouvert « '+SITE_ID+' » ; établissements recherchés : '+e.siteDiagnostic+'.';
   say(msg);loginInProgress=false;if(btn){btn.disabled=false;btn.textContent='Se connecter'}
  }
 }
