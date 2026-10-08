@@ -667,7 +667,8 @@ async function loginAppUser(btn){
    let sites=[];
    if(SITE_ID&&SITE_ID!=='main')sites.push(SITE_ID);
    try{const known=await getEstablishments();known.forEach(x=>{if(x&&x.id&&x.id!=='main'&&!sites.includes(x.id))sites.push(x.id)})}catch(_){}
-   ['restaurant-1','restaurant-2','restaurant-3'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
+   // Publicly known establishment IDs are safe login namespaces; no private profile data is exposed.
+   ['le-grand-bleu','cloche-d-or','restaurant-1','restaurant-2','restaurant-3'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
    // Administrator usernames may also use the main namespace.
    if(!sites.includes('main'))sites.push('main');
    let lastErr=null;
