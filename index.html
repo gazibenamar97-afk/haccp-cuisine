@@ -616,7 +616,7 @@ const OCR_PRODUCT_ALIASES=[
 app=document.getElementById('app');
 const SITE_ID=(new URLSearchParams(location.search).get('site')||((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone?localStorage.getItem('mtLastPwaSite'):null)||'main').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,60)||'main';
 if(SITE_ID!=='main')try{localStorage.setItem('mtLastPwaSite',SITE_ID)}catch(_){}
-const SITE_NAME=SITE_ID==='main'?'Espace administrateur':SITE_ID==='restaurant-1'?'Restaurant 1':SITE_ID==='restaurant-2'?'Restaurant 2':SITE_ID==='restaurant-3'?'Restaurant 3':SITE_ID;
+const SITE_NAME=SITE_ID==='main'?'Espace administrateur':SITE_ID;
 const SITE_STORAGE_KEY='haccpV3_'+SITE_ID;
 (function configureSitePWA(){
  try{
@@ -673,7 +673,7 @@ async function loginAppUser(btn){
    try{const known=await getEstablishments();known.forEach(x=>{if(x&&x.id&&x.id!=='main'&&!sites.includes(x.id))sites.push(x.id)})}catch(_){}
    // Publicly known establishment IDs are safe login namespaces; no private profile data is exposed.
    // Include established namespaces when Firestore registry is unavailable before login.
-   ['le-grand-bleu','cloche-d-or','restaurant-1','restaurant-2','restaurant-3'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
+   ['le-grand-bleu','cloche-d-or'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
    // Preserve site IDs from a previous successful sign-in on this device.
    try{const last=localStorage.getItem('mtLastPwaSite');if(last&&last!=='main'&&!sites.includes(last))sites.unshift(last)}catch(_){} 
    // Administrator usernames may also use the main namespace.
@@ -806,7 +806,7 @@ function renderAdminSiteDashboard(site,data){
  let exp=0,soon=0,dlcToday=0;
  stock.forEach(x=>{if(!x.dlc)return;let d=new Date(x.dlc+'T00:00:00'),diff=Math.ceil((d-today)/86400000);if(diff<0)exp++;else if(diff===0)dlcToday++;else if(diff<=3)soon++});
  let tempNC=temps.filter(x=>!x.ok).length,packNC=stock.filter(x=>x.pack==='Non conforme').length,totalNC=tempNC+packNC;
- let label=site==='restaurant-1'?'Restaurant 1':site==='restaurant-2'?'Restaurant 2':site==='restaurant-3'?'Restaurant 3':site;
+ let label=site;
  app.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h1>Supervision — ${esc(label)}</h1><p class="note">Lecture en temps réel des données de l’établissement.</p></div>${B('← Tous les établissements',"openEstablishmentSupervision()")}</div>
  <div class="cards"><div class="metric clickable" onclick="adminSiteDetail('stock')"><span>Produits / réceptions</span><b>${stock.length}</b></div><div class="metric clickable" onclick="adminSiteDetail('dlc')" ${(exp+dlcToday+soon)>0?'style="background:#fde8e8;border:2px solid #b42318"':''}><span>Alertes DLC</span><b>${exp+dlcToday+soon}</b><span>${exp} expiré(s) · ${dlcToday} aujourd’hui · ${soon} sous 3 jours</span></div><div class="metric clickable" onclick="adminSiteDetail('nc')" ${totalNC>0?'style="background:#fde8e8;border:2px solid #b42318"':''}><span>Non-conformités</span><b>${totalNC}</b><span>${tempNC} température(s) · ${packNC} réception(s)</span></div></div>
  <div class="cards" style="margin-top:14px"><div class="metric clickable" onclick="adminSiteDetail('temps')"><span>Contrôles température</span><b>${temps.length}</b></div><div class="metric clickable" onclick="adminSiteDetail('clean')"><span>Nettoyages</span><b>${clean.length}</b></div><div class="metric clickable" onclick="adminSiteDetail('trace')"><span>Traçabilité</span><b>${trace.length}</b></div></div>
@@ -822,7 +822,7 @@ function adminSiteDetail(type){
  if(type==='temps'){title='Contrôles température';rows=temps.map(x=>rec(x.equipment||x.product||'Contrôle','Température : '+esc(x.temp??x.temperature??'—')+' °C · Statut : '+(x.ok?'Conforme':'NON CONFORME')+'<br>Date : '+esc(x.date||'—')+' · Opérateur : '+esc(x.operator||'—')+' · Observation : '+esc(x.observation||'—')))}
  if(type==='clean'){title='Nettoyages';rows=clean.map(x=>rec(x.zone||x.area||x.task||'Nettoyage','Date : '+esc(x.date||'—')+' · Opérateur : '+esc(x.operator||x.doneBy||'—')+'<br>Produit / méthode : '+esc(x.product||x.method||'—')+' · Observation : '+esc(x.observation||'—')))}
  if(type==='trace'){title='Traçabilité';rows=trace.map(x=>rec(x.type||'Opération',esc(x.date||'—')+' · '+esc(x.product||x.equipment||'')+'<br>Opérateur : '+esc(x.operator||x.modifiedBy||'—')+' · Motif / observation : '+esc(x.reason||x.observation||'—')))}
- app.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1>'+esc(title)+' — '+esc(ADMIN_SITE_ID==='restaurant-1'?'Restaurant 1':'Restaurant 2')+'</h1>'+B('← Supervision',"renderAdminSiteDashboard(ADMIN_SITE_ID,ADMIN_SITE_DATA)")+'</div><div class="panel">'+(rows.length?rows.join(''):'<p class="empty">Aucune donnée enregistrée dans cette rubrique.</p>')+'</div>';
+ app.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1>'+esc(title)+' — '+esc(ADMIN_SITE_ID)+'</h1>'+B('← Supervision',"renderAdminSiteDashboard(ADMIN_SITE_ID,ADMIN_SITE_DATA)")+'</div><div class="panel">'+(rows.length?rows.join(''):'<p class="empty">Aucune donnée enregistrée dans cette rubrique.</p>')+'</div>';
 }
 function openEstablishmentSupervision(){
  if(SITE_ID!=='main'){home();return}
