@@ -647,7 +647,7 @@ async function loginAppUser(btn){
  if(!login||!password){say('Saisissez votre nom d’utilisateur ou e-mail et votre mot de passe.');return}
  loginInProgress=true;if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
-  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
   let cred=null;
   if(login.includes('@')){
    cred=await firebase.auth().signInWithEmailAndPassword(login,password);
@@ -746,9 +746,33 @@ function renderUserSessionBar(){
  homeObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
 }
 async function logoutAppUser(){try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
+// Verrouillage au retour d'une application passée en arrière-plan.
+// Sur iOS/Android, une fermeture ne déclenche pas toujours d'événement fiable.
+let mtLockingSession=false;
+async function mtLockSession(){
+ if(mtLockingSession)return;
+ mtLockingSession=true;
+ currentUserProfile=null;
+ try{await firebase.auth().signOut()}catch(e){console.warn('Session lock',e)}
+ try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}
+ authLoginScreen();
+ mtLockingSession=false;
+}
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='hidden'&&currentUserProfile){
+  try{sessionStorage.setItem('mtRequireFreshLogin','1')}catch(_){}
+ }else if(document.visibilityState==='visible'){
+  try{if(sessionStorage.getItem('mtRequireFreshLogin')==='1'){sessionStorage.removeItem('mtRequireFreshLogin');mtLockSession()}}catch(_){}
+ }
+});
 async function startApplication(){
  if(!firebase.auth){authLoginScreen('Firebase Authentication indisponible.');return}
+ try{await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)}catch(e){console.warn('Session persistence',e)}
+ let freshLoginRequired=false;
+ try{freshLoginRequired=sessionStorage.getItem('mtRequireFreshLogin')==='1';sessionStorage.removeItem('mtRequireFreshLogin')}catch(_){}
+ if(freshLoginRequired){await mtLockSession()}
  firebase.auth().onAuthStateChanged(async user=>{
+  if(mtLockingSession)return;
   if(user)await authorizeAppUser(user);
   else{currentUserProfile=null;authLoginScreen()}
  });
