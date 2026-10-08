@@ -363,6 +363,56 @@ body.on-home .home-direction .direction-photo{
   top:auto!important;left:auto!important;transform:none!important;
  }
 }
+</style><style id="direction-mobile-grid-v189">
+@media(max-width:700px){
+ body.on-home button.home-card.home-direction{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  column-gap:0!important;
+  height:142px!important;min-height:142px!important;
+  padding:0!important;
+  align-items:stretch!important;
+  background:#fff!important;
+  border-radius:28px!important;
+  overflow:hidden!important;
+ }
+ body.on-home button.home-card.home-direction .home-icon{
+  display:none!important;
+ }
+ body.on-home button.home-card.home-direction .direction-copy{
+  grid-column:1!important;grid-row:1!important;
+  position:relative!important;z-index:3!important;
+  display:flex!important;flex-direction:column!important;
+  justify-content:center!important;align-items:flex-start!important;
+  width:100%!important;min-width:0!important;
+  padding:14px 9px 14px 15px!important;
+  box-sizing:border-box!important;
+  overflow-wrap:anywhere!important;
+ }
+ body.on-home button.home-card.home-direction .direction-copy b{
+  display:block!important;width:100%!important;
+  font-size:15px!important;line-height:1.15!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+ }
+ body.on-home button.home-card.home-direction .direction-copy small{
+  display:block!important;width:100%!important;
+  font-size:11px!important;line-height:1.2!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+ }
+ body.on-home button.home-card.home-direction .direction-photo{
+  grid-column:2!important;grid-row:1!important;
+  position:relative!important;z-index:1!important;
+  inset:auto!important;left:auto!important;right:auto!important;
+  top:auto!important;bottom:auto!important;
+  width:100%!important;height:100%!important;
+  border-radius:0 28px 28px 0!important;
+  background-size:cover!important;background-position:center!important;
+ }
+ body.on-home button.home-card.home-direction .home-arrow{
+  display:none!important;
+ }
+}
 </style></head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
