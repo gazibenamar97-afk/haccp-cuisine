@@ -436,6 +436,23 @@ body.on-login .mt-login-page{width:min(100%,520px);margin:0 auto 20px;padding-bo
 @media(min-width:700px){body.on-login .mt-login-page{width:min(100%,650px)}.mt-login-hero{min-height:330px}.mt-login-panel{padding:40px 52px}.mt-login-panel h1{font-size:29px}}
 @media(max-width:850px){body.on-login #app>div{margin-top:0!important}}
 </style>
+<style id="mt-login-maquette-v2">
+body.on-login main{padding:0 0 30px!important}
+body.on-login .mt-login-page{width:min(100%,520px);margin:0 auto}
+.mt-login-hero{min-height:340px;border-radius:0!important;padding:42px 20px 28px!important}
+.mt-login-brand{font-size:43px!important;margin-top:2px}
+.mt-login-tagline{font-size:13px!important;margin:10px 0 25px!important}
+.mt-login-values>span{width:70px!important;height:70px!important;font-size:29px!important}
+.mt-login-panel{margin:-1px 12px 0!important;padding:30px 24px 25px!important;border-radius:30px!important}
+.mt-login-panel h1{font-size:25px!important;margin-bottom:13px!important}
+.mt-login-subtitle{font-size:15px!important;margin-bottom:24px!important}
+.mt-login-options{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
+.mt-login-panel .mt-remember{display:flex;align-items:center;gap:7px;margin:0!important;font-size:12px!important;font-weight:400;color:#596d7c;white-space:nowrap}
+.mt-remember input{width:17px;height:17px;accent-color:#16805a}
+.mt-forgot{border:0;background:transparent;color:#16805a;font-size:12px;font-weight:700;padding:8px 0;cursor:pointer;white-space:nowrap}
+.mt-login-submit{margin-top:18px!important}
+@media(min-width:700px){.mt-login-hero{min-height:375px}}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
@@ -684,10 +701,10 @@ function authLoginScreen(message=''){
   <p class="mt-login-subtitle">Connectez-vous pour accéder à votre espace de travail sécurisé.</p>
   <form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))">
    <label for="loginEmail">Nom d’utilisateur ou e-mail</label>
-   <div class="mt-login-field"><span aria-hidden="true">♙</span><input id="loginEmail" type="text" autocomplete="username" placeholder="Nom d’utilisateur ou e-mail" required></div>
+   <div class="mt-login-field"><span aria-hidden="true">👤</span><input id="loginEmail" type="text" autocomplete="username" placeholder="Nom d’utilisateur ou e-mail" required></div>
    <label for="loginPassword">Mot de passe</label>
-   <div class="mt-login-field"><span aria-hidden="true">♧</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="button" class="mt-password-toggle" aria-label="Afficher le mot de passe" onclick="toggleMtLoginPassword(this)">Afficher</button></div>
-   <button id="loginBtn" type="submit" class="mt-login-submit">Se connecter →</button>
+   <div class="mt-login-field"><span aria-hidden="true">🔒</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="button" class="mt-password-toggle" aria-label="Afficher le mot de passe" onclick="toggleMtLoginPassword(this)">Afficher</button></div>
+   <div class="mt-login-options"><label class="mt-remember"><input id="mtRememberUser" type="checkbox"> Se souvenir de moi</label><button type="button" class="mt-forgot" onclick="alert('La récupération du mot de passe sera configurée prochainement.')">Mot de passe oublié ?</button></div><button id="loginBtn" type="submit" class="mt-login-submit">Se connecter →</button>
   </form>
   <div id="loginStatus" role="alert" class="mt-login-error">${esc(message)}</div>
   <div class="mt-login-secure">♢ &nbsp; Connexion sécurisée — M&T HACCP<br><small>Vos données sont protégées</small></div>
