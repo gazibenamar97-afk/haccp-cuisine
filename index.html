@@ -601,6 +601,30 @@ body.on-login .mt-login-page:after{bottom:45px!important;height:95px!important;b
  body.on-login .mt-login-tagline{font-size:14px!important}
 }
 </style>
+<style id="mt-desktop-near-fullscreen-v3">
+/* Grand écran PC : occuper presque toute la fenêtre sans changer le mobile. */
+@media(min-width:901px){
+ body.on-login main{min-height:calc(100dvh - 12px)!important;width:100%!important;max-width:none!important;padding:12px 18px!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important}
+ body.on-login #app{width:100%!important;max-width:none!important}
+ body.on-login .mt-login-page{width:100%!important;max-width:none!important;min-height:calc(100dvh - 36px)!important;height:calc(100dvh - 36px)!important;max-height:none!important;grid-template-columns:52% 48%!important;border-radius:20px!important;box-shadow:0 14px 44px #173f2c20!important}
+ body.on-login .mt-login-hero{height:100%!important;min-height:0!important;padding:clamp(40px,7vh,100px) clamp(40px,5vw,110px)!important;box-sizing:border-box!important;background-position:center center!important}
+ body.on-login .mt-login-brand{font-size:clamp(51px,4.5vw,79px)!important}
+ body.on-login .mt-login-brand .mt-leaf{left:clamp(110px,11vw,160px)!important}
+ body.on-login .mt-login-tagline{font-size:clamp(16px,1.15vw,21px)!important;max-width:460px!important}
+ body.on-login .mt-login-panel{height:100%!important;box-sizing:border-box!important;padding:clamp(35px,5vh,85px) clamp(40px,5vw,110px)!important}
+ body.on-login .mt-login-panel h1{font-size:clamp(32px,2.65vw,46px)!important}
+ body.on-login .mt-login-subtitle{font-size:clamp(17px,1.15vw,21px)!important}
+ body.on-login .mt-login-field{min-height:clamp(62px,7vh,80px)!important;height:clamp(62px,7vh,80px)!important}
+ body.on-login .mt-login-field input{font-size:clamp(18px,1.25vw,22px)!important}
+ body.on-login .mt-login-submit{height:clamp(64px,7.5vh,85px)!important;font-size:clamp(21px,1.6vw,27px)!important}
+}
+@media(min-width:901px) and (max-height:680px){
+ body.on-login .mt-login-page{min-height:630px!important;height:auto!important}
+ body.on-login main{min-height:100dvh!important}
+ body.on-login .mt-login-hero{min-height:630px!important}
+ body.on-login .mt-login-panel{min-height:630px!important}
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
