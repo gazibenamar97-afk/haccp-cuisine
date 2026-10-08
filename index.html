@@ -494,6 +494,20 @@ body.on-login .mt-login-submit{margin-top:8px!important;height:57px!important;fo
 body.on-login .mt-login-secure{margin-top:24px!important;padding-top:19px!important;line-height:1.55!important}
 @media(max-width:360px){body.on-login .mt-login-hero{min-height:275px!important}body.on-login .mt-login-panel{margin-left:10px!important;margin-right:10px!important;padding-left:13px!important;padding-right:13px!important}body.on-login .mt-login-panel h1{font-size:20px!important}}
 </style>
+<style id="mt-login-reference-finishing-v5">
+body.on-login .mt-login-page{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(165deg,#fff 0%,#f7fcf9 65%,#e0f2e8 100%)!important}
+body.on-login .mt-login-page:before{content:"";position:absolute;z-index:-1;left:-20%;right:-20%;bottom:-95px;height:250px;background:linear-gradient(100deg,#80bea3,#2c946e);border-radius:50% 50% 0 0/65% 65% 0 0;transform:rotate(-6deg)}
+body.on-login .mt-login-page:after{content:"";position:absolute;z-index:-1;left:-24%;right:-12%;bottom:40px;height:105px;background:rgba(202,232,216,.78);border-radius:50%;transform:rotate(8deg)}
+body.on-login .mt-login-hero{background-position:54% 43%!important;background-size:cover!important;min-height:295px!important}
+body.on-login .mt-login-brand{display:flex;align-items:end;position:relative;padding-top:42px!important}
+body.on-login .mt-login-brand .mt-leaf{position:absolute;left:75px;top:0;width:42px;height:40px;margin:0!important;transform:none!important;display:block!important}
+body.on-login .mt-login-values{gap:13px!important}
+body.on-login .mt-login-values>span{display:flex!important;align-items:center!important;justify-content:center!important;background:#e0efe8ed!important}
+body.on-login .mt-login-values>span svg{display:block;width:33px;height:33px;flex-shrink:0}
+body.on-login .mt-login-values small{font-weight:600!important;letter-spacing:.15px!important}
+body.on-login .mt-login-panel{position:relative;z-index:1}
+@media(max-width:380px){body.on-login .mt-login-brand .mt-leaf{left:65px}}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
@@ -733,9 +747,9 @@ function authLoginScreen(message=''){
  let n=document.querySelector('nav');if(n)n.style.display='none';
  app.innerHTML=`<section class="mt-login-page">
  <div class="mt-login-hero">
-  <div class="mt-login-brand"><span class="mt-leaf">❧</span>M&T <span>HACCP</span></div>
+  <div class="mt-login-brand"><svg class="mt-leaf" viewBox="0 0 48 42" aria-hidden="true"><path d="M7 32C8 12 24 4 43 5c-2 21-13 33-33 30 7-12 16-19 26-24C23 13 14 21 7 32Z" fill="#147b56"/></svg>M&T <span>HACCP</span></div>
   <p class="mt-login-tagline">SÉCURITÉ ALIMENTAIRE<br>AU QUOTIDIEN</p>
-  <div class="mt-login-values"><span><b>⬟</b><small>HYGIÈNE</small></span><span><b>☷</b><small>CONTRÔLE</small></span><span><b>▥</b><small>TRAÇABILITÉ</small></span></div>
+  <div class="mt-login-values"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 41 11v12c0 12-7 19-17 23C14 42 7 35 7 23V11Z" fill="#237b59"/><path d="m15 24 6 6 13-14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><small>HYGIÈNE</small></span><span><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="9" width="28" height="34" rx="4" fill="none" stroke="#237b59" stroke-width="3"/><rect x="18" y="5" width="12" height="9" rx="3" fill="#237b59"/><path d="M17 22h3m5 0h7M17 30h3m5 0h7M17 37h3m5 0h7" stroke="#237b59" stroke-width="2.5" stroke-linecap="round"/></svg><small>CONTRÔLE</small></span><span><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="29" width="8" height="14" rx="2" fill="#237b59"/><rect x="20" y="20" width="8" height="23" rx="2" fill="#237b59"/><rect x="32" y="9" width="8" height="34" rx="2" fill="#237b59"/></svg><small>TRAÇABILITÉ</small></span></div>
  </div>
  <div class="mt-login-panel">
   <h1>Bienvenue sur M&T HACCP</h1>
