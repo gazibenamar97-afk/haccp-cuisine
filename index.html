@@ -647,7 +647,7 @@ try{firebase.initializeApp(FIREBASE_CONFIG);cloudDb=firebase.firestore()}catch(e
 function authLoginScreen(message=''){
  document.body.classList.remove('on-home');
  let n=document.querySelector('nav');if(n)n.style.display='none';
- app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — M&T HACCP</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>Nom d’utilisateur ou e-mail</label><input id="loginEmail" type="text" autocomplete="username" placeholder=""><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
+ app.innerHTML=`<div style="max-width:520px;margin:55px auto"><div class="panel" style="padding:28px"><div class="home-brand" style="margin-bottom:4px">M&T <span>HACCP</span></div><p class="note" style="margin-top:0">Connexion sécurisée — M&T HACCP</p><h1 style="margin-top:24px">Se connecter</h1><form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))"><label>Identifiant de l’établissement (pour les comptes des établissements)</label><input id="loginSite" type="text" autocomplete="off" value="${SITE_ID==='main'?'':esc(SITE_ID)}" placeholder="ex. le-grand-bleu"><label>Nom d’utilisateur ou e-mail</label><input id="loginEmail" type="text" autocomplete="username" placeholder=""><label>Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Votre mot de passe"><button id="loginBtn" type="submit" class="btn primary" style="margin-top:18px">Se connecter</button></form><div id="loginStatus" class="note" style="margin-top:14px;color:#9e4545">${esc(message)}</div></div></div>`;
 }
 let loginInProgress=false;
 async function loginAppUser(btn){
@@ -668,9 +668,16 @@ async function loginAppUser(btn){
    if(SITE_ID&&SITE_ID!=='main')sites.push(SITE_ID);
    try{const known=await getEstablishments();known.forEach(x=>{if(x&&x.id&&x.id!=='main'&&!sites.includes(x.id))sites.push(x.id)})}catch(_){}
    // Publicly known establishment IDs are safe login namespaces; no private profile data is exposed.
-   ['le-grand-bleu','cloche-d-or','restaurant-1','restaurant-2','restaurant-3'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
+   ['restaurant-1','restaurant-2','restaurant-3'].forEach(s=>{if(!sites.includes(s))sites.push(s)});
    // Administrator usernames may also use the main namespace.
    if(!sites.includes('main'))sites.push('main');
+   const selectedSite=(document.getElementById('loginSite')?.value||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
+   if(selectedSite&&!sites.includes(selectedSite))sites.unshift(selectedSite);
+   if(SITE_ID==='main'&&!selectedSite&&login!=='administrateur'&&login!=='admin'){
+    say('Saisissez l’identifiant de votre établissement pour vous connecter depuis le raccourci.');
+    document.getElementById('loginSite')?.focus();
+    loginInProgress=false;if(btn){btn.disabled=false;btn.textContent='Se connecter'};return;
+   }
    let lastErr=null;
    for(const site of sites){
     try{cred=await firebase.auth().signInWithEmailAndPassword(login+'@'+site+'.mt-haccp.local',password);break}catch(e){lastErr=e}
