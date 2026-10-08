@@ -1410,7 +1410,7 @@ async function usersManager(){
  const usersPromise=loadOtherAppUsers();
  const updateGenerated=()=>updateNewUserIdentifier();document.getElementById('userName')?.addEventListener('input',updateGenerated);document.getElementById('userSite')?.addEventListener('change',updateGenerated);
  if(isAdmin){
-  try{await loadUserSiteOptions('userSite')catch(e){console.error('loadUserSiteOptions',e)}
+  try{await loadUserSiteOptions('userSite')}catch(e){console.error('loadUserSiteOptions',e)}
  }else{
   const siteEl=document.getElementById('userSite');
   if(siteEl){siteEl.innerHTML='<option value="'+esc(SITE_ID)+'">'+esc(SITE_NAME)+'</option>';siteEl.value=SITE_ID}
