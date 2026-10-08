@@ -625,6 +625,29 @@ body.on-login .mt-login-page:after{bottom:45px!important;height:95px!important;b
  body.on-login .mt-login-panel{min-height:630px!important}
 }
 </style>
+<style id="mt-desktop-no-horizontal-overflow-v4">
+@media(min-width:901px){
+ html,body{max-width:100%;overflow-x:clip!important}
+ body.on-login main{width:100%!important;max-width:100vw!important;min-width:0!important;padding:12px 18px!important;box-sizing:border-box!important;overflow-x:clip!important}
+ body.on-login #app{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ body.on-login .mt-login-page{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;grid-template-columns:minmax(0,52fr) minmax(0,48fr)!important;overflow:hidden!important}
+ body.on-login .mt-login-hero,body.on-login .mt-login-panel{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;overflow-wrap:anywhere}
+ body.on-login .mt-login-panel{padding-left:clamp(24px,3vw,68px)!important;padding-right:clamp(24px,3vw,68px)!important;overflow:hidden!important}
+ body.on-login .mt-login-panel h1{white-space:normal!important;overflow-wrap:normal!important;font-size:clamp(27px,2.4vw,42px)!important;line-height:1.16!important}
+ body.on-login .mt-login-subtitle{white-space:normal!important;overflow-wrap:break-word!important}
+ body.on-login .mt-login-panel form,body.on-login .mt-login-field,body.on-login .mt-login-options,body.on-login .mt-login-submit{max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ body.on-login .mt-login-field input{min-width:0!important}
+ body.on-login .mt-login-options{flex-wrap:wrap!important;row-gap:6px!important}
+ body.on-login .mt-login-brand{font-size:clamp(38px,3.6vw,68px)!important}
+ body.on-login .mt-login-values{gap:clamp(12px,2vw,35px)!important}
+}
+@media(min-width:901px) and (max-width:1100px){
+ body.on-login .mt-login-page{grid-template-columns:minmax(0,48fr) minmax(0,52fr)!important}
+ body.on-login .mt-login-hero{padding-left:28px!important;padding-right:24px!important}
+ body.on-login .mt-login-panel{padding-left:24px!important;padding-right:24px!important}
+ body.on-login .mt-login-panel h1{font-size:27px!important}
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
