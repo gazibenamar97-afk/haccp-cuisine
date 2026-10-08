@@ -1343,26 +1343,32 @@ async function getSiteUsers(site){
  return {rows:[...by.values()],errors};
 }
 async function loadAppUsers(){
- const box=document.getElementById('usersList');if(!box||!currentUserProfile)return;
- renderManagedUsers(box,[{...currentUserProfile}],false);
+ const box=document.getElementById('usersList');
+ if(!box||!currentUserProfile)return;
+ const site=currentUserProfile.site;
+ box.innerHTML='<div class="note" style="padding:10px 0">Lecture des profils Firestore…</div>';
  try{
-  let rows=[],errors=[];
-  if(currentUserProfile.site==='main'){
-   const snap=await cloudDb.collection('users').get({source:'server'});
-   snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
-  }else{
-   const result=await getSiteUsers(currentUserProfile.site);rows=result.rows;errors=result.errors;
-  }
-  if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});
+  if(!cloudDb)throw new Error('Firestore indisponible');
+  const query=site==='main'
+   ?cloudDb.collection('users')
+   :cloudDb.collection('users').where('site','==',site);
+  const snap=await query.get({source:'server'});
+  const rows=[];
+  snap.forEach(d=>{
+   const u={...(d.data()||{}),uid:d.id};
+   if(u.site===site)rows.push(u);
+  });
   rows.sort((x,y)=>String(x.name||x.username||x.email||'').localeCompare(String(y.name||y.username||y.email||''),'fr'));
+  // Only show accounts actually returned by Firestore; never substitute the
+  // logged-in profile for a failed or incomplete collection read.
   renderManagedUsers(box,rows,false);
-  if(errors.length||rows.length===1){
-   const msg=errors.length?errors.join(' | '):'Aucun autre profil retourné par les sources Firebase.';
-   box.insertAdjacentHTML('beforeend','<div class="note" style="margin-top:12px;padding:12px;border:1px solid #d5a86d;border-radius:10px"><b>Diagnostic de synchronisation</b><div>Établissement : '+esc(currentUserProfile.site||'')+'</div><div>Utilisateurs récupérés : '+rows.length+'</div><div>'+esc(msg)+'</div></div>');
-  }
+  const count=document.createElement('div');
+  count.className='note';count.style.cssText='margin-top:12px;padding:10px;border:1px solid #d5a86d;border-radius:10px';
+  count.textContent='Vérification Firestore : '+rows.length+' profil(s) reçus du serveur pour '+site+'.';
+  box.appendChild(count);
  }catch(e){
-  console.error('loadAppUsers',e);
-  box.insertAdjacentHTML('beforeend','<div style="color:#8b2f2f;padding:10px 0"><b>Erreur de lecture :</b> '+esc(e.code||e.message||String(e))+'</div>')
+  console.error('Firestore users list',e);
+  box.innerHTML='<div style="color:#8b2f2f;padding:12px;border:1px solid #c66;border-radius:10px"><b>Lecture de la liste refusée ou impossible.</b><div>Établissement : '+esc(site)+'</div><div>Erreur Firebase : '+esc(e.code||e.message||String(e))+'</div><div>Les utilisateurs existants n’ont pas été modifiés.</div></div>';
  }
 }
 async function editAppUser(uid){
