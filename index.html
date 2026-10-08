@@ -1328,45 +1328,41 @@ async function createAppUser(btn){
 }
 function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');if(!rows.length){box.innerHTML='<div class="note" style="padding:12px 0">Aucun utilisateur enregistré.</div>';return}box.innerHTML='<div class="note" style="padding:4px 0 10px"><b>'+rows.length+'</b> utilisateur'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(adminMode?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':(canManageUserProfile(u)&&u.uid!==currentUserProfile.uid?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':''))+'</div>').join('')}
 async function getSiteUsers(site){
- if(!cloudDb||!site)return[];
- const by=new Map(),add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
- if(currentUserProfile&&currentUserProfile.site===site)add({...currentUserProfile});
- // Run every source independently and in parallel. One blocked/slow source must never
- // prevent the other authorized sources from returning the establishment directory.
- const jobs=[
-  cloudDb.collection('appState').doc(site).get().then(s=>{if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)}),
-  cloudDb.collection('appUsers').doc(site).get().then(r=>{if(r.exists&&Array.isArray(r.data()?.users))r.data().users.forEach(add)}),
-  cloudDb.collection('users').where('site','==',site).get().then(s=>s.forEach(d=>add({...(d.data()||{}),uid:d.id})))
+ if(!cloudDb||!site)return {rows:[],errors:['Firebase indisponible']};
+ const by=new Map(),errors=[];
+ const add=u=>{if(u&&u.uid&&u.site===site)by.set(u.uid,{...(by.get(u.uid)||{}),...u})};
+ if(currentUserProfile?.site===site)add({...currentUserProfile});
+ const tasks=[
+  ['Répertoire établissement',()=>cloudDb.collection('appState').doc(site).get({source:'server'}),s=>{if(s.exists&&Array.isArray(s.data()?.userDirectory))s.data().userDirectory.forEach(add)}],
+  ['Registre utilisateurs',()=>cloudDb.collection('appUsers').doc(site).get({source:'server'}),s=>{if(s.exists&&Array.isArray(s.data()?.users))s.data().users.forEach(add)}],
+  ['Profils Firestore',()=>cloudDb.collection('users').where('site','==',site).get({source:'server'}),s=>s.forEach(d=>add({...(d.data()||{}),uid:d.id}))]
  ];
- const settled=await Promise.allSettled(jobs);
- settled.forEach((r,i)=>{if(r.status==='rejected')console.warn('User directory source '+i,r.reason)});
- const rows=[...by.values()];
- if(rows.length>1){
-  try{await cloudDb.collection('appState').doc(site).set({userDirectory:rows},{merge:true})}catch(e){console.warn('User directory repair',e)}
- }
- return rows
+ await Promise.all(tasks.map(async ([label,read,collect])=>{
+  try{collect(await read())}catch(e){errors.push(label+' : '+(e.code||e.message||String(e)))}
+ }));
+ return {rows:[...by.values()],errors};
 }
 async function loadAppUsers(){
- const box=document.getElementById('usersList');if(!box)return;
- if(!cloudDb||!currentUserProfile){box.innerHTML='<div style="color:#9e4545">Service utilisateurs indisponible.</div>';return}
- // Show the signed-in profile immediately; never leave this area visually blank.
- let rows=[{...currentUserProfile}];
- renderManagedUsers(box,rows,false);
+ const box=document.getElementById('usersList');if(!box||!currentUserProfile)return;
+ renderManagedUsers(box,[{...currentUserProfile}],false);
  try{
+  let rows=[],errors=[];
   if(currentUserProfile.site==='main'){
-   const snap=await cloudDb.collection('users').get();
-   rows=[];snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
+   const snap=await cloudDb.collection('users').get({source:'server'});
+   snap.forEach(d=>{const u={...(d.data()||{}),uid:d.id};if(u.site==='main')rows.push(u)})
   }else{
-   rows=await getSiteUsers(currentUserProfile.site);
+   const result=await getSiteUsers(currentUserProfile.site);rows=result.rows;errors=result.errors;
   }
   if(!rows.some(u=>u.uid===currentUserProfile.uid))rows.unshift({...currentUserProfile});
   rows.sort((x,y)=>String(x.name||x.username||x.email||'').localeCompare(String(y.name||y.username||y.email||''),'fr'));
-  renderManagedUsers(box,rows,false)
+  renderManagedUsers(box,rows,false);
+  if(errors.length||rows.length===1){
+   const msg=errors.length?errors.join(' | '):'Aucun autre profil retourné par les sources Firebase.';
+   box.insertAdjacentHTML('beforeend','<div class="note" style="margin-top:12px;padding:12px;border:1px solid #d5a86d;border-radius:10px"><b>Diagnostic de synchronisation</b><div>Établissement : '+esc(currentUserProfile.site||'')+'</div><div>Utilisateurs récupérés : '+rows.length+'</div><div>'+esc(msg)+'</div></div>');
+  }
  }catch(e){
   console.error('loadAppUsers',e);
-  // Keep the current user visible and expose the real Firebase error instead of an empty panel.
-  renderManagedUsers(box,[{...currentUserProfile}],false);
-  box.insertAdjacentHTML('beforeend','<div style="color:#8b2f2f;padding:10px 0"><b>Lecture des autres utilisateurs impossible :</b> '+esc(e.code||e.message||String(e))+'</div>')
+  box.insertAdjacentHTML('beforeend','<div style="color:#8b2f2f;padding:10px 0"><b>Erreur de lecture :</b> '+esc(e.code||e.message||String(e))+'</div>')
  }
 }
 async function editAppUser(uid){
