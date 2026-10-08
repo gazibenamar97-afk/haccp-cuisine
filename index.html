@@ -753,6 +753,46 @@ body.on-login .mt-login-field{border-color:#cbd9e3!important}
  }
 }
 </style>
+<style id="direction-clean-card-v191">
+/* Carte Direction : supprimer les anciennes photos de fond conflictuelles. */
+body.on-home button.home-card.home-direction{
+ background:#fff!important;
+ background-image:none!important;
+}
+body.on-home button.home-card.home-direction::before,
+body.on-home button.home-card.home-direction::after{
+ background:none!important;
+ background-image:none!important;
+}
+body.on-home button.home-card.home-direction>.direction-copy{
+ background:transparent!important;
+}
+@media(min-width:701px){
+ body.on-home button.home-card.home-direction{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  padding:18px calc(50% + 20px) 18px 22px!important;
+  height:140px!important;
+  min-height:140px!important;
+ }
+ body.on-home button.home-card.home-direction>.direction-copy{
+  flex:1 1 auto!important;
+  overflow:visible!important;
+ }
+ body.on-home button.home-card.home-direction>.direction-photo{
+  left:50%!important;
+  width:50%!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  height:100%!important;
+  background-image:url("https://cdn.marblism.com/1_erpLjjSTz.webp")!important;
+  background-size:cover!important;
+  background-position:center!important;
+ }
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
