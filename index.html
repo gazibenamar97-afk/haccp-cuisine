@@ -467,6 +467,33 @@ body.on-login .mt-login-panel h1{font-weight:800}
 body.on-login .mt-login-submit{background:linear-gradient(100deg,#279e74,#14734f)!important}
 @media(max-width:380px){body.on-login .mt-login-brand{font-size:36px!important}body.on-login .mt-login-panel h1{font-size:22px!important}}
 </style>
+<style id="mt-login-reference-v4">
+body.on-login{background:#e8f3ee!important}
+body.on-login main{padding:0!important}
+body.on-login .mt-login-page{width:min(100%,520px)!important;margin:0 auto!important;min-height:calc(100dvh - env(safe-area-inset-top,0px));padding-bottom:60px!important;box-sizing:border-box;background:radial-gradient(ellipse 85% 20% at 50% 100%,#70b396 0%,#c7e6d8 55%,transparent 100%),linear-gradient(155deg,#fff 20%,#e8f5ed 100%)!important}
+body.on-login .mt-login-hero{min-height:295px!important;padding:28px 18px 34px!important;box-sizing:border-box;background-image:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.87) 36%,rgba(255,255,255,.05) 85%),url("./assets/home/login-photo.webp")!important;background-size:cover!important;background-position:center!important;text-align:left!important}
+body.on-login .mt-login-brand{font-size:clamp(32px,8.5vw,46px)!important;line-height:1.1!important;letter-spacing:-1.4px!important;white-space:nowrap;color:#092b23!important;margin:0 0 7px!important}
+body.on-login .mt-leaf{display:block;color:#17855c!important;font-size:38px!important;height:34px;line-height:30px;transform:rotate(-25deg);width:45px;margin-left:76px}
+body.on-login .mt-login-tagline{text-align:center!important;max-width:275px;font-size:12px!important;letter-spacing:2.6px!important;margin:6px 0 20px!important;color:#657482!important}
+body.on-login .mt-login-values{justify-content:flex-start!important;gap:13px!important}
+body.on-login .mt-login-values>span{position:relative!important;width:70px!important;height:58px!important;flex:0 0 70px!important;font-size:26px!important;border-radius:50%!important;background:#e0efe9ed!important}
+body.on-login .mt-login-values b{font-weight:800!important}
+body.on-login .mt-login-values small{position:absolute!important;top:67px!important;left:50%;transform:translateX(-50%);font-size:10px!important;white-space:nowrap;color:#364954!important}
+body.on-login .mt-login-panel{margin:-2px 15px 0!important;border-radius:28px!important;padding:28px 18px 29px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 18px 35px #174c3422!important}
+body.on-login .mt-login-panel h1{font-size:clamp(21px,5.3vw,29px)!important;white-space:nowrap;letter-spacing:-.7px;margin:0 0 12px!important}
+body.on-login .mt-login-subtitle{font-size:15px!important;line-height:1.45!important;margin:0 0 25px!important}
+body.on-login .mt-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+body.on-login .mt-login-field{height:54px!important;min-height:54px!important;border:1.5px solid #d0dbe2!important;border-radius:12px!important;margin:0 0 14px!important;padding:0 13px!important;box-shadow:none!important}
+body.on-login .mt-login-field>span{font-size:20px!important;filter:grayscale(1)}
+body.on-login .mt-login-field input{font-size:15px!important}
+body.on-login .mt-password-toggle{font-size:22px!important;color:#687a89!important}
+body.on-login .mt-login-options{margin-top:2px!important;margin-bottom:9px!important}
+body.on-login .mt-login-panel .mt-remember{font-size:12px!important}
+body.on-login .mt-forgot{font-size:12px!important}
+body.on-login .mt-login-submit{margin-top:8px!important;height:57px!important;font-size:19px!important;border-radius:12px!important}
+body.on-login .mt-login-secure{margin-top:24px!important;padding-top:19px!important;line-height:1.55!important}
+@media(max-width:360px){body.on-login .mt-login-hero{min-height:275px!important}body.on-login .mt-login-panel{margin-left:10px!important;margin-right:10px!important;padding-left:13px!important;padding-right:13px!important}body.on-login .mt-login-panel h1{font-size:20px!important}}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
@@ -706,19 +733,19 @@ function authLoginScreen(message=''){
  let n=document.querySelector('nav');if(n)n.style.display='none';
  app.innerHTML=`<section class="mt-login-page">
  <div class="mt-login-hero">
-  <div class="mt-login-brand">M&T <span>HACCP</span></div>
+  <div class="mt-login-brand"><span class="mt-leaf">❧</span>M&T <span>HACCP</span></div>
   <p class="mt-login-tagline">SÉCURITÉ ALIMENTAIRE<br>AU QUOTIDIEN</p>
-  <div class="mt-login-values"><span>✓<small>HYGIÈNE</small></span><span>▤<small>CONTRÔLE</small></span><span>▥<small>TRAÇABILITÉ</small></span></div>
+  <div class="mt-login-values"><span><b>⬟</b><small>HYGIÈNE</small></span><span><b>☷</b><small>CONTRÔLE</small></span><span><b>▥</b><small>TRAÇABILITÉ</small></span></div>
  </div>
  <div class="mt-login-panel">
   <h1>Bienvenue sur M&T HACCP</h1>
   <p class="mt-login-subtitle">Connectez-vous pour accéder à votre espace de travail sécurisé.</p>
   <form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))">
-   <label for="loginEmail">Nom d’utilisateur ou e-mail</label>
+   <label for="loginEmail" class="mt-sr-only">Nom d’utilisateur ou e-mail</label>
    <div class="mt-login-field"><span aria-hidden="true">👤</span><input id="loginEmail" type="text" autocomplete="username" placeholder="Nom d’utilisateur ou e-mail" required></div>
-   <label for="loginPassword">Mot de passe</label>
-   <div class="mt-login-field"><span aria-hidden="true">🔒</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="button" class="mt-password-toggle" aria-label="Afficher le mot de passe" onclick="toggleMtLoginPassword(this)">Afficher</button></div>
-   <div class="mt-login-options"><label class="mt-remember"><input id="mtRememberUser" type="checkbox"> Se souvenir de moi</label><button type="button" class="mt-forgot" onclick="alert('La récupération du mot de passe sera configurée prochainement.')">Mot de passe oublié ?</button></div><button id="loginBtn" type="submit" class="mt-login-submit">Se connecter →</button>
+   <label for="loginPassword" class="mt-sr-only">Mot de passe</label>
+   <div class="mt-login-field"><span aria-hidden="true">🔒</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="button" class="mt-password-toggle" aria-label="Afficher le mot de passe" onclick="toggleMtLoginPassword(this)">◉</button></div>
+   <div class="mt-login-options"><label class="mt-remember"><input id="mtRememberUser" type="checkbox"> Se souvenir de moi</label><button type="button" class="mt-forgot" onclick="alert('La récupération du mot de passe sera configurée prochainement.')">Mot de passe oublié ?</button></div><button id="loginBtn" type="submit" class="mt-login-submit">⇥ &nbsp; Se connecter</button>
   </form>
   <div id="loginStatus" role="alert" class="mt-login-error">${esc(message)}</div>
   <div class="mt-login-secure">♢ &nbsp; Connexion sécurisée — M&T HACCP<br><small>Vos données sont protégées</small></div>
@@ -727,7 +754,7 @@ function authLoginScreen(message=''){
 function toggleMtLoginPassword(button){
  const field=document.getElementById('loginPassword');if(!field)return;
  const show=field.type==='password';field.type=show?'text':'password';
- button.textContent=show?'Masquer':'Afficher';
+ button.textContent=show?'◎':'◉';
  button.setAttribute('aria-label',show?'Masquer le mot de passe':'Afficher le mot de passe');
 }
 
