@@ -793,6 +793,27 @@ body.on-home button.home-card.home-direction>.direction-copy{
  }
 }
 </style>
+<style id="direction-left-white-mask-v192">
+@media(min-width:701px){
+ body.on-home button.home-card.home-direction{isolation:isolate!important}
+ body.on-home button.home-card.home-direction::before{
+  content:""!important;display:block!important;
+  position:absolute!important;left:0!important;top:0!important;
+  width:50%!important;height:100%!important;
+  border-radius:30px 0 0 30px!important;
+  background:#fff!important;background-image:none!important;
+  opacity:1!important;z-index:2!important;
+  pointer-events:none!important;
+ }
+ body.on-home button.home-card.home-direction>.home-icon,
+ body.on-home button.home-card.home-direction>.direction-copy{
+  z-index:4!important;
+ }
+ body.on-home button.home-card.home-direction>.direction-photo{
+  z-index:1!important;
+ }
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
