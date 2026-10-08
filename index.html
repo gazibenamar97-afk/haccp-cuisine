@@ -814,6 +814,24 @@ body.on-home button.home-card.home-direction>.direction-copy{
  }
 }
 </style>
+<style id="mt-interactive-thermometer-v1">
+body.on-login .mt-login-hero{background:#0c2024!important;background-image:none!important;color:#edf8f6!important;display:flex!important;flex-direction:column!important;justify-content:center!important;padding:clamp(18px,3vw,42px)!important}
+body.on-login .mt-login-hero>.mt-login-brand,body.on-login .mt-login-hero>.mt-login-tagline,body.on-login .mt-login-hero>.mt-login-values{display:none!important}
+body.on-login .mt-temp-demo{display:block!important;width:100%;max-width:550px;margin:auto;text-align:left;color:#eaf6f4}
+body.on-login .mt-temp-demo h2{font-size:clamp(24px,2.4vw,38px);line-height:1.2;color:#f3faf9;margin:0 0 16px;font-weight:800}
+body.on-login .mt-temp-demo>p{color:#b9d1d1;font-size:clamp(13px,1vw,17px);line-height:1.55;margin:0 0 22px}
+body.on-login .mt-temp-row{display:flex;align-items:center;gap:25px}
+body.on-login .mt-temp-scale{height:280px;width:76px;flex:0 0 76px;border-radius:40px;position:relative;background:linear-gradient(to bottom,#16875d 0% 20%,#bd4439 20% 68%,#e3ad24 68% 74%,#278b60 74% 83%,#296584 83% 92%,#3389ad 92% 100%)}
+body.on-login .mt-temp-scale input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:2;cursor:ns-resize;writing-mode:vertical-lr;direction:rtl}
+body.on-login .mt-temp-scale #mtTempMark{position:absolute;top:73.6%;left:7px;right:7px;height:6px;border-radius:5px;background:white;pointer-events:none}
+body.on-login .mt-temp-result{flex:1;min-width:0}
+body.on-login .mt-temp-result strong{display:block;font-size:clamp(42px,5vw,78px);line-height:1.1;color:white}
+body.on-login .mt-temp-result h3{font-size:clamp(18px,1.7vw,27px);margin:12px 0;color:#f0f9f8}
+body.on-login .mt-temp-result p{font-size:clamp(13px,1vw,17px);line-height:1.5;color:#b9d1d1}
+body.on-login .mt-temp-key{font-size:12px;color:#c1d5d5;line-height:1.7;margin:20px 0 8px}
+body.on-login .mt-temp-demo>small{font-size:11px;color:#a7bebe;line-height:1.5}
+@media(max-width:900px){body.on-login .mt-login-hero{min-height:0!important;padding:24px!important}.mt-temp-scale{height:200px!important;width:55px!important;flex-basis:55px!important}.mt-temp-row{gap:18px!important}.mt-temp-result strong{font-size:45px!important}}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
@@ -1053,6 +1071,7 @@ function authLoginScreen(message=''){
  let n=document.querySelector('nav');if(n)n.style.display='none';
  app.innerHTML=`<section class="mt-login-page">
  <div class="mt-login-hero">
+  <section class="mt-temp-demo"><h2>Chaque degré compte.</h2><p>Glissez sur l'échelle pour découvrir les repères de sécurité alimentaire.</p><div class="mt-temp-row"><div class="mt-temp-scale"><input type="range" min="-25" max="85" value="4" step="1" orient="vertical" aria-label="Température en degrés Celsius" oninput="mtUpdateTemp(this.value)"><span id="mtTempMark"></span></div><div class="mt-temp-result" aria-live="polite"><strong id="mtTempNumber">4 °C</strong><h3 id="mtTempTitle">Froid positif</h3><p id="mtTempDesc">Repère de réfrigération pour de nombreux produits sensibles.</p></div></div><div class="mt-temp-key">❄ Congélation &nbsp; ● Froid positif &nbsp; ● Vigilance &nbsp; ● Maintien au chaud</div><small>Repères pédagogiques : respectez les consignes HACCP de chaque produit.</small></section>
   <div class="mt-login-brand"><svg class="mt-leaf" viewBox="0 0 48 42" aria-hidden="true"><path d="M7 32C8 12 24 4 43 5c-2 21-13 33-33 30 7-12 16-19 26-24C23 13 14 21 7 32Z" fill="#147b56"/></svg>M&T <span>HACCP</span></div>
   <p class="mt-login-tagline">SÉCURITÉ ALIMENTAIRE<br>AU QUOTIDIEN</p>
   <div class="mt-login-values"><span><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 41 11v12c0 12-7 19-17 23C14 42 7 35 7 23V11Z" fill="#237b59"/><path d="m15 24 6 6 13-14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><small>HYGIÈNE</small></span><span><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="9" width="28" height="34" rx="4" fill="none" stroke="#237b59" stroke-width="3"/><rect x="18" y="5" width="12" height="9" rx="3" fill="#237b59"/><path d="M17 22h3m5 0h7M17 30h3m5 0h7M17 37h3m5 0h7" stroke="#237b59" stroke-width="2.5" stroke-linecap="round"/></svg><small>CONTRÔLE</small></span><span><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="29" width="8" height="14" rx="2" fill="#237b59"/><rect x="20" y="20" width="8" height="23" rx="2" fill="#237b59"/><rect x="32" y="9" width="8" height="34" rx="2" fill="#237b59"/></svg><small>TRAÇABILITÉ</small></span></div>
@@ -2665,4 +2684,18 @@ document.addEventListener('click',function(e){
 
 startApplication();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(reg=>reg.update()).catch(e=>console.warn('PWA service worker',e))})}
-</script></body></html>
+</script><script>
+function mtUpdateTemp(raw){
+ const t=Math.max(-25,Math.min(85,Number(raw))),n=document.getElementById('mtTempNumber'),h=document.getElementById('mtTempTitle'),d=document.getElementById('mtTempDesc'),m=document.getElementById('mtTempMark');if(!n||!h||!d||!m)return;
+ n.textContent=t+' °C';
+ let title,desc;
+ if(t<=-18){title='Congélation';desc='−18 °C ou moins : repère courant pour les produits surgelés.'}
+ else if(t<0){title='Froid négatif';desc='Sous zéro, mais pas assez froid pour garantir −18 °C aux surgelés.'}
+ else if(t<=4){title='Froid positif';desc='Réfrigération de nombreux produits sensibles, selon leur consigne.'}
+ else if(t<=8){title='À surveiller';desc='Vérifiez les limites de conservation propres à chaque aliment.'}
+ else if(t<63){title='Zone de danger';desc='La multiplication des microbes peut être favorisée. Limitez la durée d’exposition.'}
+ else{title='Maintien au chaud';desc='63 °C ou plus : repère courant de maintien au chaud des préparations.'}
+ h.textContent=title;d.textContent=desc;m.style.top=((85-t)/110*100)+'%';
+}
+</script>
+</body></html>
