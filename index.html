@@ -915,6 +915,41 @@ body.on-login .mt-temp-demo>small{color:#8eabb2!important}
  body.on-login .mt-login-hero{background:#0c1d23!important;background-image:none!important}
 }
 </style>
+<style id="mt-login-user-reference-v4">
+/* Référence HTML approuvée : thème clair par défaut, sans toucher à Firebase. */
+body.on-login{--mt-ref-bg:#e9eef0;--mt-ref-card:#fff;--mt-ref-ink:#12303a;--mt-ref-mute:#5b727b;--mt-ref-line:#cfdadd;--mt-ref-brand:#0f6b4a;background:var(--mt-ref-bg)!important;color:var(--mt-ref-ink)!important;font-family:"IBM Plex Sans",system-ui,sans-serif!important}
+body.on-login .mt-login-page{font-family:"IBM Plex Sans",system-ui,sans-serif!important}
+body.on-login .mt-login-panel{background:var(--mt-ref-card)!important;color:var(--mt-ref-ink)!important}
+body.on-login .mt-login-panel h1{font-family:"Bricolage Grotesque",system-ui,sans-serif!important;font-weight:700!important;color:var(--mt-ref-ink)!important;letter-spacing:-.01em!important}
+body.on-login .mt-login-subtitle{color:var(--mt-ref-mute)!important}
+body.on-login .mt-login-panel .mt-sr-only{color:var(--mt-ref-ink)!important;font-family:"IBM Plex Sans",system-ui,sans-serif!important}
+body.on-login .mt-login-field{background:#fff!important;border:1.5px solid var(--mt-ref-line)!important;border-radius:8px!important;box-shadow:none!important}
+body.on-login .mt-login-field input,body.on-login .mt-login-field input:focus{background:#fff!important;color:var(--mt-ref-ink)!important}
+body.on-login .mt-login-field input::placeholder{color:#738991!important}
+body.on-login .mt-login-field input:-webkit-autofill,body.on-login .mt-login-field input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #fff inset!important;-webkit-text-fill-color:#12303a!important}
+body.on-login .mt-login-options,body.on-login .mt-remember{color:var(--mt-ref-ink)!important}
+body.on-login .mt-forgot{color:var(--mt-ref-brand)!important}
+body.on-login .mt-login-submit{background:var(--mt-ref-brand)!important;color:white!important;border-radius:8px!important;font-family:"Bricolage Grotesque",system-ui,sans-serif!important;font-weight:700!important}
+body.on-login .mt-login-secure,body.on-login .mt-login-secure small{color:var(--mt-ref-mute)!important}
+body.on-login .mt-login-hero{background:var(--mt-ref-bg)!important;background-image:none!important;color:var(--mt-ref-ink)!important}
+body.on-login .mt-temp-demo h2{font-family:"Bricolage Grotesque",system-ui,sans-serif!important;color:var(--mt-ref-ink)!important;font-weight:800!important}
+body.on-login .mt-temp-demo>p,body.on-login .mt-temp-result p,body.on-login .mt-temp-key,body.on-login .mt-temp-demo>small{color:var(--mt-ref-mute)!important}
+body.on-login .mt-temp-result strong{font-family:"Bricolage Grotesque",system-ui,sans-serif!important;color:var(--mt-ref-ink)!important;font-weight:800!important}
+body.on-login .mt-temp-result h3{font-family:"Bricolage Grotesque",system-ui,sans-serif!important;color:var(--mt-ref-ink)!important}
+body.on-login .mt-temp-scale{border:1.5px solid var(--mt-ref-line)!important;border-radius:35px!important;background:linear-gradient(to bottom,rgba(31,138,91,.55) 0% 30.8%,rgba(192,57,43,.55) 30.8% 75%,rgba(224,161,0,.70) 75% 80%,#1f8a5b 80% 83.33%,rgba(47,127,168,.55) 83.33% 100%)!important}
+body.on-login .mt-temp-scale #mtTempMark{background:var(--mt-ref-ink)!important}
+@media(min-width:901px){
+ body.on-login main{background:var(--mt-ref-bg)!important}
+ body.on-login .mt-login-page{grid-template-columns:minmax(340px,38%) minmax(0,62%)!important;background:var(--mt-ref-bg)!important;border-radius:0!important;box-shadow:none!important;max-width:1500px!important}
+ body.on-login .mt-login-panel{padding:clamp(30px,3.3vw,52px)!important}
+ body.on-login .mt-login-hero{padding:clamp(30px,4vw,60px)!important}
+}
+@media(max-width:900px){
+ body.on-login .mt-login-page{background:var(--mt-ref-bg)!important;border-radius:0!important}
+ body.on-login .mt-login-panel{background:var(--mt-ref-card)!important}
+ body.on-login .mt-login-hero{background:var(--mt-ref-bg)!important}
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
@@ -925,7 +960,8 @@ body.on-login main{padding-top:12px!important}
  body.on-login #app>div{margin-top:24px!important}
  body.on-login .panel{max-width:100%}
 }
-</style></head><body class="on-home">
+</style><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+</head><body class="on-home">
 <nav><div class="brand">M&T HACCP</div>
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
 </nav><main><div id="app"></div></main><button class="mobile-home-btn" onclick="home()">🏠 Accueil</button>
