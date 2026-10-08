@@ -1403,8 +1403,17 @@ async function saveEditedAppUser(uid){
  }catch(e){say('Enregistrement impossible : '+(e.code||e.message||String(e)),true)}
 }
 async function toggleAppUser(uid,isActive){
- if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists||!canManageUserProfile(snap.data()||{})){alert('Accès non autorisé.');return}
- await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadAppUsers();
+ if(!cloudDb||!currentUserProfile)return;
+ if(uid===currentUserProfile.uid){alert('Vous ne pouvez pas désactiver votre propre compte connecté.');return}
+ const action=isActive?'désactiver':'réactiver';
+ if(!confirm('Voulez-vous '+action+' ce compte utilisateur ?'))return;
+ try{
+  const ref=cloudDb.collection('users').doc(uid),snap=await ref.get({source:'server'});
+  if(!snap.exists||!canManageUserProfile({...snap.data(),uid}))throw new Error('Profil introuvable ou accès refusé');
+  await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});
+  await loadAppUsers();
+  alert('Compte '+(isActive?'désactivé':'réactivé')+' avec succès.');
+ }catch(e){console.error('toggleAppUser',e);alert('Impossible de '+action+' le compte : '+(e.code||e.message||String(e)))}
 }
 
 async function loadResetSiteOptions(){
