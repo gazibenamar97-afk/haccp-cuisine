@@ -1256,7 +1256,7 @@ async function renderEstablishmentsList(preferredItems){
  const draw=items=>{
   const live=document.getElementById('establishmentsList');if(!live)return;
   const rows=Array.isArray(items)?items:[];
-  live.innerHTML=rows.length?rows.map(x=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important"><b>'+esc(x.name||x.id)+'</b><br><span class="note">'+(x.active===false?'Désactivé':'Actif')+' · ID : '+esc(x.id)+'</span><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" style="width:auto" onclick="adminSelectSite('+JSON.stringify(x.id)+')">Superviser</button><button class="btn" style="width:auto" onclick="editEstablishment('+JSON.stringify(x.id)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleEstablishment('+JSON.stringify(x.id)+')">'+(x.active===false?'Réactiver':'Désactiver')+'</button></div></div>').join(''):'<p class="note">Aucun établissement enregistré. Vous pouvez en ajouter un ci-dessus.</p>';
+  live.innerHTML=rows.length?rows.map(x=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important"><b>'+esc(x.name||x.id)+'</b><br><span class="note">'+(x.active===false?'Désactivé':'Actif')+' · ID : '+esc(x.id)+'</span><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editEstablishment(\''+encodeURIComponent(x.id)+'\')">Modifier</button><button class="btn" style="width:auto" onclick="toggleEstablishment(\''+encodeURIComponent(x.id)+'\')">'+(x.active===false?'Réactiver':'Désactiver')+'</button></div></div>').join(''):'<p class="note">Aucun établissement enregistré. Vous pouvez en ajouter un ci-dessus.</p>';
  };
  // Never paint obsolete/default establishments before Firestore has answered.
  // This prevents the brief "ghost list" seen immediately after a global reset.
@@ -1270,7 +1270,17 @@ async function renderEstablishmentsList(preferredItems){
 }
 async function editEstablishment(id){const items=await getEstablishments(),x=items.find(e=>e.id===id);if(!x)return;CURRENT_VIEW='establishment-edit';const types=['Restaurant','Hôtel','Café / Cafétéria','Salon de thé','Fast-food','Pâtisserie / Boulangerie','Traiteur','Cuisine centrale','Autre'];app.innerHTML=B('← Établissements','establishmentsManager()','back')+'<h1>Modifier l’établissement</h1><div class="panel"><label>Nom *</label><input id="eeName" value="'+esc(x.name||'')+'"><label>Type *</label><select id="eeType">'+types.map(t=>'<option'+(x.type===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select><label>Adresse</label><input id="eeAddress" value="'+esc(x.address||'')+'"><div class="row"><div><label>Ville / Gouvernorat</label><input id="eeCity" value="'+esc(x.city||'')+'"></div><div><label>Téléphone</label><input id="eePhone" type="tel" value="'+esc(x.phone||'')+'"></div></div><div class="row"><div><label>E-mail</label><input id="eeEmail" type="email" value="'+esc(x.email||'')+'"></div><div><label>Capacité</label><input id="eeCapacity" type="number" min="0" value="'+esc(x.capacity??'')+'"></div></div><div class="row"><div><label>Nom du responsable</label><input id="eeManager" value="'+esc(x.manager||'')+'"></div><div><label>Téléphone responsable</label><input id="eeManagerPhone" type="tel" value="'+esc(x.managerPhone||'')+'"></div></div><br><button id="saveEstablishmentBtn" class="btn primary">Enregistrer</button><p id="eeStatus" class="note"></p></div>';document.getElementById('saveEstablishmentBtn').onclick=()=>saveEstablishmentEdit(id)}
 async function saveEstablishmentEdit(id){const items=await getEstablishments(),x=items.find(e=>e.id===id),v=i=>(document.getElementById(i)?.value||'').trim(),status=document.getElementById('eeStatus');if(!x)return;const name=v('eeName'),type=v('eeType');if(!name||!type){status.textContent='Nom et type obligatoires.';status.style.color='#9e4545';return}Object.assign(x,{name,type,address:v('eeAddress'),city:v('eeCity'),phone:v('eePhone'),email:v('eeEmail'),capacity:v('eeCapacity')?Number(v('eeCapacity')):null,manager:v('eeManager'),managerPhone:v('eeManagerPhone'),updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'});await saveEstablishments(items);await establishmentsManager()}
-async function toggleEstablishment(id){const items=await getEstablishments(),x=items.find(e=>e.id===id);if(!x)return;x.active=x.active===false;x.updatedAt=new Date().toISOString();x.updatedBy='M&T Admin';await saveEstablishments(items);await renderEstablishmentsList()}
+async function toggleEstablishment(id){
+ try{
+  const items=await getEstablishments(),x=items.find(e=>e.id===id);
+  if(!x){alert('Établissement introuvable.');return}
+  const activating=x.active===false;
+  if(!confirm((activating?'Réactiver':'Désactiver')+' l’établissement « '+x.name+' » ?'))return;
+  x.active=activating;x.updatedAt=new Date().toISOString();x.updatedBy='M&T Admin';
+  await saveEstablishments(items);
+  await renderEstablishmentsList();
+ }catch(e){console.error('toggleEstablishment',e);alert('Modification impossible : '+(e.code||e.message||String(e)))}
+}
 function refreshAdminEstablishmentButtons(){if(document.getElementById('adminEstablishmentButtons'))loadAdminEstablishmentButtons()}
 
 async function usersManager(){
