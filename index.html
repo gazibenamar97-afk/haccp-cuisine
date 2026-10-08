@@ -1272,15 +1272,30 @@ async function editEstablishment(id){const items=await getEstablishments(),x=ite
 async function saveEstablishmentEdit(id){const items=await getEstablishments(),x=items.find(e=>e.id===id),v=i=>(document.getElementById(i)?.value||'').trim(),status=document.getElementById('eeStatus');if(!x)return;const name=v('eeName'),type=v('eeType');if(!name||!type){status.textContent='Nom et type obligatoires.';status.style.color='#9e4545';return}Object.assign(x,{name,type,address:v('eeAddress'),city:v('eeCity'),phone:v('eePhone'),email:v('eeEmail'),capacity:v('eeCapacity')?Number(v('eeCapacity')):null,manager:v('eeManager'),managerPhone:v('eeManagerPhone'),updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'});await saveEstablishments(items);await establishmentsManager()}
 async function toggleEstablishment(id){
  try{
+  if(!currentUserProfile||currentUserProfile.site!=='main'||currentUserProfile.role!=='admin')throw new Error('Accès réservé à l’administrateur');
   const items=await getEstablishments(),x=items.find(e=>e.id===id);
   if(!x){alert('Établissement introuvable.');return}
   const activating=x.active===false;
-  if(!confirm((activating?'Réactiver':'Désactiver')+' l’établissement « '+x.name+' » ?'))return;
-  x.active=activating;x.updatedAt=new Date().toISOString();x.updatedBy='M&T Admin';
+  const action=activating?'réactiver':'désactiver';
+  const password=prompt('Saisissez votre mot de passe administrateur pour '+action+' « '+x.name+' » :');
+  if(password===null)return;
+  if(!password){alert('Mot de passe obligatoire. Aucune modification effectuée.');return}
+  const authUser=firebase.auth().currentUser;
+  if(!authUser||!authUser.email)throw new Error('Session administrateur invalide. Reconnectez-vous.');
+  try{
+   const credential=firebase.auth.EmailAuthProvider.credential(authUser.email,password);
+   await authUser.reauthenticateWithCredential(credential);
+  }catch(e){
+   alert('Mot de passe administrateur incorrect ou vérification impossible. Aucune modification effectuée.');
+   return;
+  }
+  x.active=activating;x.updatedAt=new Date().toISOString();x.updatedBy=currentUserProfile.uid||'M&T Admin';
   await saveEstablishments(items);
   await renderEstablishmentsList();
+  alert('Établissement « '+x.name+' » '+(activating?'réactivé':'désactivé')+' avec succès.');
  }catch(e){console.error('toggleEstablishment',e);alert('Modification impossible : '+(e.code||e.message||String(e)))}
 }
+
 function refreshAdminEstablishmentButtons(){if(document.getElementById('adminEstablishmentButtons'))loadAdminEstablishmentButtons()}
 
 async function usersManager(){
