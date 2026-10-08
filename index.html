@@ -674,7 +674,7 @@ function home(){
    <button class="home-card" onclick="suppliers()"><span class="home-icon">🚚</span><b>Fournisseurs</b><small>Gérez vos fournisseurs</small><span class="home-arrow">›</span></button>
    <button class="home-card" onclick="trace()"><span class="home-icon">▤</span><b>Traçabilité</b><small>Consultez l'historique des opérations</small><span class="home-arrow">›</span></button>
    <button class="home-card" onclick="settings()"><span class="home-icon">⚙</span><b>Paramètres</b><small>Configuration de l'application</small><span class="home-arrow">›</span></button>
-   <button class="${SITE_ID==='main'?'home-card':'home-card home-direction'}" onclick="openDashboard()"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span>${SITE_ID==='main'?'':'<span class="direction-photo" aria-hidden="true"></span>'}<span class="home-arrow">›</span></button>
+   <button class="home-card home-direction" onclick="openDashboard()"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span><span class="direction-photo" aria-hidden="true"></span><span class="home-arrow">›</span></button>
    ${SITE_ID==='main'?'<button class="home-card" onclick="openEstablishmentSupervision()"><span class="home-icon">🏢</span><b>Supervision des établissements</b><small>Consultez chaque établissement en temps réel</small><span class="home-arrow">›</span></button>':''}
   </div>
  </div>`
