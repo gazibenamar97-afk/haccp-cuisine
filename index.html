@@ -570,26 +570,24 @@ body.on-home button.home-card.home-direction>.direction-copy{
   z-index:1!important;
  }
 }
-/* Le compte administrateur (site main) n'insère pas .direction-photo dans home().
-   Afficher la photo via ::after uniquement lorsque ce conteneur manque. */
+/* Sur le compte admin, home() ne crée pas de .direction-photo.
+   Image directement sur la carte : ne dépend d'aucun pseudo-élément. */
 @media(min-width:701px){
- body.on-home .home-grid > button.home-direction:not(:has(>.direction-photo)){
+ body.on-home .home-grid > button.home-card.home-direction:not(:has(>.direction-photo)){
   grid-column:auto!important;
-  padding:18px 51% 18px 20px!important;
   height:130px!important;min-height:130px!important;
+  padding:18px 51% 18px 20px!important;
+  background-color:#fff!important;
+  background-image:url("./assets/home/settings.jpg?v=75")!important;
+  background-size:50% 100%!important;
+  background-position:right center!important;
+  background-repeat:no-repeat!important;
  }
- body.on-home .home-grid > button.home-direction:not(:has(>.direction-photo))::before{
-  display:none!important;content:none!important;
+ body.on-home .home-grid > button.home-card.home-direction:not(:has(>.direction-photo))::before,
+ body.on-home .home-grid > button.home-card.home-direction:not(:has(>.direction-photo))::after{
+  content:none!important;display:none!important;
  }
- body.on-home .home-grid > button.home-direction:not(:has(>.direction-photo))::after{
-  content:""!important;display:block!important;
-  position:absolute!important;left:50%!important;right:0!important;
-  top:0!important;bottom:0!important;width:50%!important;height:100%!important;
-  z-index:1!important;border-radius:0 28px 28px 0!important;
-  background:url("https://cdn.marblism.com/1_erpLjjSTz.webp") center center / cover no-repeat!important;
-  pointer-events:none!important;
- }
- body.on-home .home-grid > button.home-direction:not(:has(>.direction-photo))>.direction-copy b{
+ body.on-home .home-grid > button.home-card.home-direction:not(:has(>.direction-photo))>.direction-copy b{
   font-size:clamp(15px,1.12vw,18px)!important;
  }
 }
