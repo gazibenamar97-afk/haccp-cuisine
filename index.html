@@ -626,29 +626,8 @@ async function refreshSiteDisplayName(){
  return siteDisplayName;
 }
 const SITE_STORAGE_KEY='haccpV3_'+SITE_ID;
-(function configureSitePWA(){
- try{
-  const manifest=document.getElementById('appManifest');
-  if(!manifest)return;
-  // iOS Home Screen must preserve the actual page URL (including ?site=...).
-  // Its static manifest start_url='./' otherwise launches the admin namespace.
-  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){manifest.remove();return;}
-  const site=encodeURIComponent(SITE_ID);
-  const data={
-   name:'M&T HACCP — '+SITE_NAME,
-   short_name:SITE_ID==='main'?'M&T Admin':'M&T HACCP',
-   description:'Application HACCP pour hôtels, restaurants et établissements de restauration',
-   start_url:'./?site='+site+'&pwa=1',
-   scope:'./',
-   display:'browser',
-   background_color:'#f3f7f5',
-   theme_color:'#2e6a50',
-   orientation:'any',
-   icons:[{src:'./icon.svg',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]
-  };
-  manifest.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/manifest+json'}));
- }catch(e){console.warn('PWA site manifest',e)}
-})();
+// Le manifeste statique fournit un point d'entrée commun à tous les comptes.
+// Firebase redirige ensuite chaque utilisateur vers son établissement autorisé.
 const LEGACY_STORAGE_KEY='haccpV3';
 const DEFAULT_STATE='{"stock":[],"temps":[],"clean":[],"trace":[],"equipment":[{"name":"Frigo 1","min":0,"max":4},{"name":"Congélateur 1","min":-24,"max":-18}]}';
 const S=JSON.parse(localStorage.getItem(SITE_STORAGE_KEY)||(SITE_ID==='main'?localStorage.getItem(LEGACY_STORAGE_KEY):null)||DEFAULT_STATE);
@@ -2222,5 +2201,5 @@ document.addEventListener('click',function(e){
 });
 
 startApplication();
-if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister()));if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('mt-haccp-')).map(k=>caches.delete(k)))}}catch(e){console.warn('PWA cache cleanup',e)}})}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(reg=>reg.update()).catch(e=>console.warn('PWA service worker',e))})}
 </script></body></html>
