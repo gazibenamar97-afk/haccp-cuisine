@@ -453,6 +453,20 @@ body.on-login .mt-login-page{width:min(100%,520px);margin:0 auto}
 .mt-login-submit{margin-top:18px!important}
 @media(min-width:700px){.mt-login-hero{min-height:375px}}
 </style>
+<style id="mt-login-final-photo-v3">
+/* Photo recadrée de la maquette approuvée, stockée dans le dépôt. */
+body.on-login .mt-login-hero{
+ background-image:linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.88) 39%,rgba(255,255,255,.16) 76%),url("./assets/home/login-photo.webp")!important;
+ background-size:cover!important;background-position:center!important;
+ min-height:335px!important;
+}
+body.on-login .mt-login-page{background:linear-gradient(155deg,#fff 0%,#f2f8f5 72%,#d5ebe1 100%)}
+body.on-login .mt-login-panel{margin-top:-2px!important;border-radius:29px!important}
+body.on-login .mt-login-values>span{background:rgba(222,240,232,.94)!important}
+body.on-login .mt-login-panel h1{font-weight:800}
+body.on-login .mt-login-submit{background:linear-gradient(100deg,#279e74,#14734f)!important}
+@media(max-width:380px){body.on-login .mt-login-brand{font-size:36px!important}body.on-login .mt-login-panel h1{font-size:22px!important}}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
