@@ -458,16 +458,16 @@ body.on-home .home-direction .direction-photo{
 <style id="direction-desktop-card-fix-v190">
 /* Corriger uniquement la carte Tableau de bord Direction sur ordinateur. */
 @media(min-width:701px){
- body.on-home button.home-card.home-direction{
+ body.on-home .home-grid > button.home-card.home-direction{
   position:relative!important;
   display:flex!important;
   align-items:center!important;
   justify-content:flex-start!important;
-  grid-column:auto!important;
-  width:100%!important;
+  grid-column:span 1!important;grid-row:auto!important;
+  width:100%!important;min-width:0!important;
   height:130px!important;
   min-height:130px!important;
-  padding:20px calc(50% + 20px) 20px 24px!important;
+  padding:18px 51% 18px 20px!important;
   background:#fff!important;
   background-image:none!important;
   border-radius:30px!important;
@@ -478,8 +478,8 @@ body.on-home .home-direction .direction-photo{
  body.on-home button.home-card.home-direction:after{display:none!important}
  body.on-home button.home-card.home-direction>.home-icon{
   position:relative!important;z-index:3!important;
-  flex:0 0 50px!important;
-  margin:0 14px 0 0!important;
+  flex:0 0 42px!important;
+  margin:0 10px 0 0!important;
  }
  body.on-home button.home-card.home-direction>.direction-copy{
   position:relative!important;z-index:3!important;
@@ -530,8 +530,8 @@ body.on-home button.home-card.home-direction>.direction-copy{
   align-items:center!important;
   justify-content:flex-start!important;
   padding:18px calc(50% + 20px) 18px 22px!important;
-  height:140px!important;
-  min-height:140px!important;
+  height:130px!important;
+  min-height:130px!important;
  }
  body.on-home button.home-card.home-direction>.direction-copy{
   flex:1 1 auto!important;
