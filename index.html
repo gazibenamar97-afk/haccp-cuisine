@@ -530,6 +530,44 @@ body.on-login .mt-login-page:before{bottom:-75px!important;height:215px!importan
 body.on-login .mt-login-page:after{bottom:45px!important;height:95px!important;background:#d4eaddc9!important}
 @media(max-width:380px){body.on-login .mt-login-hero{height:320px!important;min-height:320px!important;padding-left:15px!important}body.on-login .mt-login-values{gap:16px!important}body.on-login .mt-login-panel{margin-left:10px!important;margin-right:10px!important;padding-left:14px!important;padding-right:14px!important}}
 </style>
+<style id="mt-desktop-premium-v1">
+/* Adaptation PC uniquement : le rendu mobile approuvé reste intact. */
+@media(min-width:901px){
+ body.on-login{background:linear-gradient(135deg,#eaf5ee,#f8fbf9)!important}
+ body.on-login main{display:flex!important;align-items:center!important;justify-content:center!important;min-height:calc(100vh - 40px)!important;padding:34px!important;max-width:100%!important}
+ body.on-login #app{width:100%!important}
+ body.on-login .mt-login-page{width:min(1180px,100%)!important;min-height:640px!important;padding:0!important;display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch!important;overflow:hidden!important;border-radius:28px!important;background:white!important;box-shadow:0 22px 65px #173f2c26!important}
+ body.on-login .mt-login-page:before,body.on-login .mt-login-page:after{display:none!important}
+ body.on-login .mt-login-hero{height:auto!important;min-height:640px!important;padding:82px 38px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;background-image:linear-gradient(90deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.68) 45%,rgba(255,255,255,.06) 100%),url("./assets/home/login-photo.webp")!important;background-size:cover!important;background-position:center!important;border-radius:0!important}
+ body.on-login .mt-login-brand{font-size:clamp(36px,3.8vw,53px)!important;padding-top:50px!important;letter-spacing:-1.5px!important}
+ body.on-login .mt-login-brand .mt-leaf{left:96px!important;top:0!important;width:49px!important;height:46px!important}
+ body.on-login .mt-login-tagline{font-size:14px!important;max-width:330px!important;margin:16px 0 38px!important}
+ body.on-login .mt-login-values{gap:34px!important;padding-left:8px!important}
+ body.on-login .mt-login-values>span{width:78px!important;height:78px!important;flex-basis:78px!important}
+ body.on-login .mt-login-values>span svg{width:40px!important;height:40px!important}
+ body.on-login .mt-login-values small{top:88px!important;font-size:11px!important}
+ body.on-login .mt-login-panel{margin:0!important;padding:64px clamp(30px,4vw,68px)!important;border-radius:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+ body.on-login .mt-login-panel h1{font-size:clamp(25px,2.4vw,35px)!important;white-space:normal!important}
+ body.on-login .mt-login-subtitle{font-size:16px!important;margin-bottom:33px!important}
+ body.on-login .mt-login-field{height:60px!important;min-height:60px!important;margin-bottom:20px!important}
+ body.on-login .mt-login-options{margin-top:7px!important;margin-bottom:18px!important}
+ body.on-login .mt-login-submit{height:62px!important;font-size:20px!important}
+ body.on-login .mt-login-secure{margin-top:30px!important}
+ body.on-home main{max-width:1600px!important;margin:0 auto!important;padding:30px 30px 55px!important}
+ body.on-home .home-shell{max-width:1540px!important;margin:auto!important}
+ body.on-home .home-head{margin:20px 0 30px!important}
+ body.on-home .home-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:17px!important}
+ body.on-home .home-card{min-width:0!important;min-height:240px!important;border-radius:25px!important;padding:20px 17px!important}
+ body.on-home .home-card b{font-size:clamp(15px,1.3vw,20px)!important;line-height:1.16!important}
+ body.on-home .home-card small{font-size:clamp(12px,1vw,15px)!important}
+ body.on-home .home-icon{width:49px!important;height:49px!important;font-size:23px!important;margin-bottom:16px!important}
+}
+@media(min-width:901px) and (max-width:1120px){
+ body.on-home .home-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ body.on-login .mt-login-hero{padding:65px 24px!important}
+ body.on-login .mt-login-panel{padding:40px 28px!important}
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
