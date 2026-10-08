@@ -258,7 +258,40 @@ body.on-home .home-card:nth-child(8){background-image:url("./assets/home/setting
  body{padding-bottom:76px}
 }
 </style><style id="home-supervision-photo-v136">
-body.on-home .home-grid > .home-card:last-child{background-image:url("https://d2jqrm6oza8nb6.cloudfront.net/datasets/d5ec581b-9358-4e0d-870c-fac1759aad91.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZjRhOTk2MzE4YTExYTZlNCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTU2NzUzN30.yTy9Cg1940kscgXtfkwlRi2pSx7C1YdvuzvL7iNma1I")!important;background-position:center bottom!important;background-size:100% 58%!important;background-repeat:no-repeat!important}
+/* Carte supervision : image cadrée sur la moitié droite, texte dégagé à gauche. */
+@media(min-width:701px){
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction){
+  position:relative!important;isolation:isolate!important;
+  background:#fff!important;overflow:hidden!important;
+  padding-right:51%!important;min-width:0!important;
+ }
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction)::before{
+  content:""!important;position:absolute!important;z-index:0!important;
+  left:50%!important;top:0!important;right:0!important;bottom:0!important;
+  background-image:url("https://d2jqrm6oza8nb6.cloudfront.net/datasets/d5ec581b-9358-4e0d-870c-fac1759aad91.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZjRhOTk2MzE4YTExYTZlNCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTU2NzUzN30.yTy9Cg1940kscgXtfkwlRi2pSx7C1YdvuzvL7iNma1I")!important;
+  background-size:cover!important;background-position:center center!important;
+  background-repeat:no-repeat!important;pointer-events:none!important;
+ }
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction) > .home-icon,
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction) > b,
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction) > small{
+  position:relative!important;z-index:1!important;max-width:100%!important;
+ }
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction) > b{
+  font-size:clamp(16px,1.15vw,20px)!important;line-height:1.2!important;
+  overflow-wrap:normal!important;
+ }
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction) > small{
+  font-size:clamp(11px,.9vw,14px)!important;line-height:1.3!important;
+  overflow-wrap:break-word!important;
+ }
+}
+@media(max-width:700px){
+ body.on-home .home-grid > button.home-card:last-child:not(.home-direction){
+  background-image:url("https://d2jqrm6oza8nb6.cloudfront.net/datasets/d5ec581b-9358-4e0d-870c-fac1759aad91.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZjRhOTk2MzE4YTExYTZlNCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTU2NzUzN30.yTy9Cg1940kscgXtfkwlRi2pSx7C1YdvuzvL7iNma1I")!important;background-size:50% 100%!important;
+  background-position:right center!important;background-repeat:no-repeat!important;
+ }
+}
 </style><style id="direction-container-v143">
 /* Establishments: professional full-width Direction card.
    The photo has its own container and uses object-fit:cover semantics via background cover. */
