@@ -1373,6 +1373,8 @@ async function editAppUser(uid){
  if(!cloudDb||!currentUserProfile)return;
  const box=document.getElementById('userEditPanel')||document.createElement('div');
  box.id='userEditPanel';
+ const targetButton=Array.from(document.querySelectorAll('#usersList button')).find(b=>b.textContent.trim()==='Modifier'&&b.getAttribute('onclick')?.includes(encodeURIComponent(uid)));
+ if(targetButton){const record=targetButton.closest('.record');if(record)record.insertAdjacentElement('afterend',box)}
  if(!box.isConnected){const list=document.getElementById('usersList');if(!list)return;list.parentElement.insertBefore(box,list)}
  box.innerHTML='<div class="panel"><h3>Chargement du profil…</h3></div>';
  try{
