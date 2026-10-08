@@ -1282,7 +1282,7 @@ async function migrateLegacyUser(btn){
  }catch(e){console.error('migrateLegacyUser',e);try{if(creator)await creator.auth().signOut()}catch(_e){}say('Migration impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Migrer le compte'}}
 }
-function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return isEstablishmentManagerProfile(currentUserProfile)&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'&&u.uid!==currentUserProfile.uid}
+function canManageUserProfile(u){if(!currentUserProfile)return false;if(currentUserProfile.site==='main')return true;return isEstablishmentManagerProfile(currentUserProfile)&&currentUserProfile.site===SITE_ID&&u.site===SITE_ID&&u.role!=='admin'}
 async function createAppUser(btn){
  const status=document.getElementById('createUserStatus'),say=(m,bad)=>{if(status){status.textContent=m;status.style.color=bad?'#a12622':'#20543e'}};
  if(!cloudDb||!currentUserProfile){say('Service indisponible.',true);return}
@@ -1324,7 +1324,7 @@ async function createAppUser(btn){
  }catch(e){say('Création impossible : '+(e.code||e.message||e),true)}
  finally{if(btn){btn.disabled=false;btn.textContent='Créer le compte'}}
 }
-function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');if(!rows.length){box.innerHTML='<div class="note" style="padding:12px 0">Aucun utilisateur enregistré.</div>';return}box.innerHTML='<div class="note" style="padding:4px 0 10px"><b>'+rows.length+'</b> utilisateur'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(adminMode?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':(canManageUserProfile(u)&&u.uid!==currentUserProfile.uid?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':''))+'</div>').join('')}
+function renderManagedUsers(box,rows,adminMode){const roleLabel=r=>r==='responsable'?'Responsable établissement':r==='haccp'?'Responsable HACCP / Qualité':r==='employe'?'Employé':r==='admin'?'Administrateur':(r||'Rôle non défini');if(!rows.length){box.innerHTML='<div class="note" style="padding:12px 0">Aucun utilisateur enregistré.</div>';return}box.innerHTML='<div class="note" style="padding:4px 0 10px"><b>'+rows.length+'</b> utilisateur'+(rows.length>1?'s':'')+' enregistré'+(rows.length>1?'s':'')+'</div>'+rows.map(u=>'<div class="record" style="display:block!important;visibility:visible!important;opacity:1!important;padding:14px 0;border-top:1px solid #e3e9ef"><b>'+esc(u.name||u.username||u.email||'Utilisateur')+'</b><br><span class="note">'+esc(u.username||u.email||'')+' · '+esc(roleLabel(u.role))+' · '+(u.active===false?'Désactivé':'Actif')+'</span>'+(adminMode?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editSupervisionUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleSupervisionUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':(canManageUserProfile(u)?'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="editAppUser('+JSON.stringify(u.uid)+')">Modifier</button><button class="btn" style="width:auto" onclick="toggleAppUser('+JSON.stringify(u.uid)+','+(u.active!==false)+')">'+(u.active===false?'Réactiver':'Désactiver')+'</button></div>':''))+'</div>').join('')}
 async function getSiteUsers(site){
  if(!cloudDb||!site)return {rows:[],errors:['Firebase indisponible']};
  const by=new Map(),errors=[];
@@ -1370,12 +1370,37 @@ async function loadAppUsers(){
  }
 }
 async function editAppUser(uid){
- if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};if(!canManageUserProfile(u)){alert('Accès non autorisé.');return}
- const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;
- let role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();
- if(currentUserProfile.site==='main'&&!['responsable','haccp','employe','admin'].includes(role)){alert('Rôle invalide.');return}
- if(currentUserProfile.site!=='main'&&!['responsable','haccp','employe'].includes(role)){alert('Rôle non autorisé.');return}
- await ref.update({name:name.trim(),role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadAppUsers();
+ if(!cloudDb||!currentUserProfile)return;
+ const box=document.getElementById('userEditPanel')||document.createElement('div');
+ box.id='userEditPanel';
+ if(!box.isConnected){const list=document.getElementById('usersList');if(!list)return;list.parentElement.insertBefore(box,list)}
+ box.innerHTML='<div class="panel"><h3>Chargement du profil…</h3></div>';
+ try{
+  const ref=cloudDb.collection('users').doc(uid);
+  const snap=await ref.get({source:'server'});
+  if(!snap.exists)throw new Error('Profil introuvable');
+  const u={...snap.data(),uid};
+  if(!canManageUserProfile(u))throw new Error('Accès non autorisé');
+  const roles=['responsable','haccp','employe'];
+  if(currentUserProfile.site==='main')roles.push('admin');
+  box.innerHTML='<div class="panel" style="border:2px solid #cbdce8;border-radius:12px;padding:16px;margin:12px 0"><h3>Modifier un utilisateur</h3><label>Nom complet</label><input id="editUserName" value="'+esc(u.name||'')+'"><label>Nom d’utilisateur (identifiant de connexion)</label><input value="'+esc(u.username||'')+'" disabled><p class="note">L’identifiant de connexion ne peut pas être changé ici : il est lié à Firebase Authentication.</p><label>Rôle</label><select id="editUserRole">'+roles.map(r=>'<option value="'+r+'" '+(u.role===r?'selected':'')+'>'+({responsable:'Responsable établissement',haccp:'Responsable HACCP / Qualité',employe:'Employé',admin:'Administrateur'}[r])+'</option>').join('')+'</select><div id="editUserStatus" class="note" style="margin:10px 0"></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" onclick="saveEditedAppUser('+JSON.stringify(uid)+')">Enregistrer les modifications</button><button class="btn" onclick="document.getElementById(\'userEditPanel\').remove()">Annuler</button></div></div>';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }catch(e){box.innerHTML='<div class="note" style="color:#a12622">Impossible d’ouvrir la modification : '+esc(e.code||e.message||String(e))+'</div>'}
+}
+async function saveEditedAppUser(uid){
+ const status=document.getElementById('editUserStatus'),name=(document.getElementById('editUserName')?.value||'').trim(),role=document.getElementById('editUserRole')?.value;
+ const say=(msg,bad)=>{if(status){status.textContent=msg;status.style.color=bad?'#a12622':'#20543e'}};
+ if(!name){say('Le nom est obligatoire.',true);return}
+ if(!['responsable','haccp','employe',...(currentUserProfile?.site==='main'?['admin']:[])].includes(role)){say('Rôle invalide.',true);return}
+ try{
+  const ref=cloudDb.collection('users').doc(uid),snap=await ref.get({source:'server'});
+  if(!snap.exists||!canManageUserProfile({...snap.data(),uid}))throw new Error('Profil introuvable ou accès refusé');
+  // Keep uid, email and site unchanged to comply with Firestore rules.
+  await ref.update({name,role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});
+  if(uid===currentUserProfile.uid){currentUserProfile.name=name;currentUserProfile.role=role;renderUserSessionBar()}
+  say('Modifications enregistrées dans Firebase.',false);
+  await loadAppUsers();
+ }catch(e){say('Enregistrement impossible : '+(e.code||e.message||String(e)),true)}
 }
 async function toggleAppUser(uid,isActive){
  if(!cloudDb)return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists||!canManageUserProfile(snap.data()||{})){alert('Accès non autorisé.');return}
