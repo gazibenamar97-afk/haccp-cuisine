@@ -993,6 +993,28 @@ body.on-login .mt-ref-field input:focus-visible,body.on-login .mt-ref-wrap butto
 @media(max-width:860px){body.on-login .mt-ref-wrap{grid-template-columns:1fr!important}body.on-login .mt-ref-login{padding:32px 22px!important}body.on-login .mt-ref-board{padding:32px 22px!important}body.on-login .mt-ref-bar{height:300px!important}}
 @media(prefers-reduced-motion:reduce){body.on-login .mt-ref-ptr{transition:none!important}}
 </style>
+<style id="mt-ref-desktop-polish-v6">
+/* Ajustements ciblés : largeur du formulaire, logo et hauteur d'écran PC. */
+@media(min-width:861px){
+ body.on-login{overflow:hidden!important}
+ body.on-login main:has(.mt-ref-wrap){padding:0!important;margin:0!important}
+ body.on-login #app{height:100vh!important;overflow:hidden!important}
+ body.on-login .mt-ref-wrap{height:100vh!important;min-height:0!important;grid-template-columns:minmax(410px,460px) minmax(0,1fr)!important;overflow:hidden!important}
+ body.on-login .mt-ref-login{min-width:0!important;padding:28px 42px!important;gap:22px!important;overflow-y:auto!important}
+ body.on-login .mt-ref-board{min-width:0!important;padding:28px 42px!important;gap:20px!important;overflow-y:auto!important}
+ body.on-login .mt-ref-bar{height:min(420px,46vh)!important}
+ body.on-login .mt-ref-row{flex-wrap:nowrap!important;white-space:nowrap!important;gap:10px!important}
+ body.on-login .mt-ref-row label{white-space:nowrap!important;flex-shrink:0!important}
+ body.on-login .mt-ref-row button{white-space:nowrap!important;flex-shrink:0!important}
+ body.on-login .mt-ref-logo{letter-spacing:0!important;word-spacing:3px!important}
+ body.on-login .mt-ref-logo b{margin-left:5px!important}
+}
+@media(max-width:860px){
+ body.on-login .mt-ref-logo b{margin-left:5px!important}
+ body.on-login .mt-ref-row{gap:12px!important}
+ body.on-login .mt-ref-row label{white-space:nowrap!important}
+}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
