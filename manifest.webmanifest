@@ -4,7 +4,7 @@
   "description": "Application HACCP pour hôtels, restaurants et établissements de restauration",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#f3f7f5",
   "theme_color": "#2e6a50",
   "orientation": "any",
