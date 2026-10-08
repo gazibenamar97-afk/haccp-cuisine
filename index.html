@@ -614,13 +614,17 @@ const OCR_PRODUCT_ALIASES=[
 ];
 
 app=document.getElementById('app');
-const SITE_ID=(new URLSearchParams(location.search).get('site')||'main').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,60)||'main';
+const SITE_ID=(new URLSearchParams(location.search).get('site')||((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone?localStorage.getItem('mtLastPwaSite'):null)||'main').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,60)||'main';
+if(SITE_ID!=='main')try{localStorage.setItem('mtLastPwaSite',SITE_ID)}catch(_){}
 const SITE_NAME=SITE_ID==='main'?'Espace administrateur':SITE_ID==='restaurant-1'?'Restaurant 1':SITE_ID==='restaurant-2'?'Restaurant 2':SITE_ID==='restaurant-3'?'Restaurant 3':SITE_ID;
 const SITE_STORAGE_KEY='haccpV3_'+SITE_ID;
 (function configureSitePWA(){
  try{
   const manifest=document.getElementById('appManifest');
   if(!manifest)return;
+  // iOS Home Screen must preserve the actual page URL (including ?site=...).
+  // Its static manifest start_url='./' otherwise launches the admin namespace.
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){manifest.remove();return;}
   const site=encodeURIComponent(SITE_ID);
   const data={
    name:'M&T HACCP — '+SITE_NAME,
@@ -656,7 +660,7 @@ async function loginAppUser(btn){
  if(!login||!password){say('Saisissez votre nom d’utilisateur ou e-mail et votre mot de passe.');return}
  loginInProgress=true;if(btn){btn.disabled=true;btn.textContent='Connexion…'};say('');
  try{
-  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   let cred=null;
   if(login.includes('@')){
    cred=await firebase.auth().signInWithEmailAndPassword(login,password);
