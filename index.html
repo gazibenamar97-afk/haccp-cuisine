@@ -699,7 +699,7 @@ async function loginAppUser(btn){
  }catch(e){
   console.error('Login',e);
   let msg=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found')?'Nom d’utilisateur, e-mail ou mot de passe incorrect.':(e.message||'Connexion impossible.');
-  if(e.siteDiagnostic)msg+=' Diagnostic : espace ouvert « '+SITE_ID+' » ; établissements recherchés : '+e.siteDiagnostic+'.';
+  // Ne pas exposer les détails internes des établissements dans les erreurs de connexion.
   say(msg);loginInProgress=false;if(btn){btn.disabled=false;btn.textContent='Se connecter'}
  }
 }
