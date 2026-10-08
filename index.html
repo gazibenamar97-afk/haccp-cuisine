@@ -676,6 +676,27 @@ body.on-login .mt-login-page:after{bottom:45px!important;height:95px!important;b
 }
 </style>
 
+<style id="mt-login-white-fields-v7">
+/* Champs blancs, y compris lorsque Chrome préremplit les identifiants. */
+body.on-login .mt-login-field,
+body.on-login .mt-login-field input,
+body.on-login .mt-login-field input:focus,
+body.on-login .mt-login-field input:not(:placeholder-shown){
+ background:#fff!important;
+ background-color:#fff!important;
+ color:#243746!important;
+ box-shadow:none!important;
+}
+body.on-login .mt-login-field input:-webkit-autofill,
+body.on-login .mt-login-field input:-webkit-autofill:hover,
+body.on-login .mt-login-field input:-webkit-autofill:focus{
+ -webkit-box-shadow:0 0 0 1000px #fff inset!important;
+ box-shadow:0 0 0 1000px #fff inset!important;
+ -webkit-text-fill-color:#243746!important;
+ caret-color:#243746!important;
+}
+body.on-login .mt-login-field{border-color:#cbd9e3!important}
+</style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
 html{background:#f3f7f5}
