@@ -1940,7 +1940,7 @@ document.addEventListener('click',function(e){
      if(hidden&&hidden.value==='')checkEquipmentTemperature();
    }
  });
- document.querySelectorAll('[id$="Suggestions"],[id$="List"]').forEach(function(box){
+ document.querySelectorAll('[id$="Suggestions"]').forEach(function(box){
    let parent=box.parentElement;
    if(parent&&!parent.contains(e.target))box.style.display='none';
  });
