@@ -695,7 +695,7 @@ async function loginAppUser(btn){
    }
    if(!cred){const err=lastErr||new Error('Identifiants incorrects');err.siteDiagnostic=sites.join(', ');throw err;}
   }
-  try{sessionStorage.setItem('mtWelcomePending',cred.user.uid)}catch(_){}
+  try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.setItem('mtWelcomePending',cred.user.uid)}catch(_){}
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
@@ -705,7 +705,7 @@ async function loginAppUser(btn){
  }
 }
 async function showEstablishmentWelcome(site){
- let name=site==='Espace administrateur'?site:site;
+ let name=site==='Espace administrateur'?'Administrateur':site;
  if(site!=='Espace administrateur'){
   try{const items=await getEstablishments();const found=items.find(x=>x.id===site);if(found&&found.name)name=found.name}catch(_){}
  }
@@ -737,8 +737,10 @@ async function authorizeAppUser(user){
   try{
    const pendingWelcome=sessionStorage.getItem('mtWelcomePending')===user.uid;
    const redirectedLogin=new URLSearchParams(location.search).get('auth')==='1';
-   if(pendingWelcome||redirectedLogin){
+   const loginAlreadyWelcomed=sessionStorage.getItem('mtWelcomeShownFor')===user.uid;
+   if((pendingWelcome||redirectedLogin)&&!loginAlreadyWelcomed){
     sessionStorage.removeItem('mtWelcomePending');
+    sessionStorage.setItem('mtWelcomeShownFor',user.uid);
     if(redirectedLogin){const clean=new URL(location.href);clean.searchParams.delete('auth');history.replaceState(null,'',clean.pathname+clean.search+clean.hash)}
     await showEstablishmentWelcome(isAdmin?'Espace administrateur':p.site);
    }
@@ -764,7 +766,7 @@ function renderUserSessionBar(){
  const homeObserver=new MutationObserver(syncSessionBarVisibility);
  homeObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
 }
-async function logoutAppUser(){try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
+async function logoutAppUser(){try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
 async function startApplication(){
  if(!firebase.auth){authLoginScreen('Firebase Authentication indisponible.');return}
  firebase.auth().onAuthStateChanged(async user=>{
