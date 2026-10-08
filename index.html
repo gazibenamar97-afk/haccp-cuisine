@@ -1360,10 +1360,7 @@ async function loadAppUsers(){
   // Only show accounts actually returned by Firestore; never substitute the
   // logged-in profile for a failed or incomplete collection read.
   renderManagedUsers(box,rows,false);
-  const count=document.createElement('div');
-  count.className='note';count.style.cssText='margin-top:12px;padding:10px;border:1px solid #d5a86d;border-radius:10px';
-  count.textContent='Vérification Firestore : '+rows.length+' profil(s) reçus du serveur pour '+site+'.';
-  box.appendChild(count);
+
  }catch(e){
   console.error('Firestore users list',e);
   box.innerHTML='<div style="color:#8b2f2f;padding:12px;border:1px solid #c66;border-radius:10px"><b>Lecture de la liste refusée ou impossible.</b><div>Établissement : '+esc(site)+'</div><div>Erreur Firebase : '+esc(e.code||e.message||String(e))+'</div><div>Les utilisateurs existants n’ont pas été modifiés.</div></div>';
