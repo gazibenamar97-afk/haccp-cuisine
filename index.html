@@ -1398,8 +1398,9 @@ async function saveEditedAppUser(uid){
   // Keep uid, email and site unchanged to comply with Firestore rules.
   await ref.update({name,role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});
   if(uid===currentUserProfile.uid){currentUserProfile.name=name;currentUserProfile.role=role;renderUserSessionBar()}
-  say('Modifications enregistrées dans Firebase.',false);
   await loadAppUsers();
+  const editPanel=document.getElementById('userEditPanel');
+  if(editPanel)editPanel.remove();
  }catch(e){say('Enregistrement impossible : '+(e.code||e.message||String(e)),true)}
 }
 async function toggleAppUser(uid,isActive){
