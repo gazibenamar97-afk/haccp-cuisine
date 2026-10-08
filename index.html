@@ -735,8 +735,11 @@ async function authorizeAppUser(user){
   if(SITE_ID!==p.site){location.replace(location.pathname+'?site='+encodeURIComponent(p.site)+'&auth=1');return false}
   renderUserSessionBar();home();
   try{
-   if(sessionStorage.getItem('mtWelcomePending')===user.uid){
+   const pendingWelcome=sessionStorage.getItem('mtWelcomePending')===user.uid;
+   const redirectedLogin=new URLSearchParams(location.search).get('auth')==='1';
+   if(pendingWelcome||redirectedLogin){
     sessionStorage.removeItem('mtWelcomePending');
+    if(redirectedLogin){const clean=new URL(location.href);clean.searchParams.delete('auth');history.replaceState(null,'',clean.pathname+clean.search+clean.hash)}
     await showEstablishmentWelcome(isAdmin?'Espace administrateur':p.site);
    }
   }catch(e){console.warn('Welcome screen',e)}
