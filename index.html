@@ -743,7 +743,7 @@ function openEstablishmentSupervision(){
  app.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h1>Supervision des établissements</h1><p class="note">Supervision en temps réel et gestion complète de tous les établissements.</p></div>'+B('← Accueil',"home()")+'</div>'+
  '<div class="panel"><h2>🏢 Gestion des établissements</h2><p class="note">Ajoutez, modifiez, activez ou désactivez vos établissements depuis ce module.</p>'+B('Gérer les établissements',"establishmentsManager()",'primary')+'</div>'+
  '<div class="panel"><h2>📊 Supervision en temps réel</h2><p class="note">Sélectionnez un établissement pour consulter ses produits, DLC, non-conformités, températures, nettoyages et traçabilité.</p><label>Établissement à superviser</label><div class="row" style="align-items:end"><div><select id="supervisionSite" onchange="openSelectedSupervision()"><option value="">Choisir un établissement…</option></select></div></div><div id="supervisionSiteStatus" class="note"></div></div>'+
- '<div class="panel"><h2>👥 Utilisateurs des établissements</h2><p class="note">Choisissez un établissement pour afficher et gérer ses comptes utilisateurs.</p><div class="row" style="align-items:start"><div><label>Choisir l’établissement</label><select id="supervisionUsersSite" onchange="loadSupervisionUsers()"><option value="">Choisir un établissement…</option></select></div><div><div id="supervisionUsersList" class="note" style="padding-top:28px">Sélectionnez un établissement.</div></div></div></div>'+
+ '<div class="panel"><h2>👥 Utilisateurs des établissements</h2><p class="note">Choisissez un établissement pour afficher et gérer ses comptes utilisateurs.</p><label>Choisir l’établissement</label><select id="supervisionUsersSite" onchange="loadSupervisionUsers()"><option value="">Choisir un établissement…</option></select><div id="supervisionUsersList" class="note" style="margin-top:16px">Sélectionnez un établissement.</div></div>'+
  '<div class="panel" style="border-color:#d9b8b8"><h2>🧪 Remise à zéro d’un établissement</h2><p class="note">Efface les données d’exploitation de l’établissement choisi sans supprimer ses comptes ni les autres établissements.</p><label>Établissement à remettre à zéro</label><select id="resetSite"><option value="">Choisir un établissement…</option></select><br><br><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetEstablishmentData()">↺ Remettre cet établissement à zéro</button><div id="resetSiteStatus" class="note"></div></div>'+
  '<div class="panel" style="border-color:#b96b6b;background:#fffafa"><h2>⚠️ Remise à zéro globale des établissements</h2><p class="note"><b>La structure M&T HACCP est conservée.</b> Cette opération retire tous les établissements et désactive leurs profils utilisateurs dans Firestore. Elle efface leurs données d’exploitation, mais ne supprime ni l’application, ni ses modules, ni le catalogue intégré, ni le compte administrateur principal. Vous pourrez ajouter immédiatement un nouvel établissement après la remise à zéro.</p><button id="globalResetBtn" class="btn danger" style="width:auto" onclick="globalResetEstablishments(this)">Remise à zéro globale</button><div id="globalResetStatus" class="note" style="margin-top:10px"></div></div>';
  loadSupervisionSiteOptions();
@@ -1195,7 +1195,40 @@ async function loadSupervisionUsers(){
   box.innerHTML='<div style="color:#8b2f2f"><b>Erreur Firestore :</b> '+esc(e.code||e.message||String(e))+'</div>'
  }
 }
-async function editSupervisionUser(uid){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid),snap=await ref.get();if(!snap.exists)return;const u=snap.data()||{};const name=prompt('Nom complet :',u.name||'');if(name===null||!name.trim())return;let role=prompt('Rôle : responsable, haccp ou employe',u.role||'employe');if(role===null)return;role=role.trim().toLowerCase();if(!['responsable','haccp','employe'].includes(role)){alert('Rôle invalide.');return}await ref.update({name:name.trim(),role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
+async function editSupervisionUser(uid){
+ if(!cloudDb||currentUserProfile?.site!=='main')return;
+ const list=document.getElementById('supervisionUsersList');
+ if(!list)return;
+ const box=document.getElementById('supervisionUserEditPanel')||document.createElement('div');
+ box.id='supervisionUserEditPanel';
+ const button=Array.from(list.querySelectorAll('button')).find(b=>b.textContent.trim()==='Modifier'&&b.getAttribute('onclick')?.includes(encodeURIComponent(uid)));
+ const record=button?.closest('.record');
+ if(record)record.insertAdjacentElement('afterend',box);else list.prepend(box);
+ box.innerHTML='<div class="note">Chargement du profil…</div>';
+ try{
+  const snap=await cloudDb.collection('users').doc(uid).get({source:'server'});
+  if(!snap.exists)throw new Error('Utilisateur introuvable');
+  const u=snap.data()||{};
+  if(u.site==='main')throw new Error('Compte administrateur non modifiable ici');
+  const roles=[['responsable','Responsable établissement'],['haccp','Responsable HACCP / Qualité'],['employe','Employé']];
+  box.innerHTML='<div class="panel" style="border:2px solid #cbdce8;border-radius:12px;padding:16px;margin:12px 0"><h3>Modifier un utilisateur</h3><label>Nom complet</label><input id="supervisionEditName" value="'+esc(u.name||'')+'"><label>Nom d’utilisateur (identifiant de connexion)</label><input value="'+esc(u.username||'')+'" disabled><p class="note">L’identifiant de connexion reste inchangé.</p><label>Fonction</label><select id="supervisionEditRole">'+roles.map(([v,l])=>'<option value="'+v+'" '+(u.role===v?'selected':'')+'>'+l+'</option>').join('')+'</select><div id="supervisionEditStatus" class="note" style="margin:10px 0"></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" onclick="saveSupervisionUser(\''+encodeURIComponent(uid)+'\')">Enregistrer les modifications</button><button class="btn" onclick="document.getElementById(\'supervisionUserEditPanel\').remove()">Annuler</button></div></div>';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }catch(e){box.innerHTML='<div class="note" style="color:#a12622">Impossible d’ouvrir le profil : '+esc(e.code||e.message||String(e))+'</div>'}
+}
+async function saveSupervisionUser(uid){
+ const name=(document.getElementById('supervisionEditName')?.value||'').trim(),role=document.getElementById('supervisionEditRole')?.value,status=document.getElementById('supervisionEditStatus');
+ const say=(s)=>{if(status){status.textContent=s;status.style.color='#a12622'}};
+ if(!name){say('Le nom complet est obligatoire.');return}
+ if(!['responsable','haccp','employe'].includes(role)){say('Fonction invalide.');return}
+ try{
+  if(currentUserProfile?.site!=='main')throw new Error('Accès réservé à l’administrateur');
+  const ref=cloudDb.collection('users').doc(uid),snap=await ref.get({source:'server'});
+  if(!snap.exists||snap.data()?.site==='main')throw new Error('Compte non modifiable');
+  await ref.update({name,role,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});
+  await loadSupervisionUsers();
+  document.getElementById('supervisionUserEditPanel')?.remove();
+ }catch(e){say('Enregistrement impossible : '+(e.code||e.message||String(e)))}
+}
 async function toggleSupervisionUser(uid,isActive){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid);await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 
 async function establishmentsManager(){if(SITE_ID!=='main'||!currentUserProfile||currentUserProfile.site!=='main'){home();return}CURRENT_VIEW='establishments-manager';app.innerHTML=B('← Supervision','openEstablishmentSupervision()','back')+'<h1>Gestion des établissements</h1><div class="panel"><h2>Ajouter un établissement</h2><div class="row"><div><label>Nom de l’établissement *</label><input id="newEstablishmentName" placeholder="Ex. Le Grand Bleu"></div><div><label>Type d’établissement *</label><select id="newEstablishmentType"><option value="">Choisir…</option><option>Restaurant</option><option>Hôtel</option><option>Café / Cafétéria</option><option>Salon de thé</option><option>Fast-food</option><option>Pâtisserie / Boulangerie</option><option>Traiteur</option><option>Cuisine centrale</option><option>Autre</option></select></div></div><label>Adresse</label><input id="newEstablishmentAddress" placeholder="Adresse complète"><div class="row"><div><label>Ville / Gouvernorat</label><input id="newEstablishmentCity" placeholder="Ex. Gammarth, Tunis"></div><div><label>Téléphone</label><input id="newEstablishmentPhone" type="tel" placeholder="+216 ..."></div></div><div class="row"><div><label>E-mail</label><input id="newEstablishmentEmail" type="email" placeholder="contact@etablissement.tn"></div><div><label>Capacité / nombre de couverts</label><input id="newEstablishmentCapacity" type="number" min="0" inputmode="numeric" placeholder="Ex. 250"></div></div><h3>Responsable de l’établissement</h3><div class="row"><div><label>Nom du responsable</label><input id="newEstablishmentManager" placeholder="Nom et prénom"></div><div><label>Téléphone du responsable</label><input id="newEstablishmentManagerPhone" type="tel" placeholder="+216 ..."></div></div><label style="display:flex;gap:10px;align-items:center;margin-top:14px"><input id="newEstablishmentActive" type="checkbox" checked style="width:auto"> Établissement actif</label><br><button id="addEstablishmentBtn" class="btn primary" style="width:auto">Ajouter l’établissement</button><p id="establishmentStatus" class="note" style="font-weight:700"></p></div><div class="panel"><h2>Établissements enregistrés</h2><div id="establishmentsList"><p class="note">Chargement…</p></div></div>';document.getElementById('addEstablishmentBtn').onclick=addEstablishment;renderEstablishmentsList()}
