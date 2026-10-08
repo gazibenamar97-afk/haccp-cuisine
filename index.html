@@ -1089,11 +1089,12 @@ async function mtLockSession(){
  authLoginScreen();
  mtLockingSession=false;
 }
+// Ne pas déconnecter à un simple changement de visibilité : le navigateur peut
+// masquer brièvement la page pendant Firebase Auth ou une redirection d'établissement.
+// La déconnexion explicite reste assurée par logoutAppUser().
 document.addEventListener('visibilitychange',()=>{
- if(document.visibilityState==='hidden'&&currentUserProfile){
-  try{sessionStorage.setItem('mtRequireFreshLogin','1')}catch(_){}
- }else if(document.visibilityState==='visible'){
-  try{if(sessionStorage.getItem('mtRequireFreshLogin')==='1'){sessionStorage.removeItem('mtRequireFreshLogin');mtLockSession()}}catch(_){}
+ if(document.visibilityState==='visible'){
+  try{sessionStorage.removeItem('mtRequireFreshLogin')}catch(_){}
  }
 });
 async function startApplication(){
