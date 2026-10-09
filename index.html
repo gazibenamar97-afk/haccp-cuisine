@@ -639,6 +639,10 @@ body.on-login .mt-ref-field input:focus-visible,body.on-login .mt-ref-wrap butto
 @media(max-width:860px){body.on-login .mt-ref-wrap{grid-template-columns:1fr!important}body.on-login .mt-ref-login{padding:32px 22px!important}body.on-login .mt-ref-board{padding:32px 22px!important}body.on-login .mt-ref-bar{height:300px!important}}
 @media(prefers-reduced-motion:reduce){body.on-login .mt-ref-ptr{transition:none!important}}
 @media(min-width:861px){body.on-login{overflow:hidden!important}body.on-login #app{height:100vh!important;overflow:hidden!important}body.on-login .mt-ref-wrap{height:100vh!important;min-height:0!important;overflow:hidden!important}body.on-login .mt-ref-login,body.on-login .mt-ref-board{min-width:0!important;overflow-y:auto!important}body.on-login .mt-ref-row,body.on-login .mt-ref-row label,body.on-login .mt-ref-row button{white-space:nowrap!important}body.on-login .mt-ref-logo b{margin-left:8px!important}}
+/* Une feuille verte unique, petite et en hauteur entre M&T et HACCP */
+body.on-login .mt-ref-logo{display:flex!important;align-items:baseline!important;white-space:nowrap!important;gap:0!important}
+body.on-login .mt-ref-logo .mt-logo-leaf{display:inline-flex!important;align-self:flex-start!important;width:.52em!important;height:.52em!important;margin:.02em .09em 0 .08em!important;flex:none!important}
+body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!important;height:100%!important}
 /* Login mobile compact : tableau thermometre masque, champs et case alignes */
 @media(max-width:860px){
  body.on-login .mt-ref-board{display:none!important}
@@ -893,7 +897,7 @@ function authLoginScreen(message=''){
  let n=document.querySelector('nav');if(n)n.style.display='none';
  app.innerHTML=`<div class="mt-ref-wrap">
  <main class="mt-ref-login">
-  <div class="mt-ref-logo">M&amp;T<b>HACCP</b></div>
+  <div class="mt-ref-logo">M&amp;T<span class="mt-logo-leaf" aria-hidden="true"><svg viewBox="0 0 32 32" width="24" height="24" focusable="false"><defs><linearGradient id="mtLeafGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#147b45"/><stop offset="1" stop-color="#83c919"/></linearGradient></defs><path d="M5 27C4 12 14 4 29 3c0 14-7 25-24 24Z" fill="url(#mtLeafGradient)"/><path d="M6 27c5-8 11-13 20-20" stroke="#c8ed9d" stroke-width="1.1" fill="none"/></svg></span><b>HACCP</b></div>
   <div><h1>Bienvenue</h1><p class="mt-ref-sub">Connectez-vous pour ouvrir vos relevés du jour.</p></div>
   <form id="loginForm" onsubmit="event.preventDefault();loginAppUser(document.getElementById('loginBtn'))">
    <div class="mt-ref-field"><label for="loginEmail">Identifiant</label><input id="loginEmail" type="text" autocomplete="username" required></div>
