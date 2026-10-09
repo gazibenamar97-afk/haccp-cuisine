@@ -1515,7 +1515,58 @@ function saveSupplier(){let name=sname.value.trim(),phone=sphone.value.trim(),pl
 
 function deleteSupplier(i){if(confirm('Supprimer ce fournisseur ?')){S.suppliers.splice(i,1);save();suppliers()}}
 
-function saveRec(){if(!checkReceivingTemp()&&!String((document.getElementById('robs')||{}).value||'').trim()){alert('Température de réception non conforme. Indiquez obligatoirement l’action prise dans Observation.');document.getElementById('robs').focus();return}receptionRules();toggleNCReason();
+// Photos de reception : bucket prive Supabase et jeton Firebase.
+const HACCP_PHOTO_ENDPOINT='https://xtinmuduvwnhnwnmuggt.supabase.co';
+const HACCP_PHOTO_PUBLIC_KEY='sb_publishable_Zjw89hLTIjWeAJGYKWgvlQ_1ovdedwp';
+async function haccpPhotoAuth(){
+ const user=firebase.auth().currentUser;
+ if(!user)throw new Error('Reconnectez-vous a votre compte Firebase');
+ const token=await user.getIdToken();
+ const payload=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+ if(payload.role!=='authenticated')throw new Error('Le role authenticated manque dans le jeton Firebase : configuration requise avant de pouvoir archiver les photos');
+ return {token,uid:user.uid};
+}
+async function haccpPhotoToWebp(file){
+ return new Promise((resolve,reject)=>{
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{
+   URL.revokeObjectURL(url);
+   const factor=Math.min(1,1100/img.width,1100/img.height);
+   const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.width*factor));cv.height=Math.max(1,Math.round(img.height*factor));
+   cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+   cv.toBlob(blob=>blob?resolve(blob):reject(new Error('Conversion WebP impossible')),'image/webp',0.7);
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Format photo non pris en charge'))};
+  img.src=url;
+ });
+}
+async function haccpUploadReceptionPhotos(files){
+ const {token,uid}=await haccpPhotoAuth(),paths=[];
+ for(const file of files){
+  const blob=await haccpPhotoToWebp(file);
+  if(blob.size>1024*1024)throw new Error('Photo trop volumineuse pour le bucket (1 Mo)');
+  const path=uid+'/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.webp';
+  const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/haccp-photos/'+path,{method:'POST',headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token,'Content-Type':'image/webp','x-upsert':'false'},body:blob});
+  if(!res.ok)throw new Error('Envoi refuse par Supabase ('+res.status+') : '+(await res.text()).slice(0,180));
+  paths.push(path);
+ }
+ return paths;
+}
+async function haccpShowReceptionPhotos(paths){
+ const box=document.getElementById('receptionPhotoProof');if(!box||!paths||!paths.length)return;
+ try{
+  const {token}=await haccpPhotoAuth();
+  for(const path of paths){
+   const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/authenticated/haccp-photos/'+path,{headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token}});
+   if(!res.ok)throw new Error('Lecture refusee ('+res.status+')');
+   const img=document.createElement('img'),url=URL.createObjectURL(await res.blob());
+   img.src=url;img.alt='Photo de reception';img.style='max-width:100%;max-height:300px;border-radius:8px;margin:6px';
+   img.onload=()=>setTimeout(()=>URL.revokeObjectURL(url),60000);box.appendChild(img);
+  }
+  if(box.querySelector('img'))box.firstChild&&box.firstChild.nodeType===3&&(box.firstChild.textContent='');
+ }catch(err){box.textContent='Photo non disponible : '+err.message}
+}
+async function saveRec(){if(!checkReceivingTemp()&&!String((document.getElementById('robs')||{}).value||'').trim()){alert('Température de réception non conforme. Indiquez obligatoirement l’action prise dans Observation.');document.getElementById('robs').focus();return}receptionRules();toggleNCReason();
 let rpEl=document.getElementById('rp'),rpSearchEl=document.getElementById('rpSearch'),rfEl=document.getElementById('rf'),receiverEl=document.getElementById('rreceiver');
 if(rpEl&&!rpEl.value.trim()&&rpSearchEl&&rpSearchEl.value.trim()){
  let typed=normalizeProductSearch(rpSearchEl.value),match=receptionSearchItems().find(function(x){return normalizeProductSearch(x.name)===typed});
@@ -1525,7 +1576,13 @@ let missing=[];
 if(!rpEl||!rpEl.value.trim())missing.push('produit');
 if(!rfEl||!rfEl.value.trim())missing.push('fournisseur');
 if(!receiverEl||!receiverEl.value.trim())missing.push('nom de la personne ayant réceptionné');
-if(missing.length){alert('Champ'+(missing.length>1?'s':'')+' obligatoire'+(missing.length>1?'s':'')+' manquant'+(missing.length>1?'s':'')+' : '+missing.join(', ')+'.');let target=!rpEl||!rpEl.value.trim()?rpSearchEl:(!rfEl||!rfEl.value.trim()?rfEl:receiverEl);if(target){target.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){target.focus()},250)}return}if(!re.value.trim()){alert("L’état de l’emballage est obligatoire.");re.focus();return}if(rt.required&&!rt.value){alert('La température est obligatoire pour cette catégorie de produit.');rt.focus();return}if(!rfab.value&&!rfabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');rfab.focus();return}if(rc.value.trim()!=='Fruits & légumes'&&!rd.value&&!rdNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');rd.focus();return}if(re.value==='Non conforme'&&!rreason.value.trim()){alert('Le motif de non-conformité est obligatoire.');rreason.focus();return}let tempRuleAtSave=receivingTempRule(rc.value,rp.value),tempNumber=parseFloat(String(rt.value).replace(',','.')),tempOverRecommendation=!!tempRuleAtSave&&rt.value!==''&&!Number.isNaN(tempNumber)&&tempNumber>tempRuleAtSave.max;if(tempOverRecommendation&&!confirm('ALERTE HACCP : la température saisie ('+tempNumber+' °C) dépasse la recommandation ('+tempRuleAtSave.label+').\n\nUne action a été renseignée dans Observation. Voulez-vous malgré tout valider cette réception ?'))return;let x={category:rc.value,product:rp.value,brand:rbrand.value,quantity:rqty.value,supplier:rf.value,receivedBy:document.getElementById('rreceiver').value.trim(),lot:rl.value,temp:rt.value,recommendedTemp:tempRuleAtSave?tempRuleAtSave.label:'',recommendedTempMax:tempRuleAtSave?tempRuleAtSave.max:null,tempOverRecommendation:tempOverRecommendation,fabrication:rfab.value,fabricationNA:rfabNA.checked,dlc:rd.value,dlcNA:rdNA.checked,barcode:rbarcode.value.trim(),pack:re.value,nonConformityReason:document.getElementById('rreason')?rreason.value.trim():'',observation:document.getElementById('robs')?robs.value.trim():'',ocr:rocr.value,date:new Date().toLocaleDateString('fr-FR'),receivedAt:new Date().toISOString()};S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();stock()}
+if(missing.length){alert('Champ'+(missing.length>1?'s':'')+' obligatoire'+(missing.length>1?'s':'')+' manquant'+(missing.length>1?'s':'')+' : '+missing.join(', ')+'.');let target=!rpEl||!rpEl.value.trim()?rpSearchEl:(!rfEl||!rfEl.value.trim()?rfEl:receiverEl);if(target){target.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){target.focus()},250)}return}if(!re.value.trim()){alert("L’état de l’emballage est obligatoire.");re.focus();return}if(rt.required&&!rt.value){alert('La température est obligatoire pour cette catégorie de produit.');rt.focus();return}if(!rfab.value&&!rfabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');rfab.focus();return}if(rc.value.trim()!=='Fruits & légumes'&&!rd.value&&!rdNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');rd.focus();return}if(re.value==='Non conforme'&&!rreason.value.trim()){alert('Le motif de non-conformité est obligatoire.');rreason.focus();return}let tempRuleAtSave=receivingTempRule(rc.value,rp.value),tempNumber=parseFloat(String(rt.value).replace(',','.')),tempOverRecommendation=!!tempRuleAtSave&&rt.value!==''&&!Number.isNaN(tempNumber)&&tempNumber>tempRuleAtSave.max;if(tempOverRecommendation&&!confirm('ALERTE HACCP : la température saisie ('+tempNumber+' °C) dépasse la recommandation ('+tempRuleAtSave.label+').\n\nUne action a été renseignée dans Observation. Voulez-vous malgré tout valider cette réception ?'))return;let x={category:rc.value,product:rp.value,brand:rbrand.value,quantity:rqty.value,supplier:rf.value,receivedBy:document.getElementById('rreceiver').value.trim(),lot:rl.value,temp:rt.value,recommendedTemp:tempRuleAtSave?tempRuleAtSave.label:'',recommendedTempMax:tempRuleAtSave?tempRuleAtSave.max:null,tempOverRecommendation:tempOverRecommendation,fabrication:rfab.value,fabricationNA:rfabNA.checked,dlc:rd.value,dlcNA:rdNA.checked,barcode:rbarcode.value.trim(),pack:re.value,nonConformityReason:document.getElementById('rreason')?rreason.value.trim():'',observation:document.getElementById('robs')?robs.value.trim():'',ocr:rocr.value,date:new Date().toLocaleDateString('fr-FR'),receivedAt:new Date().toISOString()};if(receptionSelectedPhotos.length){
+ const btn=document.querySelector('.rec-actions .primary');
+ if(btn){btn.disabled=true;btn.textContent='Envoi des photos…'}
+ try{x.photoPaths=await haccpUploadReceptionPhotos(receptionSelectedPhotos)}
+ catch(err){alert('Reception non enregistree : '+err.message);if(btn){btn.disabled=false;btn.textContent='✓ Enregistrer la réception'}return}
+}
+S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();stock()}
 function isEstablishmentManagerProfile(p){if(!p||p.site==='main')return false;const r=String(p.role||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return r==='responsable'||r==='responsable etablissement'||r==='manager'||r==='responsable_etablissement'}
 function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1>${currentUserProfile&&(currentUserProfile.site==='main'||isEstablishmentManagerProfile(currentUserProfile))?'<div class="panel"><h2>👥 Utilisateurs</h2><p class="note">'+(currentUserProfile.site==='main'?'Gérez les comptes de tous les établissements.':'Gérez uniquement les utilisateurs de votre établissement.')+'</p>'+B('Gérer les utilisateurs','usersManager()','primary')+'</div>':''}<div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div>`}
 
@@ -2224,7 +2281,9 @@ function traceReceptionDetail(i){
  <div class="record"><b>Emballage</b><br><span class="note">${esc(x.pack||'—')}</span></div>
  ${x.nonConformityReason?'<div class="record"><b>Motif de non-conformité</b><br><span class="note">'+esc(x.nonConformityReason)+'</span></div>':''}
  ${x.observation?'<div class="record"><b>Observation / action</b><br><span class="note">'+esc(x.observation)+'</span></div>':''}
- </div>`;
+ ${x.photoPaths&&x.photoPaths.length?'<div class="record"><b>Photos de réception</b><div id="receptionPhotoProof">Chargement…</div></div>':''}
+  </div>`;
+ if(x.photoPaths&&x.photoPaths.length)haccpShowReceptionPhotos(x.photoPaths);
 }
 function traceLabelDetail(i){
  let x=S.trace[i];if(!x||x.type!=='Étiquette HACCP'){trace();return}
