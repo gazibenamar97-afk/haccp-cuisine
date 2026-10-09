@@ -1568,15 +1568,19 @@ async function haccpPhotoToWebp(file){
      cv.height=Math.max(1,Math.round(img.naturalHeight*factor));
      ctx.drawImage(img,0,0,cv.width,cv.height);
      let quality=0.76;
+     let format='image/webp';
      const attempt=()=>{
       cv.toBlob(blob=>{
        if(!blob){reject(new Error('Conversion WebP impossible'));return}
-       if(blob.type!=='image/webp'){reject(new Error('Le navigateur ne prend pas en charge WebP'));return}
+       if(blob.type!==format){
+        if(format==='image/webp'){format='image/jpeg';quality=0.76;attempt();return}
+        reject(new Error('Format JPEG non pris en charge'));return
+       }
        if(blob.size<=MAX_BYTES){resolve(blob);return}
        if(quality>0.38){quality=Math.max(0.38,quality-0.12);attempt();return}
        if(dimension>400){dimension=Math.max(400,Math.round(dimension*0.75));encode();return}
        reject(new Error('Impossible de compresser cette photo sous 1 Mo'));
-      },'image/webp',quality);
+      },format,quality);
      };
      attempt();
     };
@@ -1592,8 +1596,9 @@ async function haccpUploadReceptionPhotos(files){
  for(const file of files){
   const blob=await haccpPhotoToWebp(file);
   if(blob.size>1024*1024)throw new Error('Photo trop volumineuse pour le bucket (1 Mo)');
-  const path=uid+'/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.webp';
-  const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/haccp-photos/'+path,{method:'POST',headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token,'Content-Type':'image/webp','x-upsert':'false'},body:blob});
+  const extension=blob.type==='image/jpeg'?'jpg':'webp';
+  const path=uid+'/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+extension;
+  const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/haccp-photos/'+path,{method:'POST',headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token,'Content-Type':blob.type,'x-upsert':'false'},body:blob});
   if(!res.ok)throw new Error('Envoi refuse par Supabase ('+res.status+') : '+(await res.text()).slice(0,180));
   paths.push(path);
  }
