@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v131-premium-mobile-home-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v132-reference-mobile-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -716,6 +716,88 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
  .mt-home-drawer aside>button{display:block;width:100%;padding:13px 8px;text-align:left;border:0;border-radius:9px;background:none;color:white;font-size:13px}
  .mt-home-drawer aside>button:active{background:#168668}
 }
+
+/* Pixel-oriented mobile adaptation of the approved eight-panel reference. */
+@media(max-width:850px){
+ body.mt-premium-active{background:#eef2f1!important;color:#12302b!important;font-family:Inter,Arial,sans-serif!important}
+ body.mt-premium-active>nav,body.mt-premium-active>.mobile-home-btn{display:none!important}
+ body.mt-premium-active main{max-width:none!important;width:auto!important;padding:0!important;margin:0!important}
+ body.mt-premium-active #app{width:100%!important;max-width:none!important}
+ .mtp-app{width:100%;max-width:430px;margin:0 auto;min-height:100vh;background:#fff;color:#12302b;font-family:Inter,"Segoe UI",Arial,sans-serif;box-shadow:0 2px 25px #06251c0a}
+ .mtp-app *,.mtp-module *{box-sizing:border-box}
+ .mtp-app button,.mtp-module button{cursor:pointer;font:inherit;border:0}
+ .mtp-ic{width:1em;height:1em;flex:none;vertical-align:middle}
+ .mtp-header{position:relative;z-index:2;padding:calc(16px + env(safe-area-inset-top)) 17px 0;background:linear-gradient(135deg,#003d36,#005247);color:white}
+ .mtp-top{display:flex;align-items:center;justify-content:space-between}
+ .mtp-brand{display:flex;align-items:center;gap:9px;background:transparent!important;color:white!important;text-align:left;padding:0}
+ .mtp-leaf{font-size:39px;color:#46d792;display:grid;place-items:center}
+ .mtp-brand-copy strong{display:block;font-size:26px;font-weight:800;line-height:1}
+ .mtp-brand-copy strong small{font-size:13px;font-weight:500;letter-spacing:-.5px}
+ .mtp-brand-copy em{display:block;font-size:10px;font-style:normal;line-height:1.25;margin-top:5px;color:#e4f6ef}
+ .mtp-header-actions{display:flex;gap:10px}
+ .mtp-header-actions button{position:relative;background:#ffffff1a!important;color:white!important;border:1px solid #ffffff50!important;border-radius:50%;width:37px;height:37px;display:grid;place-items:center;font-size:21px}
+ .mtp-site{position:relative;top:24px;display:flex;align-items:center;gap:11px;min-height:61px;padding:9px 13px;background:white;color:#18332c;border-radius:15px;box-shadow:0 8px 19px #001e1c40}
+ .mtp-site-icon{display:grid;place-items:center;width:37px;height:37px;background:#e6f2ee;color:#0b574c;border-radius:10px;font-size:23px}
+ .mtp-site strong,.mtp-site small{display:block}.mtp-site strong{font-size:14px}.mtp-site small{font-size:11px;color:#697a74;margin-top:3px}
+ .mtp-site-down{margin-left:auto;color:#174c43;font-size:18px}
+ .mtp-hero{height:145px;background:#bed8c8 url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=85") center 50%/cover no-repeat}
+ .mtp-welcome{position:relative;margin-top:-15px;background:#fff;border-radius:18px 18px 0 0;display:flex;justify-content:space-between;align-items:center;gap:5px;padding:17px 13px 12px}
+ .mtp-welcome>span:first-child{min-width:0}.mtp-welcome strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mtp-welcome small{display:block;font-size:10px;color:#4f6761;margin-top:3px}
+ .mtp-date{display:flex;align-items:center;gap:5px;color:#009c90}.mtp-date .mtp-ic{font-size:23px}.mtp-date small{max-width:70px;font-size:10px;font-weight:700;color:#233d37;line-height:1.2;text-transform:capitalize}
+ .mtp-content{padding:5px 12px 25px!important;background:#fff!important}
+ .mtp-alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:3px 0 15px}
+ .mtp-alert{display:flex;align-items:center;gap:7px;min-width:0;position:relative;text-align:left;border-radius:15px!important;padding:10px 7px!important;min-height:87px;background:#fff0f0!important;border:1px solid #edb7b7!important;color:#bd1f30!important}
+ .mtp-alert-orange{background:#fff5e5!important;border-color:#edc78c!important;color:#bf7000!important}
+ .mtp-alert-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#d52439;color:white;font-size:19px;flex:none}
+ .mtp-alert-orange .mtp-alert-icon{background:#ef930c}
+ .mtp-alert strong,.mtp-alert b,.mtp-alert small{display:block;line-height:1.1}
+ .mtp-alert strong{font-size:10px}.mtp-alert b{font-size:23px;margin-top:4px}.mtp-alert small{font-size:9px;margin-top:4px}
+ .mtp-alert-go{margin-left:auto;font-size:16px}
+ .mtp-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .mtp-tile{display:block!important;position:relative!important;min-width:0!important;height:145px!important;padding:0!important;border-radius:14px!important;border:1px solid #e1e9e5!important;background:white!important;box-shadow:0 3px 9px #103b321a!important;text-align:left!important;overflow:hidden!important;transition:transform .14s ease,box-shadow .14s ease!important}
+ .mtp-tile:active{transform:scale(.965)!important;box-shadow:0 0 0 4px #4de0a373!important}
+ .mtp-photo{display:block;height:86px;background-position:center!important;background-size:cover!important;background-color:#d1e4d9}
+ .mtp-photo-reception{background-image:url("https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80")}
+ .mtp-photo-trace{background-image:url("https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=500&q=80")}
+ .mtp-photo-temperature{background-image:url("https://www.thermoworks.com/cdn/shop/files/TGrip-t-grip-heavy-duty-waterproof-thermometer-g01.jpg?v=1762382777&width=1200")}
+ .mtp-photo-clean{background-image:url("https://www.cleanipedia.com/images/yvwvo5xgjuhg/2pqKnP0ZRPj4srJqytDWxM/bc43446b068632ba43bf87c5b192eca4/VVBST19Gb29kX1NhZmVfMjAyM18wNF8yNV9VUFJPX0RTQ0Y1MjI1X18xXy5qcGc/1200w/a-person-wearing-blue-gloves-is-wiping-a-stainless-steel-surface-with-a-green-microfiber-cloth..jpg")}
+ .mtp-photo-etiquetage{background-image:url("https://www.cateringsafe.co.uk/cdn/shop/files/DCG-X22-Dual-Printer-Automated-Labeling-System-detail-3.jpg?v=1730306288")}
+ .mtp-photo-direction{background-image:url("https://static.wixstatic.com/media/f4a1ed_25dce0557c5546a9b08fe3077782d31a~mv2.png")}
+ .mtp-photo-parametres{background-image:url("https://d48-a.sdn.cz/d_48/c_img_of_A/nPadKnN9M1DuJ87aGE78OSx/fa76.jpeg")}
+ .mtp-photo-supervision{background-image:url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80")}
+ .mtp-photo-stock{background-image:url("https://www.airoaab.com/img/portfolio-cold-room-restaurant.jpg")}
+ .mtp-tile-icon{position:absolute;top:66px;left:9px;width:38px;height:38px;border:3px solid #fff;border-radius:11px;display:grid;place-items:center;color:white;font-size:21px;box-shadow:0 2px 7px #0003}
+ .mtp-tile-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:3px;padding:20px 9px 7px}
+ .mtp-tile-bottom strong{font-size:11px;line-height:1.16;font-weight:700}
+ .mtp-round-go{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:#006b56;color:white;font-size:16px}
+ .mtp-drawer[hidden]{display:none!important}
+ .mtp-drawer{position:fixed;inset:0;z-index:999999}
+ .mtp-shade{position:absolute;inset:0;background:#0009;width:100%;height:100%}
+ .mtp-drawer-panel{position:absolute;inset:0 14% 0 0;background:linear-gradient(165deg,#00473f,#071b23);color:white;padding:calc(24px + env(safe-area-inset-top)) 15px 25px;display:flex;flex-direction:column;overflow-y:auto}
+ .mtp-drawer-top{display:flex;align-items:center;justify-content:space-between}
+ .mtp-drawer-top strong{font-size:22px;display:flex;align-items:center;gap:6px}
+ .mtp-drawer-top strong small{font-size:12px;font-weight:400}
+ .mtp-drawer-top button{color:white;font-size:22px;background:transparent}
+ .mtp-drawer-profile{display:flex;align-items:center;gap:12px;margin:30px 0 18px;padding-bottom:20px;border-bottom:1px solid #ffffff33}
+ .mtp-drawer-profile>.mtp-ic{font-size:43px;background:#d4f5e8;color:#00473f;border-radius:50%;padding:7px}
+ .mtp-drawer-profile strong,.mtp-drawer-profile small{display:block}
+ .mtp-drawer-profile strong{font-size:14px}.mtp-drawer-profile small{font-size:11px;line-height:1.5;margin-top:4px;color:#d4e8df}
+ .mtp-drawer-panel nav{display:flex!important;position:static!important;width:auto!important;height:auto!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;flex-direction:column!important;gap:3px!important;overflow:visible!important}
+ .mtp-drawer-panel nav button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 9px;border-radius:10px;color:#e4f4ef;background:transparent;font-size:12px;text-align:left}
+ .mtp-drawer-panel nav button .mtp-ic{font-size:19px}
+ .mtp-drawer-panel nav .mtp-selected{background:#18845f;color:white}
+ .mtp-logout{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:auto;padding:14px;background:#e5263b!important;color:white!important;border-radius:12px!important;font-size:14px}
+ .mtp-module{width:100%;max-width:430px;min-height:100vh;margin:0 auto;background:white;font-family:Inter,Arial,sans-serif}
+ .mtp-module-hero{height:195px;background:#a9cfad url("https://images.unsplash.com/photo-1542838132-92c53300491e?w=900&q=85") center/cover no-repeat}
+ .mtp-module-hero button{display:flex;align-items:center;gap:9px;background:#003f36c9!important;color:white!important;width:100%;padding:calc(15px + env(safe-area-inset-top)) 15px 16px;font-size:13px;font-weight:700}
+ .mtp-module-body{position:relative;margin-top:-25px;background:white;border-radius:23px 23px 0 0;padding:28px 18px 30px;min-height:70vh}
+ .mtp-module-icon{position:absolute;top:-26px;left:20px;width:54px;height:54px;border:4px solid white;border-radius:15px;background:#11865d;color:white;display:grid;place-items:center;font-size:26px}
+ .mtp-module-body h1{font-size:24px;line-height:1.14;margin:16px 0 7px}
+ .mtp-module-body p{font-size:13px;color:#526960;padding-bottom:19px;margin-bottom:16px;border-bottom:1px solid #e3eae6}
+ .mtp-module-body button{display:flex;align-items:center;gap:13px;width:100%;padding:15px 13px;margin-bottom:10px;border-radius:12px!important;border:1px solid #e5ece8!important;background:white!important;color:#183d34!important;box-shadow:0 2px 6px #0e392012;font-size:12px;font-weight:700;text-align:left}
+ .mtp-module-body button .mtp-ic:first-child{font-size:21px}.mtp-module-body button .mtp-ic:last-child{margin-left:auto}
+ .mtp-module-body .mtp-module-primary{background:#006b49!important;color:white!important}
+}
 </style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
@@ -733,7 +815,75 @@ body.on-login main{padding-top:12px!important}
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
 </nav><main><div id="app"></div></main><button class="mobile-home-btn" onclick="home()">🏠 Accueil</button>
 <script>
+
+/* Premium mobile reference layout. Isolated from the desktop application. */
+function mtSvg(name){
+ const icons={
+ leaf:'<path d="M4 21C4 9 12 3 22 2c0 11-5 19-18 19Z"/><path d="M4 21c4-6 9-11 16-16"/>',
+ bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M10 21h4"/>',
+ user:'<circle cx="12" cy="7" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>',
+ building:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-5h6v5M8 7h2M14 7h2M8 11h2M14 11h2"/>',
+ chevron:'<path d="m9 18 6-6-6-6"/>',
+ down:'<path d="m6 9 6 6 6-6"/>',
+ calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
+ alert:'<circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/>',
+ clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+ box:'<path d="m3 7 9-5 9 5v10l-9 5-9-5Z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
+ trace:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+ thermo:'<path d="M10 14V5a3 3 0 0 1 6 0v9a5 5 0 1 1-6 0Z"/><path d="M13 9v9"/>',
+ clean:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
+ tag:'<path d="M3 3h9l9 9-9 9-9-9Z"/><circle cx="8" cy="8" r="1"/>',
+ chart:'<path d="M3 3v18h18M8 17v-5M13 17V8M18 17V5"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="m10 2-.6 2.3-2 1-2.3-.7-2 3.4 1.7 1.7v2.6L3 14l2 3.4 2.3-.7 2 1L10 20h4l.6-2.3 2-1 2.3.7 2-3.4-1.7-1.7V9.7L21 8l-2-3.4-2.3.7-2-1L14 2Z"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+ close:'<path d="M5 5 19 19M19 5 5 19"/>',
+ back:'<path d="m13 5-7 7 7 7M6 12h15"/>',
+ plus:'<circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/>',
+ logout:'<path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M14 7l5 5-5 5M19 12H9"/>',
+ truck:'<path d="M3 6h12v12H3ZM15 10h4l3 4v4h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>'
+ };
+ return '<svg class="mtp-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.box)+'</svg>';
+}
+function mtPremiumHome(){
+ CURRENT_VIEW='home';
+ document.body.classList.remove('on-login');
+ document.body.classList.add('on-home','mt-premium-active');
+ const site=typeof siteDisplayName!=='undefined'&&siteDisplayName?siteDisplayName:(typeof SITE_ID!=='undefined'?SITE_ID:'Établissement');
+ const profile=typeof currentUserProfile!=='undefined'&&currentUserProfile?currentUserProfile:{};
+ const rawName=profile.displayName||profile.name||profile.username||profile.email||'';
+ const firstName=rawName.includes('@')?rawName.split('@')[0]:rawName.split(' ')[0];
+ const escapeHTML=x=>String(x||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const date=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'short',year:'numeric'}).format(new Date());
+ let soon=0;try{const now=new Date();now.setHours(0,0,0,0);(S.stock||[]).forEach(x=>{if(!x.dlc)return;const d=new Date(x.dlc+'T00:00:00');const diff=Math.ceil((d-now)/86400000);if(diff<=3)soon++})}catch(e){}
+ const cards=[
+  ['reception','Réception<br>de marchandises','box','reception()','#11865d'],
+  ['trace','Traçabilité','trace','trace()','#cf3443'],
+  ['temperature','Température','thermo','temperatures()','#2288df'],
+  ['clean','Nettoyage','clean','cleaning()','#e7a51c'],
+  ['etiquetage','Étiquetage HACCP','tag','dlcCats()','#824cc9'],
+  ['direction','Tableau de bord<br>Direction','chart','openDashboard()','#09a4a6'],
+  ['parametres','Paramètres','gear','settings()','#225a7d'],
+  ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[['stock','Stock et DLC','box','stock()','#9c6846']])
+ ];
+ const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','mtReceptionLanding()'],['Traçabilité','trace','trace()'],['Température','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Étiquetage HACCP','tag','dlcCats()'],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[['Stock et DLC','box','stock()']])];
+ const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
+ app.innerHTML='<div class="mtp-app">'+
+ '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button onclick="mtPremiumMenu(true)" aria-label="Notifications">'+mtSvg('bell')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
+ '<div class="mtp-hero"></div><div class="mtp-welcome"><span><strong>Bonjour '+escapeHTML(firstName||'')+' 👋</strong><small>Bienvenue sur M&amp;T HACCP</small></span><span class="mtp-date">'+mtSvg('calendar')+'<small>'+escapeHTML(date)+'</small></span></div>'+
+ '<main class="mtp-content"><div class="mtp-alert-grid"><button class="mtp-alert mtp-alert-red" onclick="openDashboard()"><span class="mtp-alert-icon">'+mtSvg('alert')+'</span><span><strong>Non-conformités</strong><b>Voir</b><small>Consulter les alertes</small></span><span class="mtp-alert-go">'+mtSvg('chevron')+'</span></button><button class="mtp-alert mtp-alert-orange" onclick="stock()"><span class="mtp-alert-icon">'+mtSvg('clock')+'</span><span><strong>Alertes DLC</strong><b>'+soon+'</b><small>Produits à contrôler</small></span><span class="mtp-alert-go">'+mtSvg('chevron')+'</span></button></div><div class="mtp-tiles">'+tiles+'</div></main>'+
+ '<div id="mtpDrawer" class="mtp-drawer" hidden><button class="mtp-shade" onclick="mtPremiumMenu(false)" aria-label="Fermer"></button><aside class="mtp-drawer-panel"><div class="mtp-drawer-top"><strong>'+mtSvg('leaf')+' M&amp;T<small>HACCP</small></strong><button onclick="mtPremiumMenu(false)">'+mtSvg('close')+'</button></div><div class="mtp-drawer-profile">'+mtSvg('user')+'<span><strong>'+escapeHTML(rawName||'Utilisateur')+'</strong><small>'+escapeHTML(profile.role||'')+'<br>'+escapeHTML(site)+'</small></span></div><nav>'+nav+'</nav><button class="mtp-logout" onclick="logoutAppUser()">'+mtSvg('logout')+' Déconnexion</button></aside></div></div>';
+}
+function mtPremiumMenu(open){const d=document.getElementById('mtpDrawer');if(d)d.hidden=!open}
+function mtReceptionLanding(){
+ CURRENT_VIEW='reception-landing';
+ document.body.classList.remove('on-home','mt-premium-active');
+ const nav=document.querySelector('nav');if(nav)nav.style.display='none';
+ app.innerHTML='<div class="mtp-module"><div class="mtp-module-hero"><button onclick="home()">'+mtSvg('back')+' Réception de marchandises</button></div><div class="mtp-module-body"><span class="mtp-module-icon">'+mtSvg('box')+'</span><h1>Réception<br>de marchandises</h1><p>Enregistrer et contrôler vos réceptions</p><button class="mtp-module-primary" onclick="reception()">'+mtSvg('plus')+' Nouvelle réception '+mtSvg('chevron')+'</button><button onclick="trace()">'+mtSvg('clock')+' Historique des réceptions '+mtSvg('chevron')+'</button><button onclick="stock()">'+mtSvg('box')+' Produits '+mtSvg('chevron')+'</button><button onclick="suppliers()">'+mtSvg('truck')+' Fournisseurs '+mtSvg('chevron')+'</button><button onclick="openDashboard()">'+mtSvg('chart')+' Rapports '+mtSvg('chevron')+'</button></div></div>';
+}
 function home(){
+ if(window.innerWidth<=850){mtPremiumHome();return}
+ document.body.classList.remove('mt-premium-active');
  CURRENT_VIEW='home';
  document.body.classList.remove('on-login');
  document.body.classList.add('on-home');
