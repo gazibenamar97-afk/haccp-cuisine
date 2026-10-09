@@ -1362,7 +1362,7 @@ async function loginAppUser(btn){
    }
    if(!cred){const err=lastErr||new Error('Identifiants incorrects');err.siteDiagnostic=sites.join(', ');throw err;}
   }
-  try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.setItem('mtWelcomePending',cred.user.uid)}catch(_){}
+  try{sessionStorage.removeItem('haccpDashboardUnlocked');sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.setItem('mtWelcomePending',cred.user.uid)}catch(_){}
   await authorizeAppUser(cred.user);loginInProgress=false;
  }catch(e){
   console.error('Login',e);
@@ -1421,7 +1421,7 @@ function renderUserSessionBar(){
  // Session identity is available in the mobile drawer; logout is only in navigation menus.
  refreshSiteDisplayName();
 }
-async function logoutAppUser(){try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
+async function logoutAppUser(){try{sessionStorage.removeItem('haccpDashboardUnlocked');sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
 // Verrouillage au retour d'une application passée en arrière-plan.
 // Sur iOS/Android, une fermeture ne déclenche pas toujours d'événement fiable.
 let mtLockingSession=false;
@@ -1430,7 +1430,7 @@ async function mtLockSession(){
  mtLockingSession=true;
  currentUserProfile=null;
  try{await firebase.auth().signOut()}catch(e){console.warn('Session lock',e)}
- try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}
+ try{sessionStorage.removeItem('haccpDashboardUnlocked');sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}
  authLoginScreen();
  mtLockingSession=false;
 }
@@ -1443,6 +1443,8 @@ document.addEventListener('visibilitychange',()=>{
  }
 });
 async function startApplication(){
+ // Verrouiller le tableau de bord au démarrage, même si Firebase restaure une session.
+ try{sessionStorage.removeItem('haccpDashboardUnlocked')}catch(_){}
  if(!firebase.auth){authLoginScreen('Firebase Authentication indisponible.');return}
  try{await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)}catch(e){console.warn('Session persistence',e)}
  let freshLoginRequired=false;
@@ -1451,7 +1453,7 @@ async function startApplication(){
  firebase.auth().onAuthStateChanged(async user=>{
   if(mtLockingSession)return;
   if(user)await authorizeAppUser(user);
-  else{currentUserProfile=null;authLoginScreen()}
+  else{try{sessionStorage.removeItem('haccpDashboardUnlocked')}catch(_){}currentUserProfile=null;authLoginScreen()}
  });
 }
 function cloudComparable(x){let y=JSON.parse(JSON.stringify(x||{}));delete y._cloudUpdatedAt;return JSON.stringify(y)}
