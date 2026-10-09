@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v138-css-cleanup';
+const CACHE='mt-haccp-shell-v139-role-direction';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
