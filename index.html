@@ -1531,10 +1531,31 @@ async function haccpPhotoToWebp(file){
   const url=URL.createObjectURL(file),img=new Image();
   img.onload=()=>{
    URL.revokeObjectURL(url);
-   const factor=Math.min(1,1100/img.width,1100/img.height);
-   const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.width*factor));cv.height=Math.max(1,Math.round(img.height*factor));
-   cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-   cv.toBlob(blob=>blob?resolve(blob):reject(new Error('Conversion WebP impossible')),'image/webp',0.7);
+   try{
+    const MAX_BYTES=900*1024;
+    const cv=document.createElement('canvas'),ctx=cv.getContext('2d');
+    if(!ctx)throw new Error('Compression photo indisponible sur cet appareil');
+    let dimension=Math.min(1200,Math.max(img.naturalWidth,img.naturalHeight));
+    const encode=()=>{
+     const factor=Math.min(1,dimension/img.naturalWidth,dimension/img.naturalHeight);
+     cv.width=Math.max(1,Math.round(img.naturalWidth*factor));
+     cv.height=Math.max(1,Math.round(img.naturalHeight*factor));
+     ctx.drawImage(img,0,0,cv.width,cv.height);
+     let quality=0.76;
+     const attempt=()=>{
+      cv.toBlob(blob=>{
+       if(!blob){reject(new Error('Conversion WebP impossible'));return}
+       if(blob.type!=='image/webp'){reject(new Error('Le navigateur ne prend pas en charge WebP'));return}
+       if(blob.size<=MAX_BYTES){resolve(blob);return}
+       if(quality>0.38){quality=Math.max(0.38,quality-0.12);attempt();return}
+       if(dimension>400){dimension=Math.max(400,Math.round(dimension*0.75));encode();return}
+       reject(new Error('Impossible de compresser cette photo sous 1 Mo'));
+      },'image/webp',quality);
+     };
+     attempt();
+    };
+    encode();
+   }catch(err){reject(err)}
   };
   img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Format photo non pris en charge'))};
   img.src=url;
