@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v136-label-product';
+const CACHE='mt-haccp-shell-v137-floating-home';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
