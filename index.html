@@ -1179,7 +1179,7 @@ function dashboardDetail(type){if(sessionStorage.getItem('haccpDashboardUnlocked
  if(type==='stock'){title='Produits en stock';intro='Liste des produits issus des réceptions enregistrées.';rows=S.stock.map(x=>`<div class="record"><b>${esc(x.product)}</b><br><span class="note">Catégorie : ${esc(x.category||'—')} · Fournisseur : ${esc(x.supplier||'—')} · Lot : ${esc(x.lot||'—')} · DLC : ${esc(x.dlc||'—')}</span></div>`).join('')}
  if(type==='dlc'){title='Alertes DLC';intro='Produits dont la DLC est dépassée, arrive aujourd’hui ou dans les 3 prochains jours. Touchez un produit pour ouvrir sa fiche.';rows=S.stock.map((x,i)=>({x:x,i:i})).filter(o=>{let x=o.x;if(!x.dlc)return false;let d=new Date(x.dlc+'T00:00:00'),n=Math.ceil((d-now)/86400000);return n<=3}).map(o=>{let x=o.x,i=o.i,d=new Date(x.dlc+'T00:00:00'),n=Math.ceil((d-now)/86400000),s=n<0?'EXPIRÉE':n===0?'AUJOURD’HUI':'Dans '+n+' jour(s)';return `<div class="record clickable" onclick="dashboardDLCDetail(${i})" style="cursor:pointer"><b>${esc(x.product)} — ${s}</b><br><span class="note">DLC : ${esc(x.dlc)} · Lot : ${esc(x.lot||'—')} · Fournisseur : ${esc(x.supplier||'—')} · Voir la fiche →</span></div>`}).join('')}
  if(type==='nc'||type==='watch'){title=type==='nc'?'Non-conformités':'Points à surveiller';intro=type==='nc'?'Détail des contrôles enregistrés comme non conformes.':'Alertes qui nécessitent l’attention de la direction ou du responsable HACCP.';let a=[];S.temps.forEach((x,i)=>{if(!x.ok)a.push(`<div class="record clickable" onclick="dashboardTempNCDetail('${esc(x.id||String(i))}')" style="cursor:pointer"><b>Température non conforme — ${esc(x.equipment)}</b><br><span class="note">${esc(x.value)} °C · ${esc(x.date||'')} · Opérateur : ${esc(x.operator||'—')} · Voir le détail →</span></div>`)});S.stock.forEach((x,i)=>{if(x.pack==='Non conforme')a.push(`<div class="record clickable" onclick="dashboardReceptionNCDetail(${i})" style="cursor:pointer"><b>Réception non conforme — ${esc(x.product)}</b><br><span class="note">Motif : ${esc(x.nonConformityReason||'—')} · Fournisseur : ${esc(x.supplier||'—')} · Voir le détail →</span></div>`)});if(type==='watch')S.stock.filter(x=>x.dlc&&new Date(x.dlc+'T00:00:00')<now).forEach(x=>a.push(`<div class="record"><b>DLC dépassée — ${esc(x.product)}</b><br><span class="note">DLC : ${esc(x.dlc)} · Lot : ${esc(x.lot||'—')}</span></div>`));rows=a.join('')}
- if(type==='receptions'){title='Réceptions enregistrées';intro='Historique synthétique des marchandises réceptionnées.';rows=S.stock.map(x=>`<div class="record"><b>${esc(x.product)}</b> — ${esc(x.date||'')}<br><span class="note">Fournisseur : ${esc(x.supplier||'—')} · Lot : ${esc(x.lot||'—')} · Emballage : ${esc(x.pack||'—')}</span></div>`).join('')}
+ if(type==='receptions'){title='Réceptions enregistrées';intro='Touchez une réception pour ouvrir sa fiche complète et ses photos.';rows=S.stock.map((x,i)=>`<div class="record clickable" onclick="dashboardOpenReception(${i})" style="cursor:pointer"><b>${esc(x.product)}</b> — ${esc(x.date||'')}<br><span class="note">Fournisseur : ${esc(x.supplier||'—')} · Lot : ${esc(x.lot||'—')} · Emballage : ${esc(x.pack||'—')} · Voir la fiche →</span></div>`).join('')}
  if(type==='temps'){title='Contrôles de température';intro='Tous les relevés de température avec leur statut de conformité.';rows=S.temps.map(x=>`<div class="record"><b>${esc(x.equipment)} — ${esc(x.value)} °C — ${x.ok?'Conforme':'NON CONFORME'}</b><br><span class="note">${esc(x.date||'')} · Opérateur : ${esc(x.operator||'—')}</span></div>`).join('')}
  if(type==='clean'){title='Nettoyages enregistrés';intro='Historique des opérations de nettoyage et de désinfection.';rows=S.clean.map(x=>`<div class="record"><b>${esc(x.zone||'Zone')} — ${esc(x.action||'')}</b><br><span class="note">${esc(x.date||'')} · Opérateur : ${esc(x.operator||'—')} · ${esc(x.note||'')}</span></div>`).join('')}
  if(type==='mods'){title='Modifications des réceptions';intro='Journal des corrections effectuées sur les articles réceptionnés.';rows=S.trace.filter(x=>x.type==='Modification réception').map(x=>`<div class="record"><b>${esc(x.product||'Article')}</b> — ${esc(x.date||'')}<br><span class="note">Par : ${esc(x.modifiedBy||'—')} · Motif : ${esc(x.reason||'—')}</span></div>`).join('')}
@@ -1187,6 +1187,15 @@ function dashboardDetail(type){if(sessionStorage.getItem('haccpDashboardUnlocked
  app.innerHTML=back+`<h1>${title}</h1><p class="note">${intro}</p><div class="panel">${rows||'<p class="empty">Aucune donnée à afficher.</p>'}</div>`;
 }
 
+function dashboardOpenReception(i){
+ if(sessionStorage.getItem('haccpDashboardUnlocked')!=='1'){dashboard();return}
+ const x=S.stock[i];if(!x){dashboardDetail('receptions');return}
+ const match=S.trace.findIndex(t=>t&&t.type==='Réception'&&((x.id&&t.id===x.id)||(t.product===x.product&&t.lot===x.lot&&t.date===x.date)));
+ if(match<0){alert('Fiche de réception introuvable dans la traçabilité');return}
+ traceReceptionDetail(match);
+ const back=app.querySelector('button.back');
+ if(back){back.textContent='← Réceptions enregistrées';back.onclick=()=>dashboardDetail('receptions')}
+}
 function dashboardActivityDetail(i){
  if(sessionStorage.getItem('haccpDashboardUnlocked')!=='1'){dashboard();return}
  let x=S.trace[i];
@@ -1604,6 +1613,17 @@ async function haccpUploadReceptionPhotos(files){
  }
  return paths;
 }
+function haccpEnlargePhoto(url){
+ const overlay=document.createElement('div');
+ overlay.style='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+ overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Photo de réception agrandie');
+ const photo=document.createElement('img');photo.src=url;photo.alt='Photo de réception agrandie';photo.style='max-width:100%;max-height:90vh;object-fit:contain;border-radius:6px';
+ const close=document.createElement('button');close.type='button';close.textContent='✕ Fermer';close.style='position:absolute;top:20px;right:18px;padding:12px 16px;border:0;border-radius:9px;background:white;color:#17251f;font-size:16px;cursor:pointer';
+ const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',escape)};
+ const escape=e=>{if(e.key==='Escape')dismiss()};
+ close.onclick=dismiss;overlay.onclick=e=>{if(e.target===overlay)dismiss()};
+ overlay.appendChild(photo);overlay.appendChild(close);document.body.appendChild(overlay);document.addEventListener('keydown',escape);close.focus();
+}
 async function haccpShowReceptionPhotos(paths){
  const box=document.getElementById('receptionPhotoProof');if(!box||!paths||!paths.length)return;
  try{
@@ -1612,7 +1632,7 @@ async function haccpShowReceptionPhotos(paths){
    const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/authenticated/haccp-photos/'+path,{headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token}});
    if(!res.ok){const detail=(await res.text()).slice(0,300);throw new Error('Lecture refusee ('+res.status+') : '+detail)}
    const img=document.createElement('img'),url=URL.createObjectURL(await res.blob());
-   img.src=url;img.alt='Photo de reception';img.style='max-width:100%;max-height:300px;border-radius:8px;margin:6px';
+   img.src=url;img.alt='Photo de reception - toucher pour agrandir';img.style='max-width:100%;max-height:300px;border-radius:8px;margin:6px;cursor:zoom-in';img.setAttribute('role','button');img.tabIndex=0;img.onclick=()=>haccpEnlargePhoto(url);img.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();haccpEnlargePhoto(url)}};
    img.onload=()=>setTimeout(()=>URL.revokeObjectURL(url),60000);box.appendChild(img);
   }
   if(box.querySelector('img'))box.firstChild&&box.firstChild.nodeType===3&&(box.firstChild.textContent='');
