@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v132-reference';
+const CACHE='mt-haccp-shell-v133-global-navigation';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
