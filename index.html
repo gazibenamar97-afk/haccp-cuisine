@@ -1636,7 +1636,7 @@ async function haccpShowReceptionPhotos(paths){
    img.onload=()=>setTimeout(()=>URL.revokeObjectURL(url),60000);box.appendChild(img);
   }
   if(box.querySelector('img'))box.firstChild&&box.firstChild.nodeType===3&&(box.firstChild.textContent='');
- }catch(err){box.textContent='Photo non disponible : '+err.message}
+ }catch(err){console.warn('Lecture photo HACCP impossible',err);box.textContent='Photo non disponible'}
 }
 async function saveRec(){if(!checkReceivingTemp()&&!String((document.getElementById('robs')||{}).value||'').trim()){alert('Température de réception non conforme. Indiquez obligatoirement l’action prise dans Observation.');document.getElementById('robs').focus();return}receptionRules();toggleNCReason();
 let rpEl=document.getElementById('rp'),rpSearchEl=document.getElementById('rpSearch'),rfEl=document.getElementById('rf'),receiverEl=document.getElementById('rreceiver');
