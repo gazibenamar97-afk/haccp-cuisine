@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v132-reference-mobile-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v133-mobile-global-navigation-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -798,6 +798,29 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
  .mtp-module-body button .mtp-ic:first-child{font-size:21px}.mtp-module-body button .mtp-ic:last-child{margin-left:auto}
  .mtp-module-body .mtp-module-primary{background:#006b49!important;color:white!important}
 }
+
+/* Fixed navigation for all existing mobile HACCP modules. */
+@media(max-width:850px){
+ #mtGlobalNavHost[hidden],#mtGlobalNavDrawer[hidden]{display:none!important}
+ #mtGlobalNavHost:not([hidden]){display:block!important}
+ #mtGlobalNavHost .mt-global-bar{position:fixed!important;z-index:99980!important;top:env(safe-area-inset-top,0px)!important;left:0!important;right:0!important;min-height:49px!important;background:linear-gradient(105deg,#003d36,#00564b)!important;color:white!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:5px!important;padding:5px 12px!important;box-shadow:0 2px 9px #0003!important}
+ .mt-global-bar button{display:flex!important;align-items:center!important;gap:5px!important;background:transparent!important;color:white!important;border:1px solid #ffffff55!important;border-radius:10px!important;padding:8px 10px!important;font-size:12px!important}
+ .mt-global-bar strong{font-size:14px!important;color:white!important}
+ .mt-global-bar .mtp-ic{width:17px!important;height:17px!important}
+ #mtGlobalNavHost:not([hidden])~*{ }
+ body:has(#mtGlobalNavHost:not([hidden])) #app{padding-top:53px!important}
+ #mtGlobalNavDrawer:not([hidden]){position:fixed!important;inset:0!important;z-index:99999!important;display:block!important}
+ .mt-global-shade{position:absolute!important;inset:0!important;width:100%!important;background:#001d1bc2!important;border:0!important}
+ #mtGlobalNavDrawer aside{position:absolute!important;inset:0 12% 0 0!important;background:linear-gradient(165deg,#00473f,#081d26)!important;color:white!important;display:flex!important;flex-direction:column!important;padding:calc(20px + env(safe-area-inset-top)) 14px 20px!important;overflow-y:auto!important}
+ .mt-global-drawer-title{display:flex!important;justify-content:space-between!important;align-items:center!important;margin-bottom:25px!important}
+ .mt-global-drawer-title strong{font-size:21px!important}
+ .mt-global-drawer-title button{background:transparent!important;color:white!important;border:0!important;font-size:24px!important}
+ #mtGlobalNavDrawer nav{display:flex!important;position:static!important;flex-direction:column!important;gap:4px!important;padding:0!important;width:100%!important;height:auto!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+ #mtGlobalNavDrawer nav button{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;padding:13px 9px!important;text-align:left!important;border:0!important;border-radius:9px!important;background:transparent!important;color:white!important;font-size:13px!important}
+ #mtGlobalNavDrawer nav button:first-child{background:#19865e!important}
+ #mtGlobalNavDrawer nav .mtp-ic{width:20px!important;height:20px!important}
+ .mt-global-logout{margin-top:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;background:#e62c42!important;color:white!important;border:0!important;border-radius:12px!important;padding:14px!important}
+}
 </style>
 <style id="ios-safe-area-login-fix">
 /* iOS PWA: garder la zone de statut hors de la navigation. */
@@ -815,6 +838,59 @@ body.on-login main{padding-top:12px!important}
 <button class="tab" onclick="home()">🏠 Accueil</button><button class="tab" onclick="openDashboard()">Tableau de bord 🔒</button><button class="tab" onclick="reception()">Réception</button><button class="tab" onclick="stock()">Stock</button><button class="tab" onclick="temperatures()">Températures</button><button class="tab" onclick="dlcCats()">Étiquetage HACCP</button><button class="tab" onclick="cleaning()">Nettoyage</button><button class="tab" onclick="suppliers()">Fournisseurs</button><button class="tab" onclick="trace()">Traçabilité</button><button class="tab" onclick="settings()">Paramètres</button>
 </nav><main><div id="app"></div></main><button class="mobile-home-btn" onclick="home()">🏠 Accueil</button>
 <script>
+
+
+/* Persistent mobile navigation, including screens rendered by the legacy HACCP modules. */
+function mtMobileNavOpen(){
+ const d=document.getElementById('mtGlobalNavDrawer');
+ if(d)d.hidden=false;
+}
+function mtMobileNavClose(){
+ const d=document.getElementById('mtGlobalNavDrawer');
+ if(d)d.hidden=true;
+}
+function mtMobileNavGo(action){
+ mtMobileNavClose();
+ if(action==='home')home();
+ else if(action==='reception')mtReceptionLanding();
+ else if(action==='trace')trace();
+ else if(action==='temperature')temperatures();
+ else if(action==='cleaning')cleaning();
+ else if(action==='label')dlcCats();
+ else if(action==='dashboard')openDashboard();
+ else if(action==='settings')settings();
+ else if(action==='supervision'&&SITE_ID==='main')openEstablishmentSupervision();
+ else if(action==='stock')stock();
+}
+function mtEnsureGlobalNav(){
+ if(window.innerWidth>850||!document.getElementById('app'))return;
+ let host=document.getElementById('mtGlobalNavHost');
+ if(!host){
+  host=document.createElement('div');
+  host.id='mtGlobalNavHost';
+  document.body.appendChild(host);
+ }
+ const onLogin=document.body.classList.contains('on-login');
+ const view=typeof CURRENT_VIEW==='string'?CURRENT_VIEW:'';
+ const isHome=view==='home';
+ if(onLogin||isHome){host.hidden=true;return}
+ host.hidden=false;
+ const items=[['Accueil','home','box'],['Réception de marchandises','reception','box'],['Traçabilité','trace','trace'],['Température','temperature','thermo'],['Nettoyage','cleaning','clean'],['Étiquetage HACCP','label','tag'],['Tableau de bord Direction','dashboard','chart'],['Paramètres','settings','gear'],...(SITE_ID==='main'?[['Supervision des établissements','supervision','building']]:[['Stock et DLC','stock','box']])];
+ const links=items.map(([label,action,icon])=>'<button type="button" onclick="mtMobileNavGo(\''+action+'\')">'+mtSvg(icon)+' '+label+'</button>').join('');
+ host.innerHTML='<div class="mt-global-bar"><button type="button" onclick="mtMobileNavGo(\'home\')" aria-label="Retour à l’accueil">'+mtSvg('back')+' <span>Accueil</span></button><strong>M&amp;T HACCP</strong><button type="button" onclick="mtMobileNavOpen()" aria-label="Ouvrir le menu">'+mtSvg('menu')+' <span>Menu</span></button></div><div id="mtGlobalNavDrawer" class="mt-global-drawer" hidden><button type="button" class="mt-global-shade" onclick="mtMobileNavClose()" aria-label="Fermer le menu"></button><aside><div class="mt-global-drawer-title"><strong>M&amp;T HACCP</strong><button onclick="mtMobileNavClose()" aria-label="Fermer">'+mtSvg('close')+'</button></div><nav>'+links+'</nav><button class="mt-global-logout" onclick="logoutAppUser()">'+mtSvg('logout')+' Déconnexion</button></aside></div>';
+}
+function mtStartGlobalNav(){
+ if(window.mtGlobalNavStarted)return;
+ window.mtGlobalNavStarted=true;
+ const appEl=document.getElementById('app');
+ if(!appEl)return;
+ let pending=false;
+ const refresh=()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;mtEnsureGlobalNav()})};
+ new MutationObserver(refresh).observe(appEl,{childList:true,subtree:false});
+ new MutationObserver(refresh).observe(document.body,{attributes:true,attributeFilter:['class']});
+ refresh();
+}
+document.addEventListener('DOMContentLoaded',mtStartGlobalNav);
 
 /* Premium mobile reference layout. Isolated from the desktop application. */
 function mtSvg(name){
