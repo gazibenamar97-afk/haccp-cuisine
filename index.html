@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v137-floating-home-navigation-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v138-consolidated-navigation-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -799,16 +799,16 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
  .mtp-module-body .mtp-module-primary{background:#006b49!important;color:white!important}
 }
 
-/* Fixed navigation for all existing mobile HACCP modules. */
+/* Consolidated mobile navigation: single canonical rule per selector. */
 @media(max-width:850px){
  #mtGlobalNavHost[hidden],#mtGlobalNavDrawer[hidden]{display:none!important}
  #mtGlobalNavHost:not([hidden]){display:block!important}
- #mtGlobalNavHost .mt-global-bar{position:fixed!important;z-index:99980!important;top:env(safe-area-inset-top,0px)!important;left:0!important;right:0!important;min-height:49px!important;background:linear-gradient(105deg,#003d36,#00564b)!important;color:white!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:5px!important;padding:5px 12px!important;box-shadow:0 2px 9px #0003!important}
+ #mtGlobalNavHost .mt-global-bar{position:fixed!important;z-index:99980!important;top:env(safe-area-inset-top,0px)!important;left:0!important;right:0!important;min-height:49px!important;background:linear-gradient(105deg,#003d36,#00564b)!important;color:white!important;display:grid!important;align-items:center!important;justify-content:space-between!important;gap:5px!important;padding:5px 12px!important;box-shadow:0 2px 9px #0003!important;grid-template-columns:1fr auto 1fr!important}
  .mt-global-bar button{display:flex!important;align-items:center!important;gap:5px!important;background:transparent!important;color:white!important;border:1px solid #ffffff55!important;border-radius:10px!important;padding:8px 10px!important;font-size:12px!important}
  .mt-global-bar strong{font-size:14px!important;color:white!important}
  .mt-global-bar .mtp-ic{width:17px!important;height:17px!important}
- #mtGlobalNavHost:not([hidden])~*{ }
- body:has(#mtGlobalNavHost:not([hidden])) #app{padding-top:53px!important}
+ #mtGlobalNavHost:not([hidden])~*{}
+ body:has(#mtGlobalNavHost:not([hidden])) #app{padding-top:53px!important;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
  #mtGlobalNavDrawer:not([hidden]){position:fixed!important;inset:0!important;z-index:99999!important;display:block!important}
  .mt-global-shade{position:absolute!important;inset:0!important;width:100%!important;background:#001d1bc2!important;border:0!important}
  #mtGlobalNavDrawer aside{position:absolute!important;inset:0 12% 0 0!important;background:linear-gradient(165deg,#00473f,#081d26)!important;color:white!important;display:flex!important;flex-direction:column!important;padding:calc(20px + env(safe-area-inset-top)) 14px 20px!important;overflow-y:auto!important}
@@ -820,9 +820,6 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
  #mtGlobalNavDrawer nav button:first-child{background:#19865e!important}
  #mtGlobalNavDrawer nav .mtp-ic{width:20px!important;height:20px!important}
  .mt-global-logout{margin-top:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;background:#e62c42!important;color:white!important;border:0!important;border-radius:12px!important;padding:14px!important}
-}
-
-@media(max-width:850px){
  .mtp-header-actions .mtp-open-menu{width:37px;height:37px;display:grid;place-items:center;background:transparent!important;border:1px solid #ffffff55!important}
  .mtp-drawer-panel{inset:0 12% 0 0!important;background:linear-gradient(170deg,#004b41 0%,#003f3a 28%,#09252a 67%,#0b1922 100%)!important;padding:calc(28px + env(safe-area-inset-top)) 15px calc(22px + env(safe-area-inset-bottom))!important}
  .mtp-drawer-top{align-items:flex-start!important}
@@ -834,24 +831,19 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
  .mtp-drawer-top>button{font-size:23px!important;padding:4px!important}
  .mtp-drawer-profile{margin:32px 0 20px!important;padding-bottom:17px!important;border-bottom:0!important}
  .mtp-drawer-profile>.mtp-ic{width:49px!important;height:49px!important;font-size:49px!important;border:3px solid #14ad7a!important;padding:7px!important;background:#e9f9f2!important}
- .mtp-drawer-profile strong{font-size:15px!important}.mtp-drawer-profile small{font-size:12px!important}
+ .mtp-drawer-profile strong{font-size:15px!important}
+ .mtp-drawer-profile small{font-size:12px!important}
  body.on-home .mtp-drawer-panel nav{display:flex!important;flex-direction:column!important;gap:5px!important;position:static!important;background:transparent!important;padding:0!important;width:100%!important;height:auto!important;overflow:visible!important;box-shadow:none!important}
  body.on-home .mtp-drawer-panel nav button{display:flex!important;align-items:center!important;gap:15px!important;width:100%!important;min-height:43px!important;padding:11px 12px!important;background:transparent!important;color:#fff!important;text-align:left!important;font-size:12px!important;border:0!important;border-radius:10px!important;line-height:1.2!important}
  body.on-home .mtp-drawer-panel nav button.mtp-selected{background:linear-gradient(90deg,#13966c,#2b956c)!important;box-shadow:0 2px 8px #0002!important}
  .mtp-drawer-panel nav button .mtp-ic{width:20px!important;height:20px!important;flex:none!important}
  .mtp-drawer-panel .mtp-logout{width:100%!important;margin-top:auto!important;background:#e92a3e!important;border-radius:12px!important;color:white!important;min-height:52px!important;font-size:14px!important;box-shadow:0 5px 14px #0003!important}
-}
-
-/* Mobile modules: top-left menu and bottom-right floating home shortcut. */
-@media(max-width:850px){
- #mtGlobalNavHost .mt-global-bar{display:grid!important;grid-template-columns:1fr auto 1fr!important;align-items:center!important}
  #mtGlobalNavHost .mt-global-bar>button{justify-self:start!important;min-height:38px!important}
  #mtGlobalNavHost .mt-global-bar>strong{justify-self:center!important;white-space:nowrap!important}
  #mtGlobalNavHost .mt-global-bar-spacer{display:block!important;width:75px!important;justify-self:end!important}
  #mtGlobalNavHost .mt-global-floating-home{position:fixed!important;right:16px!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;z-index:99979!important;display:flex!important;align-items:center!important;gap:8px!important;min-height:50px!important;padding:12px 17px!important;border-radius:999px!important;border:2px solid #ffffff!important;background:#087956!important;color:#ffffff!important;font-size:14px!important;font-weight:700!important;box-shadow:0 5px 18px #063b2e66!important}
  #mtGlobalNavHost .mt-global-floating-home .mtp-ic{width:20px!important;height:20px!important}
  #mtGlobalNavHost .mt-global-floating-home:active{transform:scale(.96)!important}
- body:has(#mtGlobalNavHost:not([hidden])) #app{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
  #mtGlobalNavHost[hidden] .mt-global-floating-home{display:none!important}
 }
 </style>
