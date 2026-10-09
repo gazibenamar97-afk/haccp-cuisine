@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v152-pc-layout-repair';
+const CACHE='mt-haccp-shell-v153-pc-navigation-stable';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
