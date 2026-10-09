@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v153-pc-navigation-stable-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v154-pc-module-navigation-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1021,6 +1021,17 @@ function mtReceptionLanding(){
  const nav=document.querySelector('nav');if(nav)nav.style.display='none';
  app.innerHTML='<div class="mtp-module"><div class="mtp-module-hero"><button onclick="home()">'+mtSvg('back')+' Réception de marchandises</button></div><div class="mtp-module-body"><span class="mtp-module-icon">'+mtSvg('box')+'</span><h1>Réception<br>de marchandises</h1><p>Enregistrer et contrôler vos réceptions</p><button class="mtp-module-primary" onclick="reception()">'+mtSvg('plus')+' Nouvelle réception '+mtSvg('chevron')+'</button><button onclick="trace()">'+mtSvg('clock')+' Historique des réceptions '+mtSvg('chevron')+'</button><button onclick="stock()">'+mtSvg('box')+' Produits '+mtSvg('chevron')+'</button><button onclick="suppliers()">'+mtSvg('truck')+' Fournisseurs '+mtSvg('chevron')+'</button><button onclick="openDashboard()">'+mtSvg('chart')+' Rapports '+mtSvg('chevron')+'</button></div></div>';
 }
+/* Navigation PC dédiée : les modules remplacent l'accueil, sans affecter la navigation mobile. */
+function mtPcNavigate(module){
+ if(window.innerWidth<=850)return;
+ const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,supervision:openEstablishmentSupervision};
+ const fn=routes[module];if(typeof fn!=='function')return;
+ document.body.classList.remove('on-home','mt-premium-active');
+ const legacyNav=document.querySelector('body > nav');if(legacyNav)legacyNav.style.display='none';
+ const pcShell=document.getElementById('mtPcShell');if(pcShell)pcShell.hidden=false;
+ try{fn();}catch(error){console.error('Navigation PC '+module,error);app.innerHTML='<h1>Erreur du module</h1><div class="panel"><p>'+esc(String(error&&error.message||error))+'</p><button class="btn" onclick="home()">Retour à l’accueil</button></div>'}
+ window.scrollTo(0,0);
+}
 function home(){
  if(window.innerWidth<=850){mtPremiumHome();return}
  document.body.classList.remove('mt-premium-active');
@@ -1030,7 +1041,7 @@ function home(){
  let mainNav=document.querySelector('nav');if(mainNav)mainNav.style.display='none';
  let pcShell=document.getElementById('mtPcShell');
  if(!pcShell){pcShell=document.createElement('div');pcShell.id='mtPcShell';document.body.appendChild(pcShell)}
- pcShell.innerHTML=`<aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo">M&T <span>HACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><span>⌂</span>Accueil</button><button onclick="reception()"><span>▣</span>Réception</button><button onclick="stock()"><span>▦</span>Stock et DLC</button><button onclick="temperatures()"><span>♧</span>Températures</button><button onclick="dlcCats()"><span>▧</span>Étiquetage HACCP</button><button onclick="cleaning()"><span>✧</span>Nettoyage</button><button onclick="suppliers()"><span>🚚</span>Fournisseurs</button><button onclick="trace()"><span>▤</span>Traçabilité</button><button onclick="openDashboard()"><span>▥</span>Tableau de bord Direction</button><button onclick="settings()"><span>⚙</span>Paramètres</button>${SITE_ID==='main'?'<button onclick="openEstablishmentSupervision()"><span>▣</span>Supervision établissements</button>':''}</div></aside>`;
+ pcShell.innerHTML=`<aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo">M&T <span>HACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><span>⌂</span>Accueil</button><button onclick="mtPcNavigate('reception')"><span>▣</span>Réception</button><button onclick="mtPcNavigate('stock')"><span>▦</span>Stock et DLC</button><button onclick="mtPcNavigate('temperatures')"><span>♧</span>Températures</button><button onclick="mtPcNavigate('etiquetage')"><span>▧</span>Étiquetage HACCP</button><button onclick="mtPcNavigate('nettoyage')"><span>✧</span>Nettoyage</button><button onclick="mtPcNavigate('fournisseurs')"><span>🚚</span>Fournisseurs</button><button onclick="mtPcNavigate('tracabilite')"><span>▤</span>Traçabilité</button><button onclick="mtPcNavigate('direction')"><span>▥</span>Tableau de bord Direction</button><button onclick="mtPcNavigate('parametres')"><span>⚙</span>Paramètres</button>${SITE_ID==='main'?'<button onclick="mtPcNavigate('supervision')"><span>▣</span>Supervision établissements</button>':''}</div></aside>`;
  app.innerHTML=`<div class="home-shell"><div class="mt-pc-topbar"><strong>M&T HACCP · Espace de travail</strong><div class="mt-pc-right"><span class="mt-pc-site" id="mtPcSite"></span><details class="mt-pc-profile"><summary>👤 Mon profil ▾</summary><button type="button" onclick="logoutAppUser()">Déconnexion</button></details></div></div>
   <div class="mt-mobile-top">
     <div class="mt-mobile-brand"><span class="mt-brand-leaf" aria-hidden="true">🍃</span><div><strong>M&amp;T<span>HACCP</span></strong><small>Sécurité Alimentaire<br>Qualité • Traçabilité</small></div></div>
@@ -1039,35 +1050,35 @@ function home(){
   <div class="mt-site-pill"><span>▣</span><div><b id="mtHomeSite"></b><small>Établissement</small></div></div>
   <div class="mt-home-hero" role="img" aria-label="Restaurant en bord de mer"></div>
   <div class="mt-home-welcome"><div><b>Bienvenue sur M&amp;T HACCP 👋</b><small>Vos contrôles HACCP du jour</small></div><time id="mtHomeDate"></time></div>
-  <div class="mt-home-alerts"><button type="button" onclick="openDashboard()"><span>⚠</span><b>Non-conformités</b><small>Consulter les alertes</small><i>›</i></button><button type="button" onclick="stock()"><span>◷</span><b>Alertes DLC</b><small>Consulter les produits</small><i>›</i></button></div>
+  <div class="mt-home-alerts"><button type="button" onclick="mtPcNavigate('direction')"><span>⚠</span><b>Non-conformités</b><small>Consulter les alertes</small><i>›</i></button><button type="button" onclick="mtPcNavigate('stock')"><span>◷</span><b>Alertes DLC</b><small>Consulter les produits</small><i>›</i></button></div>
   <div class="home-brand">M&T <span>HACCP</span></div>
   <div class="home-kicker">Sécurité alimentaire, simplement</div>
   <div class="home-head"><h1>Vos modules</h1><p>Sélectionnez une activité</p></div>
   <div class="home-grid">
-   <button class="home-card" onclick="reception()"><span class="home-icon">📦</span><b>Réception</b><small>Contrôlez vos marchandises</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="stock()"><span class="home-icon">▦</span><b>Stock</b><small>Suivez vos stocks et DLC</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="temperatures()"><span class="home-icon">🌡</span><b>Températures</b><small>Contrôlez vos équipements</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="dlcCats()"><span class="home-icon">🏷</span><b>Étiquetage HACCP</b><small>Gérez vos étiquettes DLC</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="cleaning()"><span class="home-icon">✦</span><b>Nettoyage</b><small>Suivez vos plans de nettoyage</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="suppliers()"><span class="home-icon">🚚</span><b>Fournisseurs</b><small>Gérez vos fournisseurs</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="trace()"><span class="home-icon">▤</span><b>Traçabilité</b><small>Consultez l'historique des opérations</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="settings()"><span class="home-icon">⚙</span><b>Paramètres</b><small>Configuration de l'application</small><span class="home-arrow">›</span></button>
-   <button class="home-card home-direction" onclick="openDashboard()"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span><span class="direction-photo" aria-hidden="true"></span><span class="home-arrow">›</span></button>
-   ${SITE_ID==='main'?'<button class="home-card" onclick="openEstablishmentSupervision()"><span class="home-icon">🏢</span><b>Supervision des établissements</b><small>Consultez chaque établissement en temps réel</small><span class="home-arrow">›</span></button>':''}
+   <button class="home-card" onclick="mtPcNavigate('reception')"><span class="home-icon">📦</span><b>Réception</b><small>Contrôlez vos marchandises</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('stock')"><span class="home-icon">▦</span><b>Stock</b><small>Suivez vos stocks et DLC</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('temperatures')"><span class="home-icon">🌡</span><b>Températures</b><small>Contrôlez vos équipements</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('etiquetage')"><span class="home-icon">🏷</span><b>Étiquetage HACCP</b><small>Gérez vos étiquettes DLC</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('nettoyage')"><span class="home-icon">✦</span><b>Nettoyage</b><small>Suivez vos plans de nettoyage</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('fournisseurs')"><span class="home-icon">🚚</span><b>Fournisseurs</b><small>Gérez vos fournisseurs</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('tracabilite')"><span class="home-icon">▤</span><b>Traçabilité</b><small>Consultez l'historique des opérations</small><span class="home-arrow">›</span></button>
+   <button class="home-card" onclick="mtPcNavigate('parametres')"><span class="home-icon">⚙</span><b>Paramètres</b><small>Configuration de l'application</small><span class="home-arrow">›</span></button>
+   <button class="home-card home-direction" onclick="mtPcNavigate('direction')"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span><span class="direction-photo" aria-hidden="true"></span><span class="home-arrow">›</span></button>
+   ${SITE_ID==='main'?'<button class="home-card" onclick="mtPcNavigate('supervision')"><span class="home-icon">🏢</span><b>Supervision des établissements</b><small>Consultez chaque établissement en temps réel</small><span class="home-arrow">›</span></button>':''}
   </div>
   <div class="mt-home-drawer" id="mtHomeDrawer" hidden>
     <button class="mt-drawer-backdrop" onclick="mtHomeMenu(false)" aria-label="Fermer le menu"></button>
     <aside><div class="mt-drawer-title"><strong>M&amp;T HACCP</strong><button onclick="mtHomeMenu(false)" aria-label="Fermer">×</button></div>
     <p id="mtDrawerSite"></p>
     <button onclick="mtHomeMenu(false)">⌂ &nbsp; Accueil</button>
-    <button onclick="reception()">▣ &nbsp; Réception de marchandises</button>
-    <button onclick="trace()">▤ &nbsp; Traçabilité</button>
-    <button onclick="temperatures()">♧ &nbsp; Température</button>
-    <button onclick="cleaning()">✧ &nbsp; Nettoyage</button>
-    <button onclick="dlcCats()">▧ &nbsp; Étiquetage HACCP</button>
-    <button onclick="openDashboard()">▥ &nbsp; Tableau de bord Direction</button>
-    <button onclick="settings()">⚙ &nbsp; Paramètres</button>
-    ${SITE_ID==='main'?'<button onclick="openEstablishmentSupervision()">▣ &nbsp; Supervision des établissements</button>':''}
+    <button onclick="mtPcNavigate('reception')">▣ &nbsp; Réception de marchandises</button>
+    <button onclick="mtPcNavigate('tracabilite')">▤ &nbsp; Traçabilité</button>
+    <button onclick="mtPcNavigate('temperatures')">♧ &nbsp; Température</button>
+    <button onclick="mtPcNavigate('nettoyage')">✧ &nbsp; Nettoyage</button>
+    <button onclick="mtPcNavigate('etiquetage')">▧ &nbsp; Étiquetage HACCP</button>
+    <button onclick="mtPcNavigate('direction')">▥ &nbsp; Tableau de bord Direction</button>
+    <button onclick="mtPcNavigate('parametres')">⚙ &nbsp; Paramètres</button>
+    ${SITE_ID==='main'?'<button onclick="mtPcNavigate('supervision')">▣ &nbsp; Supervision des établissements</button>':''}
     </aside>
   </div>
  </div>`
