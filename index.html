@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v140-module-navigation-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v141-menu-only-logout-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -18,8 +18,6 @@ body:not(.on-home) .mobile-home-btn{display:none}
 @media(max-width:850px){.home-shell{width:100%}.on-home main{padding-left:14px;padding-right:14px}body:not(.on-home) .mobile-home-btn{display:block}.home-grid{grid-template-columns:repeat(2,1fr);gap:13px}.home-card{min-height:155px;border-radius:32px;padding:18px}.home-icon{width:50px;height:50px;font-size:24px;margin-bottom:15px}.home-card b{font-size:18px}.home-card small{font-size:13px}.home-head h1{font-size:27px}.home-head p{font-size:15px}.home-direction{min-height:105px;padding:18px}.home-direction .home-icon{margin-right:12px}body:not(.on-home) nav{display:flex;overflow-x:auto;white-space:nowrap}body.on-home nav{display:none!important}main{padding-top:22px}}
 @media(max-width:430px){main{padding-left:14px;padding-right:14px}.home-grid{gap:11px}.home-card{min-height:148px;padding:16px;border-radius:29px}.home-card b{font-size:17px}.home-card small{font-size:12.5px}.home-arrow{width:34px;height:34px;right:13px;bottom:13px}.home-direction{grid-column:1/-1}.home-head{margin-bottom:20px}}
 
-/* Mobile session control: visible only on Accueil, including administrator UI */
-@media(max-width:700px){body:not(.on-home) #userSessionBar{display:none!important}body.on-home #userSessionBar{display:flex!important}}
 </style>
 <style>
 :root{--ink:#17324d;--muted:#61758a;--line:#d9e4ee;--bg:#f5f9fc;--card:#fff;--active:#eaf4ff;--accent:#0877d1;--danger:#d92d20}
@@ -244,20 +242,7 @@ body.on-home .home-card:nth-child(8){background-image:url("./assets/home/setting
   }
 }
 </style>
-<style id="session-bar-responsive">
-@media(max-width:700px){
- #userSessionBar{
-  top:auto!important;
-  bottom:14px!important;
-  right:12px!important;
-  left:12px!important;
-  max-width:none!important;
-  justify-content:space-between!important;
- }
- #userSessionBar button{min-height:44px!important}
- body{padding-bottom:76px}
-}
-</style><style id="home-supervision-photo-v136">
+<style id="home-supervision-photo-v136">
 /* Supervision : même composition que les autres cartes de l'accueil. */
 @media(min-width:701px){
  body.on-home .home-grid > button.home-card:last-child:not(.home-direction){
@@ -1374,22 +1359,10 @@ async function authorizeAppUser(user){
  }catch(e){console.error('Authorize',e);authLoginScreen('Impossible de vérifier les droits du compte. '+(e.message||''));return false}
 }
 function renderUserSessionBar(){
- let old=document.getElementById('userSessionBar');if(old)old.remove();
- if(!currentUserProfile)return;
- let d=document.createElement('div');d.id='userSessionBar';d.style.cssText='position:fixed;right:16px;top:14px;z-index:60;background:#fff;border:2px solid #c7d2cc;border-radius:14px;padding:8px 9px 8px 13px;box-shadow:0 6px 20px #0002;font-size:12px;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px)';
- d.innerHTML='<span style="line-height:1.25;white-space:nowrap"><b style="display:block;font-size:13px">'+esc(currentUserProfile.name||currentUserProfile.email||'Utilisateur')+'</b><span id="sessionSiteName" style="color:#52615a">'+esc(siteDisplayName)+'</span></span><button type="button" onclick="logoutAppUser()" style="border:0;background:#8b3030;color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:900;font-size:13px;white-space:nowrap">⎋ Déconnexion</button>';
- document.body.appendChild(d);
+ const old=document.getElementById('userSessionBar');
+ if(old)old.remove();
+ // Session identity is available in the mobile drawer; logout is only in navigation menus.
  refreshSiteDisplayName();
- // Mobile: session/logout is visible only on the Accueil screen.
- const syncSessionBarVisibility=()=>{
-  if(!d.isConnected)return;
-  const mobile=window.matchMedia('(max-width:700px)').matches;
-  d.style.display=(mobile&&!document.body.classList.contains('on-home'))?'none':'flex';
- };
- syncSessionBarVisibility();
- window.addEventListener('resize',syncSessionBarVisibility);
- const homeObserver=new MutationObserver(syncSessionBarVisibility);
- homeObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
 }
 async function logoutAppUser(){try{sessionStorage.removeItem('mtWelcomeShownFor');sessionStorage.removeItem('mtWelcomePending')}catch(_){}try{await firebase.auth().signOut()}catch(e){}currentUserProfile=null;location.reload()}
 // Verrouillage au retour d'une application passée en arrière-plan.
