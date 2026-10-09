@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v144-charcoal-text-20261009">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v145-auto-unlock-green-20261009">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1444,27 +1444,38 @@ function dashboard(){
   return;
  }
  if(sessionStorage.getItem('haccpDashboardUnlocked')==='1'){renderDashboard();return}
- app.innerHTML='<div class="panel" style="max-width:520px;margin:18px auto;padding:22px;border-radius:20px"><h1 style="font-size:clamp(22px,6vw,30px);margin:0 0 12px">🔒 Tableau de bord Direction</h1><p class="note">Saisissez le mot de passe de votre compte pour déverrouiller le tableau de bord.</p><label for="dashboardPassword">Mot de passe du compte</label><input id="dashboardPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" onkeydown="if(event.key===\'Enter\')unlockDashboard()"><p id="dashboardAuthError" class="note" role="alert"></p><button class="btn primary" style="width:100%;max-width:100%;margin-top:12px" onclick="unlockDashboard()">Déverrouiller</button></div>';
+ app.innerHTML='<div class="panel" style="max-width:520px;margin:18px auto;padding:22px;border-radius:20px"><h1 style="font-size:clamp(22px,6vw,30px);margin:0 0 12px">🔒 Tableau de bord Direction</h1><p class="note">Saisissez le mot de passe de votre compte pour déverrouiller le tableau de bord.</p><label for="dashboardPassword">Mot de passe du compte</label><input id="dashboardPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" oninput="scheduleDashboardUnlock()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();unlockDashboard()}" autofocus><p id="dashboardAuthError" class="note" role="alert"></p><button class="btn primary" style="width:100%;max-width:100%;margin-top:12px;background:#087956!important;background-image:none!important;border-color:#087956!important;color:#fff!important" onclick="unlockDashboard()">Déverrouiller</button></div>';
 }
 
-function autoUnlockDashboard(){let pin=localStorage.getItem('haccpAdminPin'),field=document.getElementById('dashboardPin');if(!pin||!field)return;let entered=field.value||'';if(entered.length===pin.length){if(entered===pin){sessionStorage.setItem('haccpDashboardUnlocked','1');renderDashboard()}else{field.value='';field.focus();alert('Code PIN incorrect. Accès refusé.')}}}
+let dashboardUnlockTimer=null;
+let dashboardUnlockBusy=false;
+function scheduleDashboardUnlock(){
+ clearTimeout(dashboardUnlockTimer);
+ const field=document.getElementById('dashboardPassword');
+ const error=document.getElementById('dashboardAuthError');
+ if(error)error.textContent='';
+ if(!field||field.value.length<8)return;
+ dashboardUnlockTimer=setTimeout(()=>unlockDashboard(),850);
+}
 async function unlockDashboard(){
- if(!mtCanViewDirection()){dashboard();return}
+ clearTimeout(dashboardUnlockTimer);
+ if(dashboardUnlockBusy||!mtCanViewDirection()){if(!mtCanViewDirection())dashboard();return}
  const user=firebase.auth().currentUser;
  const field=document.getElementById('dashboardPassword');
  const password=field&&field.value||'';
  const error=document.getElementById('dashboardAuthError');
  if(!user||!user.email||!password){if(error)error.textContent='Saisissez le mot de passe de votre compte.';return}
+ dashboardUnlockBusy=true;
  try{
   const credential=firebase.auth.EmailAuthProvider.credential(user.email,password);
   await user.reauthenticateWithCredential(credential);
+  if(!mtCanViewDirection()||firebase.auth().currentUser?.uid!==user.uid)return;
   sessionStorage.setItem('haccpDashboardUnlocked','1');
   renderDashboard();
  }catch(e){
-  if(field)field.value='';
-  if(error)error.textContent='Mot de passe incorrect ou authentification impossible. Réessayez.';
+  if(error&&error.isConnected)error.textContent='Mot de passe incorrect ou authentification impossible. Réessayez.';
   console.warn('Dashboard reauthentication',e.code||e.message);
- }
+ }finally{dashboardUnlockBusy=false}
 }
 function lockDashboard(){sessionStorage.removeItem('haccpDashboardUnlocked');dashboard()}
 
