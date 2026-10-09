@@ -1521,7 +1521,7 @@ const HACCP_PHOTO_PUBLIC_KEY='sb_publishable_Zjw89hLTIjWeAJGYKWgvlQ_1ovdedwp';
 async function haccpPhotoAuth(){
  const user=firebase.auth().currentUser;
  if(!user)throw new Error('Reconnectez-vous a votre compte Firebase');
- const token=await user.getIdToken();
+ const token=await user.getIdToken(true);
  const payload=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
  if(payload.role!=='authenticated')throw new Error('Le role authenticated manque dans le jeton Firebase : configuration requise avant de pouvoir archiver les photos');
  return {token,uid:user.uid};
