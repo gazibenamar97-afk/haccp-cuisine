@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v149-settings-ready';
+const CACHE='mt-haccp-shell-v150-settings-photo';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
