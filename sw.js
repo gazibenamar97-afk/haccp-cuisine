@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v141-menu-logout';
+const CACHE='mt-haccp-shell-v142-direction';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
