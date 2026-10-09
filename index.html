@@ -1508,13 +1508,10 @@ let dashboardUnlockTimer=null;
 let dashboardUnlockBusy=false;
 function scheduleDashboardUnlock(){
  clearTimeout(dashboardUnlockTimer);
- const field=document.getElementById('dashboardPassword');
  const error=document.getElementById('dashboardAuthError');
  if(error)error.textContent='';
- if(!field||field.value.length<8)return;
- // Sur PC, ne jamais tester un mot de passe incomplet : validation par Entrée ou bouton.
- if(window.innerWidth>850)return;
- dashboardUnlockTimer=setTimeout(()=>unlockDashboard(),850);
+ // Ne pas déclencher de réauthentification pendant la saisie, même sur mobile.
+ // Le mot de passe est vérifié uniquement via Entrée ou le bouton Déverrouiller.
 }
 async function unlockDashboard(){
  clearTimeout(dashboardUnlockTimer);
