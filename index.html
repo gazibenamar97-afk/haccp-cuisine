@@ -18,6 +18,40 @@ body:not(.on-home) .mobile-home-btn{display:none}
 @media(max-width:850px){.home-shell{width:100%}.on-home main{padding-left:14px;padding-right:14px}body:not(.on-home) .mobile-home-btn{display:block}.home-grid{grid-template-columns:repeat(2,1fr);gap:13px}.home-card{min-height:155px;border-radius:32px;padding:18px}.home-icon{width:50px;height:50px;font-size:24px;margin-bottom:15px}.home-card b{font-size:18px}.home-card small{font-size:13px}.home-head h1{font-size:27px}.home-head p{font-size:15px}.home-direction{min-height:105px;padding:18px}.home-direction .home-icon{margin-right:12px}body:not(.on-home) nav{display:flex;overflow-x:auto;white-space:nowrap}body.on-home nav{display:none!important}main{padding-top:22px}}
 @media(max-width:430px){main{padding-left:14px;padding-right:14px}.home-grid{gap:11px}.home-card{min-height:148px;padding:16px;border-radius:29px}.home-card b{font-size:17px}.home-card small{font-size:12.5px}.home-arrow{width:34px;height:34px;right:13px;bottom:13px}.home-direction{grid-column:1/-1}.home-head{margin-bottom:20px}}
 
+
+/* Interface d'accueil PC uniquement — aucun impact sous 851 px. */
+@media(min-width:851px){
+body.on-home{background:#f3f7f5!important}
+body.on-home .mt-pc-sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;z-index:60;background:linear-gradient(175deg,#07563f,#003c2f);padding:24px 13px;box-sizing:border-box;display:flex;flex-direction:column;color:#fff;box-shadow:3px 0 20px #092e2517}
+body.on-home .mt-pc-logo{font-size:21px;font-weight:900;padding:3px 12px 25px;color:#fff}
+body.on-home .mt-pc-logo span{color:#a9e2c2}
+body.on-home .mt-pc-nav{display:flex;flex-direction:column;gap:5px}
+body.on-home .mt-pc-nav button{border:0;background:transparent;color:#edf8f2;cursor:pointer;text-align:left;font:600 14px inherit;font-family:inherit;font-size:14px;font-weight:600;padding:12px 14px;border-radius:11px;display:flex;gap:12px;align-items:center}
+body.on-home .mt-pc-nav button:hover,body.on-home .mt-pc-nav button:first-child{background:#117757;color:#fff}
+body.on-home .mt-pc-nav button span{width:22px;text-align:center;font-size:17px}
+body.on-home #app{padding-left:232px;box-sizing:border-box}
+body.on-home main{padding:0!important}
+body.on-home .home-shell{width:100%;max-width:none;padding:0 30px 40px;box-sizing:border-box}
+body.on-home .mt-pc-topbar{height:70px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e1ebe5;background:#fff;margin:0 -30px 24px;padding:0 30px;gap:16px}
+body.on-home .mt-pc-topbar strong{font-size:17px;color:#153d30}
+body.on-home .mt-pc-topbar .mt-pc-right{display:flex;gap:18px;align-items:center}
+body.on-home .mt-pc-site{font-weight:700;color:#285844;font-size:14px}
+body.on-home .mt-pc-profile{position:relative;font-size:14px}
+body.on-home .mt-pc-profile summary{list-style:none;cursor:pointer;background:#edf5f0;padding:10px 14px;border-radius:12px;color:#153d30;font-weight:700}
+body.on-home .mt-pc-profile summary::-webkit-details-marker{display:none}
+body.on-home .mt-pc-profile button{position:absolute;right:0;top:42px;white-space:nowrap;border:1px solid #d6e5db;border-radius:10px;background:#fff;color:#184936;padding:12px 20px;box-shadow:0 10px 24px #0002;cursor:pointer;z-index:65}
+body.on-home .home-brand,body.on-home .home-kicker{display:none!important}
+body.on-home .home-head{text-align:left;margin:0 0 24px}
+body.on-home .home-head h1{font-size:27px;margin:0 0 5px}
+body.on-home .home-head p{font-size:14px}
+body.on-home .home-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+body.on-home .home-card{min-height:156px!important;height:156px!important;border-radius:20px!important;padding:18px!important}
+body.on-home .home-card .home-icon{width:42px;height:42px;font-size:20px;margin-bottom:13px}
+body.on-home .home-card b{font-size:16px}
+body.on-home .home-card small{font-size:12px}
+body.on-home .mt-mobile-top,body.on-home .mt-site-pill,body.on-home .mt-home-hero,body.on-home .mt-home-welcome,body.on-home .mt-home-alerts{display:none!important}
+}
+@media(min-width:851px) and (max-width:1200px){body.on-home .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
@@ -986,7 +1020,7 @@ function home(){
  document.body.classList.remove('on-login');
  document.body.classList.add('on-home');
  let mainNav=document.querySelector('nav');if(mainNav)mainNav.style.display='none';
- app.innerHTML=`<div class="home-shell">
+ app.innerHTML=`<aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo">M&T <span>HACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><span>⌂</span>Accueil</button><button onclick="reception()"><span>▣</span>Réception</button><button onclick="stock()"><span>▦</span>Stock et DLC</button><button onclick="temperatures()"><span>♧</span>Températures</button><button onclick="dlcCats()"><span>▧</span>Étiquetage HACCP</button><button onclick="cleaning()"><span>✧</span>Nettoyage</button><button onclick="suppliers()"><span>🚚</span>Fournisseurs</button><button onclick="trace()"><span>▤</span>Traçabilité</button><button onclick="openDashboard()"><span>▥</span>Tableau de bord Direction</button><button onclick="settings()"><span>⚙</span>Paramètres</button>${SITE_ID==='main'?'<button onclick="openEstablishmentSupervision()"><span>▣</span>Supervision établissements</button>':''}</div></aside><div class="home-shell"><div class="mt-pc-topbar"><strong>M&T HACCP · Espace de travail</strong><div class="mt-pc-right"><span class="mt-pc-site" id="mtPcSite"></span><details class="mt-pc-profile"><summary>👤 Mon profil ▾</summary><button type="button" onclick="logoutAppUser()">Déconnexion</button></details></div></div>
   <div class="mt-mobile-top">
     <div class="mt-mobile-brand"><span class="mt-brand-leaf" aria-hidden="true">🍃</span><div><strong>M&amp;T<span>HACCP</span></strong><small>Sécurité Alimentaire<br>Qualité • Traçabilité</small></div></div>
     <button type="button" class="mt-menu-trigger" onclick="mtHomeMenu(true)" aria-label="Ouvrir le menu">☰</button>
@@ -1028,6 +1062,7 @@ function home(){
  </div>`
  const mtSite=typeof siteDisplayName!=='undefined'&&siteDisplayName?siteDisplayName:(typeof SITE_ID!=='undefined'?SITE_ID:'Établissement');
  const siteEl=document.getElementById('mtHomeSite');if(siteEl)siteEl.textContent=mtSite;
+ const pcSiteEl=document.getElementById('mtPcSite');if(pcSiteEl)pcSiteEl.textContent=mtSite;
  const drawerSite=document.getElementById('mtDrawerSite');if(drawerSite)drawerSite.textContent=mtSite;
  const dateEl=document.getElementById('mtHomeDate');if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short'}).format(new Date());
 }
