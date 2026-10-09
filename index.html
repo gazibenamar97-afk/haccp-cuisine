@@ -21,12 +21,12 @@ body:not(.on-home) .mobile-home-btn{display:none}
 
 /* Interface d'accueil PC uniquement — aucun impact sous 851 px. */
 @media(min-width:851px){
-body:has(#mtPcShell) > nav{display:none!important}
-body:has(#mtPcShell) > main{margin-left:232px!important;width:calc(100% - 232px)!important;max-width:none!important;padding:0!important}
+body:has(#mtPcShell):not(.on-login) > nav{display:none!important}
+body:has(#mtPcShell):not(.on-login) > main{margin-left:232px!important;width:calc(100% - 232px)!important;max-width:none!important;padding:0!important}
 body:has(#mtPcShell) .mt-pc-sidebar,body:has(#mtPcShell) .mt-pc-topbar{visibility:visible!important}
 
 body:has(#mtPcShell){background:#f3f7f5!important}
-body:has(#mtPcShell) .mt-pc-sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;z-index:60;background:linear-gradient(175deg,#07563f,#003c2f);padding:24px 13px;box-sizing:border-box;display:flex;flex-direction:column;color:#fff;box-shadow:3px 0 20px #092e2517}
+body:has(#mtPcShell):not(.on-login) .mt-pc-sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;z-index:60;background:linear-gradient(175deg,#07563f,#003c2f);padding:24px 13px;box-sizing:border-box;display:flex;flex-direction:column;color:#fff;box-shadow:3px 0 20px #092e2517}
 body:has(#mtPcShell) .mt-pc-logo{font-size:21px;font-weight:900;padding:3px 12px 25px;color:#fff}
 body:has(#mtPcShell) .mt-pc-logo span{color:#a9e2c2}
 body:has(#mtPcShell) .mt-pc-nav{display:flex;flex-direction:column;gap:5px}
@@ -58,6 +58,8 @@ body:has(#mtPcShell) .mt-mobile-top,body:has(#mtPcShell) .mt-site-pill,body:has(
 @media(min-width:851px) and (max-width:1200px){body:has(#mtPcShell) .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
 @media(min-width:851px){body:has(#mtPcShell) .home-grid>.home-direction{grid-column:1/-1!important}body:has(#mtPcShell) .home-grid>.home-card:not(.home-direction){grid-column:auto!important}body:has(#mtPcShell) .home-grid>.home-card{max-width:none!important}body:has(#mtPcShell) #mtPcShell[hidden]{display:none!important}body.on-login #mtPcShell{display:none!important}}
+
+@media(min-width:851px){body.on-login:has(#mtPcShell) #app{padding-left:0!important}body.on-login:has(#mtPcShell) > main{margin-left:0!important;width:100%!important}body.on-home:has(#mtPcShell) .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
