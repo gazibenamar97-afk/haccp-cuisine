@@ -1430,7 +1430,7 @@ function mergeDateCandidates(texts){
  texts.forEach(t=>extractDateCandidates(t).forEach(d=>{let dt=new Date(d.iso+'T12:00:00');if(isNaN(dt)||dt<min||dt>max)return;map[d.iso]=map[d.iso]||{...d,hits:0};map[d.iso].hits++}));
  return Object.values(map).map(d=>({...d,confidence:d.hits>=2?'forte':'à confirmer'})).sort((a,b)=>b.hits-a.hits||a.iso.localeCompare(b.iso));
 }
-async // Photos de réception : sélection rapide, sans OCR ni analyse automatique.
+// Photos de réception : sélection rapide, sans OCR ni analyse automatique.
 let receptionSelectedPhotos=[];
 function analyzeLabels(input){
  const files=Array.from(input.files||[]).filter(f=>f.type.startsWith('image/'));
