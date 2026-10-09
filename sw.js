@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v144-charcoal';
+const CACHE='mt-haccp-shell-v145-auto-unlock';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
