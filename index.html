@@ -1610,7 +1610,7 @@ async function haccpShowReceptionPhotos(paths){
   const {token}=await haccpPhotoAuth();
   for(const path of paths){
    const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/authenticated/haccp-photos/'+path,{headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+token}});
-   if(!res.ok)throw new Error('Lecture refusee ('+res.status+')');
+   if(!res.ok){const detail=(await res.text()).slice(0,300);throw new Error('Lecture refusee ('+res.status+') : '+detail)}
    const img=document.createElement('img'),url=URL.createObjectURL(await res.blob());
    img.src=url;img.alt='Photo de reception';img.style='max-width:100%;max-height:300px;border-radius:8px;margin:6px';
    img.onload=()=>setTimeout(()=>URL.revokeObjectURL(url),60000);box.appendChild(img);
