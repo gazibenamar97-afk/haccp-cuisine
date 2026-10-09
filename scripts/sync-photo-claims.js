@@ -12,7 +12,9 @@
  * À relancer après création, changement de rôle ou changement d'établissement.
  */
 'use strict';
-const admin = require('firebase-admin');
+const {initializeApp,cert} = require('firebase-admin/app');
+const {getFirestore} = require('firebase-admin/firestore');
+const {getAuth} = require('firebase-admin/auth');
 const fs = require('fs');
 const path = require('path');
 const keyPath = path.join(process.cwd(), 'serviceAccountKey.json');
@@ -20,10 +22,10 @@ if (!fs.existsSync(keyPath)) {
  console.error('Fichier serviceAccountKey.json introuvable dans le dossier courant');
  process.exit(1);
 }
-admin.initializeApp({credential:admin.credential.cert(require(keyPath))});
+initializeApp({credential:cert(require(keyPath))});
 const allowed = new Set(['employe','haccp','responsable']);
 async function run(){
- const db=admin.firestore(),auth=admin.auth();
+ const db=getFirestore(),auth=getAuth();
  const users=await db.collection('users').get();
  let updated=0,skipped=0,revoked=0;
  for(const doc of users.docs){
