@@ -910,7 +910,7 @@ function mtEnsureGlobalNav(){
  host.hidden=false;
  const items=[['Accueil','home','box'],['Réception de marchandises','reception','box'],['Traçabilité','trace','trace'],['Température','temperature','thermo'],['Nettoyage','cleaning','clean'],['Étiquetage HACCP','label','tag'],['Tableau de bord Direction','dashboard','chart'],['Paramètres','settings','gear'],...(SITE_ID==='main'?[['Supervision des établissements','supervision','building']]:[['Stock et DLC','stock','box']])];
  const links=items.map(([label,action,icon])=>'<button type="button" onclick="mtMobileNavGo(\''+action+'\')">'+mtSvg(icon)+' '+label+'</button>').join('');
- host.innerHTML='<div class="mt-global-bar"><button type="button" onclick="mtMobileNavOpen()" aria-label="Ouvrir le menu">'+mtSvg('menu')+' <span>Menu</span></button><strong>M&amp;T HACCP</strong><span class="mt-global-bar-spacer" aria-hidden="true"></span></div><button type="button" class="mt-global-floating-home" onclick="mtMobileNavGo(\'home\')" aria-label="Retour à l’accueil">'+mtSvg('box')+' <span>Accueil</span></button><div id="mtGlobalNavDrawer" class="mt-global-drawer" hidden><button type="button" class="mt-global-shade" onclick="mtMobileNavClose()" aria-label="Fermer le menu"></button><aside><div class="mt-global-drawer-title"><strong>M&amp;T HACCP</strong><button onclick="mtMobileNavClose()" aria-label="Fermer">'+mtSvg('close')+'</button></div><nav>'+links+'</nav><button class="mt-global-logout" onclick="logoutAppUser()">'+mtSvg('logout')+' Déconnexion</button></aside></div>';
+ host.innerHTML='<div class="mt-global-bar"><button type="button" onclick="mtMobileNavOpen()" aria-label="Ouvrir le menu">'+mtSvg('menu')+' <span>Menu</span></button><strong>M&amp;T HACCP</strong><span class="mt-global-bar-spacer" aria-hidden="true"></span></div><button type="button" class="mt-global-floating-home" onclick="mtMobileNavGo(\'home\')" aria-label="Retour à l’accueil">'+mtSvg('home')+' <span>Accueil</span></button><div id="mtGlobalNavDrawer" class="mt-global-drawer" hidden><button type="button" class="mt-global-shade" onclick="mtMobileNavClose()" aria-label="Fermer le menu"></button><aside><div class="mt-global-drawer-title"><strong>M&amp;T HACCP</strong><button onclick="mtMobileNavClose()" aria-label="Fermer">'+mtSvg('close')+'</button></div><nav>'+links+'</nav><button class="mt-global-logout" onclick="logoutAppUser()">'+mtSvg('logout')+' Déconnexion</button></aside></div>';
 }
 function mtStartGlobalNav(){
  if(window.mtGlobalNavStarted)return;
@@ -929,7 +929,8 @@ document.addEventListener('DOMContentLoaded',mtStartGlobalNav);
 function mtSvg(name){
  const icons={
  leaf:'<path d="M4 21C4 9 12 3 22 2c0 11-5 19-18 19Z"/><path d="M4 21c4-6 9-11 16-16"/>',
- bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M10 21h4"/>',
+ home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M10 21h4"/>',
  user:'<circle cx="12" cy="7" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>',
  building:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-5h6v5M8 7h2M14 7h2M8 11h2M14 11h2"/>',
  chevron:'<path d="m9 18 6-6-6-6"/>',
