@@ -200,6 +200,35 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  body:has(#mtPcShell) .mtpc-alerts button+button .mtpc-alert-copy strong{color:#c77d00!important}
 }
 
+
+/* PC seulement : titres sans empattements, chevrons SVG centrés, alertes */
+@media (min-width:851px){
+ body:has(#mtPcShell) .mtpc-photo-card,
+ body:has(#mtPcShell) .mtpc-photo-card *,
+ body:has(#mtPcShell) .mtpc-photo-card .mtpc-tile-footer,
+ body:has(#mtPcShell) .mtpc-photo-card .mtpc-tile-footer strong{
+   font-family:"Segoe UI",Inter,Arial,sans-serif!important;
+ }
+ body:has(#mtPcShell) .mtpc-photo-card .mtpc-tile-footer strong{
+   font-size:14px!important;font-weight:600!important;
+ }
+ body:has(#mtPcShell) .mtpc-go{
+   display:grid!important;place-items:center!important;
+   width:26px!important;height:26px!important;min-width:26px!important;
+   border-radius:50%!important;line-height:1!important;padding:0!important;
+ }
+ body:has(#mtPcShell) .mtpc-go svg{
+   width:14px!important;height:14px!important;display:block!important;
+   fill:none!important;stroke:currentColor!important;stroke-width:2!important;
+ }
+ body:has(#mtPcShell) .mtpc-alert-copy b{
+   font-size:13px!important;font-weight:700!important;
+ }
+ body:has(#mtPcShell) .mtpc-alert-copy strong{
+   font-size:30px!important;font-weight:700!important;
+ }
+}
+
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
@@ -1197,15 +1226,15 @@ function home(){
   <div class="mtpc-hero"><div><h1>M&amp;T HACCP</h1><p>Hygiène • Sécurité • Qualité</p></div></div>
   <div class="mtpc-alerts"><button onclick="mtPcNavigate('direction')"><span class="mtpc-alert-circle mtpc-alert-red">!</span><span class="mtpc-alert-copy"><b>Non-conformités</b><strong id="mtPcNcCount">—</strong><small>Consulter les alertes</small></span><span class="mtpc-alert-chevron">›</span></button><button onclick="mtPcNavigate('stock')"><span class="mtpc-alert-circle mtpc-alert-orange"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-clock"/></svg></span><span class="mtpc-alert-copy"><b>Alertes DLC</b><strong id="mtPcDlcCount">—</strong><small>Produits à contrôler</small></span><span class="mtpc-alert-chevron">›</span></button></div>
   <div class="mtpc-photo-grid">
-<button class="mtpc-photo-card" onclick="mtPcNavigate('reception')"><span class="mtp-photo mtp-photo-reception"><span class="mtpc-tile-icon" style="background:#0f6b45">▣</span></span><span class="mtpc-tile-footer"><strong>Réception de marchandises</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('tracabilite')"><span class="mtp-photo mtp-photo-trace"><span class="mtpc-tile-icon" style="background:#e5383b">⌕</span></span><span class="mtpc-tile-footer"><strong>Traçabilité</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('temperatures')"><span class="mtp-photo mtp-photo-temperature"><span class="mtpc-tile-icon" style="background:#2f7de1">♧</span></span><span class="mtpc-tile-footer"><strong>Température</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('nettoyage')"><span class="mtp-photo mtp-photo-clean"><span class="mtpc-tile-icon" style="background:#f5a000">✧</span></span><span class="mtpc-tile-footer"><strong>Nettoyage</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('etiquetage')"><span class="mtp-photo mtp-photo-etiquetage"><span class="mtpc-tile-icon" style="background:#7a4fd1">◇</span></span><span class="mtpc-tile-footer"><strong>Étiquetage HACCP</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"><span class="mtpc-tile-icon" style="background:#0f8a8a">▥</span></span><span class="mtpc-tile-footer"><strong>Tableau de bord Direction</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"><span class="mtpc-tile-icon" style="background:#2a6fb0">⚙</span></span><span class="mtpc-tile-footer"><strong>Paramètres</strong><span class="mtpc-go">›</span></span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('stock')"><span class="mtp-photo mtp-photo-stock"><span class="mtpc-tile-icon" style="background:#c9732a">⬡</span></span><span class="mtpc-tile-footer"><strong>Stock et DLC</strong><span class="mtpc-go">›</span></span></button>
-${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"><span class="mtpc-tile-icon" style="background:#0f6b45">▤</span></span><span class="mtpc-tile-footer"><strong>Supervision des établissements</strong><span class="mtpc-go">›</span></span></button>':''}
+<button class="mtpc-photo-card" onclick="mtPcNavigate('reception')"><span class="mtp-photo mtp-photo-reception"><span class="mtpc-tile-icon" style="background:#0f6b45">▣</span></span><span class="mtpc-tile-footer"><strong>Réception de marchandises</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('tracabilite')"><span class="mtp-photo mtp-photo-trace"><span class="mtpc-tile-icon" style="background:#e5383b">⌕</span></span><span class="mtpc-tile-footer"><strong>Traçabilité</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('temperatures')"><span class="mtp-photo mtp-photo-temperature"><span class="mtpc-tile-icon" style="background:#2f7de1">♧</span></span><span class="mtpc-tile-footer"><strong>Température</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('nettoyage')"><span class="mtp-photo mtp-photo-clean"><span class="mtpc-tile-icon" style="background:#f5a000">✧</span></span><span class="mtpc-tile-footer"><strong>Nettoyage</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('etiquetage')"><span class="mtp-photo mtp-photo-etiquetage"><span class="mtpc-tile-icon" style="background:#7a4fd1">◇</span></span><span class="mtpc-tile-footer"><strong>Étiquetage HACCP</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"><span class="mtpc-tile-icon" style="background:#0f8a8a">▥</span></span><span class="mtpc-tile-footer"><strong>Tableau de bord Direction</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"><span class="mtpc-tile-icon" style="background:#2a6fb0">⚙</span></span><span class="mtpc-tile-footer"><strong>Paramètres</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('stock')"><span class="mtp-photo mtp-photo-stock"><span class="mtpc-tile-icon" style="background:#c9732a">⬡</span></span><span class="mtpc-tile-footer"><strong>Stock et DLC</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"><span class="mtpc-tile-icon" style="background:#0f6b45">▤</span></span><span class="mtpc-tile-footer"><strong>Supervision des établissements</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>':''}
   </div>
   <div class="mt-home-drawer" id="mtHomeDrawer" hidden>
     <button class="mt-drawer-backdrop" onclick="mtHomeMenu(false)" aria-label="Fermer le menu"></button>
