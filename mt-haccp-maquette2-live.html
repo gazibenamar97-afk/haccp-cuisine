@@ -238,7 +238,7 @@ const setData=d=>{
  showRec();showTra();
 };
 window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!e.data.mtMockData)return;setData(e.data);if(e.data.view)go(e.data.view)});
-document.querySelectorAll('#reception .flt .f').forEach(x=>{if(x.textContent.includes('Rechercher')){x.innerHTML='<input id="mtRecSearch" placeholder="Rechercher un produit" style="border:0;background:transparent;width:100%;padding:4px" oninput="recPage=0;showRec()">';}});
+const recSearch=document.querySelector('#reception .flt>div:last-child .f');if(recSearch)recSearch.innerHTML='<input id="mtRecSearch" placeholder="Rechercher un produit" style="border:0;background:transparent;width:100%;padding:4px" oninput="recPage=0;showRec()">';
 go('accueil');request('ready');
 
 </script>
