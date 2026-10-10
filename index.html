@@ -588,6 +588,25 @@ input:focus,select:focus,textarea:focus{border-color:#11966d;box-shadow:0 0 0 3p
 .photo-product:hover{border-color:#1685d1;background:#f1f8fe}
 .photo-product span:last-child{font-size:11px;line-height:1.15;text-align:center}
 @media(max-width:700px){.photo-product-grid{grid-template-columns:repeat(3,1fr);max-height:360px}.photo-product{padding:6px}.photo-catalogue{margin-top:10px}}
+
+/* Réception : grille catalogue photo, présentation uniquement. */
+.rec-page #photoCatalogue .photo-product-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;width:100%;box-sizing:border-box}
+.rec-page #photoCatalogue .photo-product{height:110px!important;min-height:110px!important;max-height:110px!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;margin:0!important;padding:7px 5px!important;overflow:hidden!important}
+.rec-page #photoCatalogue .photo-product .food-thumb{width:100%!important;height:60px!important;min-height:60px!important;max-height:60px!important;flex:0 0 60px!important;display:block!important;margin:0!important;border-radius:7px!important;overflow:hidden!important;background:#eaf2ed!important}
+.rec-page #photoCatalogue .photo-product .food-thumb img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important}
+.rec-page #photoCatalogue .photo-product>span:last-child{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;line-clamp:2!important;overflow:hidden!important;text-align:center!important;font-size:12px!important;line-height:15px!important;font-weight:500!important;width:100%!important;max-height:30px!important;overflow-wrap:anywhere!important}
+.rec-page #photoCatalogue .photo-product:not(:has(.food-thumb))::before{content:"";display:block!important;flex:0 0 60px!important;height:60px!important;width:100%!important;border-radius:7px!important;background:#eaf2ed url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230f5a3f%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%225%22%2F%3E%3C%2Fsvg%3E") center/27px 27px no-repeat!important}
+.rec-page:has(#rc option:checked[value*="Poisson"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before,
+.rec-page:has(#rc option:checked[value*="fruits de mer"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230f5a3f%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2012c5-7%2012-7%2016%200-4%207-11%207-16%200ZM19%2012l3-4v8l-3-4Z%22%2F%3E%3Ccircle%20cx%3D%228%22%20cy%3D%2211%22%20r%3D%221%22%2F%3E%3C%2Fsvg%3E")!important}
+.rec-page:has(#rc option:checked[value*="Viande"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before,
+.rec-page:has(#rc option:checked[value*="Boucherie"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230f5a3f%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2015c-3-5%203-11%209-10l7%207c2%204-2%209-7%208l-4-3-5-2Z%22%2F%3E%3Cpath%20d%3D%22M9%2010l5%205%22%2F%3E%3C%2Fsvg%3E")!important}
+.rec-page:has(#rc option:checked[value*="Légume"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before,
+.rec-page:has(#rc option:checked[value*="Fruit"]) #photoCatalogue .photo-product:not(:has(.food-thumb))::before{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230f5a3f%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021c-6-4-8-10-3-15%205%200%2010%206%203%2015Z%20M12%2021c1-7%203-11%208-13-1%207-3%2011-8%2013Z%22%2F%3E%3C%2Fsvg%3E")!important}
+.rec-page #tempRecommendation strong,.rec-page #sideTemp strong{font-size:18px!important;font-weight:700!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:break-word!important;max-width:100%!important}
+.rec-page .rec-main>.rec-section:first-child .row{grid-template-columns:minmax(0,1fr)!important}
+.rec-page .rec-main>.rec-section:first-child .row>div{min-width:0!important}
+.rec-page #photoCatalogue{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+
 </style><style>
 /* PC / mobile parity: aucun contenu fonctionnel n'est masqué selon la largeur.
    Le responsive ne change que la disposition et la taille. */
