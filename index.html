@@ -1242,7 +1242,7 @@ body.on-login .mt-ref-logo .mt-logo-leaf svg{display:block!important;width:100%!
 
 
 /* Accueil mobile : 8 tuiles, Paramètres occupe la dernière ligne. */
-@media(max-width:850px){body.mt-premium-active .mtp-tiles>.mtp-tile:last-child{grid-column:auto!important;height:145px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child .mtp-photo{height:86px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child .mtp-tile-icon{top:66px!important}}
+@media(max-width:850px){body.mt-premium-active .mtp-tiles>.mtp-tile:last-child:nth-child(9){grid-column:1 / -1!important;height:145px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child:nth-child(9) .mtp-photo{height:86px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child{grid-column:auto!important;height:145px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child .mtp-photo{height:86px!important}body.mt-premium-active .mtp-tiles>.mtp-tile:last-child .mtp-tile-icon{top:66px!important}}
 /* Pixel-oriented mobile adaptation of the approved eight-panel reference. */
 @media(max-width:850px){
  body.mt-premium-active{background:#eef2f1!important;color:#12302b!important;font-family:Inter,Arial,sans-serif!important}
@@ -1473,6 +1473,112 @@ function mtSvg(name){
  };
  return '<svg class="mtp-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.box)+'</svg>';
 }
+
+/* Rapports PDF locaux par établissement — lecture seule, aucune modification des données. */
+const MT_REPORT_TYPES=[
+ ['synthese','Synthèse générale HACCP'],['receptions','Registre des réceptions'],['temperatures','Registre des températures'],
+ ['anomalies','Non-conformités'],['dlc','DLC et produits à surveiller'],['nettoyage','Nettoyage et désinfection'],
+ ['tracabilite','Traçabilité des produits'],['equipement','Suivi par équipement frigorifique'],
+ ['fournisseurs','Fournisseurs et livraisons'],['operateurs','Activité des opérateurs'],
+ ['inspection','Dossier de contrôle sanitaire'],['mensuel','Bilan de conformité HACCP']
+];
+function mtReportEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function mtReportDate(v){
+ if(!v)return '';
+ const d=String(v);
+ if(/^\d{4}-\d{2}-\d{2}/.test(d))return d.slice(0,10);
+ const m=d.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+ if(m)return m[3]+'-'+m[2]+'-'+m[1];
+ const parsed=new Date(d);return Number.isNaN(parsed.getTime())?'':parsed.toISOString().slice(0,10)
+}
+function mtReportRows(kind,from,to){
+ return (Array.isArray(S[kind])?S[kind]:[]).filter(x=>{
+  const date=mtReportDate(x.receivedAt||x.createdAt||x.date||x.modifiedAt);
+  return date&&date>=from&&date<=to
+ });
+}
+function mtReportFormat(v){return v===true?'Oui':v===false?'Non':v==null||v===''?'—':String(v)}
+function mtReportTable(headers,rows){
+ if(!rows.length)return '<p class="empty">Aucun enregistrement pour les filtres sélectionnés.</p>';
+ return '<table><thead><tr>'+headers.map(h=>'<th>'+mtReportEsc(h)+'</th>').join('')+'</tr></thead><tbody>'+
+ rows.map(row=>'<tr>'+row.map(v=>'<td>'+mtReportEsc(mtReportFormat(v))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+}
+function mtReportRange(mode){
+ const now=new Date(),end=now.toISOString().slice(0,10);let start=new Date(now);
+ if(mode==='today'){}else if(mode==='week')start.setDate(now.getDate()-6);
+ else if(mode==='month')start=new Date(now.getFullYear(),now.getMonth(),1);
+ else if(mode==='last') {start=new Date(now.getFullYear(),now.getMonth()-1,1);const stop=new Date(now.getFullYear(),now.getMonth(),0);return [mtReportDate(start.toISOString()),mtReportDate(stop.toISOString())]}
+ return [mtReportDate(start.toISOString()),end]
+}
+function mtReports(){
+ if(SITE_ID==='main'){alert('Les rapports sont réservés aux établissements.');return}
+ CURRENT_VIEW='reports';document.body.classList.remove('on-home','mt-premium-active');
+ const range=mtReportRange('month');
+ app.innerHTML='<section class="mt-report-ui"><button class="btn back" onclick="home()">← Accueil</button><h1>Rapports PDF</h1><p class="note">12 rapports détaillés de votre établissement. Choisissez librement une période, même de 1 ou 3 jours.</p>'+
+ '<div class="panel"><label for="mtReportType">Rapport à générer</label><select id="mtReportType">'+MT_REPORT_TYPES.map((x,i)=>'<option value="'+x[0]+'">'+(i+1)+'. '+mtReportEsc(x[1])+'</option>').join('')+'</select>'+
+ '<label for="mtReportPeriod">Période rapide</label><select id="mtReportPeriod" onchange="mtReportSetPeriod(this.value)"><option value="month">Ce mois</option><option value="today">Aujourd’hui</option><option value="week">7 derniers jours</option><option value="last">Mois précédent</option><option value="custom">Dates personnalisées</option></select>'+
+ '<div class="row"><div><label for="mtReportFrom">Du (inclus)</label><input type="date" id="mtReportFrom" value="'+range[0]+'"></div><div><label for="mtReportTo">Au (inclus)</label><input type="date" id="mtReportTo" value="'+range[1]+'"></div></div>'+
+ '<p class="note">Les dates peuvent couvrir un jour, trois jours, une semaine ou toute autre durée. Les documents contiennent uniquement les données enregistrées.</p>'+
+ '<button class="btn primary" onclick="mtReportGenerate()">Générer le rapport PDF</button></div>'+
+ '<div class="panel"><h2>Rapports disponibles</h2>'+MT_REPORT_TYPES.map((x,i)=>'<div class="record">'+(i+1)+'. '+mtReportEsc(x[1])+'</div>').join('')+'</div></section>';
+}
+function mtReportSetPeriod(mode){if(mode==='custom')return;const range=mtReportRange(mode);document.getElementById('mtReportFrom').value=range[0];document.getElementById('mtReportTo').value=range[1]}
+function mtReportGenerate(){
+ if(SITE_ID==='main'){alert('Rapports indisponibles pour le compte administrateur.');return}
+ const type=document.getElementById('mtReportType').value,from=document.getElementById('mtReportFrom').value,to=document.getElementById('mtReportTo').value;
+ if(!from||!to||from>to){alert('Veuillez sélectionner deux dates valides, dans l’ordre chronologique.');return}
+ const name=(MT_REPORT_TYPES.find(x=>x[0]===type)||[])[1]||'Rapport HACCP';
+ const rec=mtReportRows('stock',from,to),temps=mtReportRows('temps',from,to),clean=mtReportRows('clean',from,to),trace=mtReportRows('trace',from,to);
+ const anomaliesRec=rec.filter(x=>x.pack==='Non conforme'||x.tempOverRecommendation);
+ const anomaliesTemp=temps.filter(x=>x.ok===false);
+ const allNC=anomaliesRec.length+anomaliesTemp.length;
+ const stockAll=Array.isArray(S.stock)?S.stock:[];
+ const exp=stockAll.filter(x=>x.dlc&&x.dlc<to),soon=stockAll.filter(x=>x.dlc&&x.dlc>=to&&x.dlc<=mtReportDate(new Date(new Date(to+'T12:00:00').getTime()+3*86400000).toISOString()));
+ const supplierList=Array.isArray(S.suppliers)?S.suppliers:[];
+ const equipList=Array.isArray(S.equipment)?S.equipment:[];
+ const date=x=>x.date||x.receivedAt||x.createdAt||'—';
+ const rcv=x=>[date(x),x.product,x.category,x.supplier,x.quantity,x.lot,x.temp,x.pack,x.receivedBy,x.observation];
+ const tmp=x=>[date(x),x.equipment,x.value,x.ok===false?'Non conforme':'Conforme',x.operator,x.note||x.observation];
+ const cln=x=>[date(x),x.zone,x.action,x.status,x.operator,x.note];
+ const metric=(label,val)=>'<div class="metric"><span>'+mtReportEsc(label)+'</span><b>'+mtReportEsc(val)+'</b></div>';
+ const block=(heading,headers,rows)=>'<h2>'+mtReportEsc(heading)+'</h2>'+mtReportTable(headers,rows);
+ const hRec=['Date','Produit','Catégorie','Fournisseur','Quantité','Lot','Temp. °C','Emballage','Opérateur','Observation'];
+ const hTmp=['Date','Équipement','Valeur °C','Conformité','Opérateur','Observation'];
+ let html='';
+ if(type==='synthese'||type==='mensuel'||type==='inspection'){
+  html='<div class="metrics">'+metric('Réceptions',rec.length)+metric('Températures',temps.length)+metric('Nettoyages',clean.length)+metric('Non-conformités constatées',allNC)+metric('DLC expirées à la date de fin',exp.length)+metric('DLC dans les 3 jours',soon.length)+'</div>';
+  html+='<p>Conformité des réceptions contrôlées : '+(rec.length?((rec.length-anomaliesRec.length)*100/rec.length).toFixed(1)+' %':'non calculable (aucune réception)')+'. Conformité des relevés de température : '+(temps.length?((temps.length-anomaliesTemp.length)*100/temps.length).toFixed(1)+' %':'non calculable (aucun relevé)')+'.</p>';
+  html+=block('Réceptions',hRec,rec.map(rcv))+block('Relevés de température',hTmp,temps.map(tmp));
+  html+=block('Nettoyages',['Date','Zone','Action','Statut','Opérateur','Observation'],clean.map(cln));
+  html+=block('Non-conformités',['Origine','Date','Élément','Détail','Observation'],[
+   ...anomaliesRec.map(x=>['Réception',date(x),x.product,x.nonConformityReason||x.pack,x.observation]),
+   ...anomaliesTemp.map(x=>['Température',date(x),x.equipment,x.value,x.note||x.observation])
+  ]);
+  if(type==='inspection')html+=block('Traçabilité',['Date','Type','Produit / zone','Opérateur','Observation'],trace.map(x=>[date(x),x.type,x.product||x.zone||x.equipment,x.operator||x.receivedBy,x.note||x.observation]));
+  if(type==='mensuel')html+='<p><strong>Comparaison :</strong> ce document décrit uniquement la période choisie. Aucune tendance ou action corrective n’est déduite sans données suffisantes.</p>';
+ }
+ if(type==='receptions')html=block('Registre détaillé des réceptions',hRec,rec.map(rcv));
+ if(type==='temperatures')html=block('Registre détaillé des températures',hTmp,temps.map(tmp));
+ if(type==='anomalies')html=block('Réceptions non conformes',['Date','Produit','Fournisseur','Température','Motif','Observation','Opérateur'],anomaliesRec.map(x=>[date(x),x.product,x.supplier,x.temp,x.nonConformityReason||'Température hors recommandation',x.observation,x.receivedBy]))+block('Températures non conformes',hTmp,anomaliesTemp.map(tmp));
+ if(type==='dlc')html='<p>Situation des DLC enregistrées à la date de fin sélectionnée : '+mtReportEsc(to)+'. Il s’agit des fiches conservées dans l’application, et non d’un inventaire physique garanti.</p>'+block('DLC expirées',['Produit','Catégorie','Lot','Fournisseur','DLC','Date réception'],exp.map(x=>[x.product,x.category,x.lot,x.supplier,x.dlc,date(x)]))+block('DLC à 3 jours',['Produit','Catégorie','Lot','Fournisseur','DLC'],soon.map(x=>[x.product,x.category,x.lot,x.supplier,x.dlc]));
+ if(type==='nettoyage')html=block('Registre de nettoyage et désinfection',['Date','Zone / équipement','Action','Statut','Opérateur','Observation'],clean.map(cln));
+ if(type==='tracabilite')html=block('Journal de traçabilité',['Date','Type','Produit / zone','Lot','Fournisseur','Opérateur','Observation'],trace.map(x=>[date(x),x.type,x.product||x.zone||x.equipment,x.lot,x.supplier,x.operator||x.receivedBy,x.note||x.observation]))+block('Réceptions et lots',hRec,rec.map(rcv));
+ if(type==='equipement')html=block('Catalogue des équipements',['Équipement','Minimum °C','Maximum °C','Statut'],equipList.map(x=>[x.name,x.min,x.max,x.outOfService?'Hors service':'En service']))+block('Historique des relevés par équipement',hTmp,temps.slice().sort((a,b)=>String(a.equipment).localeCompare(String(b.equipment))).map(tmp));
+ if(type==='fournisseurs')html=block('Répertoire des fournisseurs',['Nom','Téléphone','Véhicules / plaques','Chauffeur','Réceptions sur période','Non-conformités sur période'],supplierList.map(x=>{const n=typeof x==='string'?x:x.name;return [n,x.phone,(x.plates||[x.plate]).filter(Boolean).join(', '),x.driver,rec.filter(y=>y.supplier===n).length,anomaliesRec.filter(y=>y.supplier===n).length]}))+block('Historique des livraisons',hRec,rec.map(rcv));
+ if(type==='operateurs'){
+  const users=new Map();const add=(name,kind)=>{const key=String(name||'Non renseigné');if(!users.has(key))users.set(key,{reception:0,temperature:0,nettoyage:0});users.get(key)[kind]++};
+  rec.forEach(x=>add(x.receivedBy,'reception'));temps.forEach(x=>add(x.operator,'temperature'));clean.forEach(x=>add(x.operator,'nettoyage'));
+  html=block('Activité enregistrée par opérateur',['Opérateur','Réceptions','Températures','Nettoyages'],Array.from(users,([n,v])=>[n,v.reception,v.temperature,v.nettoyage]));
+ }
+ const site=typeof siteDisplayName!=='undefined'&&siteDisplayName?siteDisplayName:SITE_ID;
+ const issued=new Date().toLocaleString('fr-FR');
+ const style='@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#19362b;margin:0}header{border-bottom:3px solid #0d6045;padding-bottom:13px;margin-bottom:18px}header b{color:#0d6045;font-size:17px}h1{font-size:21px;margin:8px 0}h2{font-size:14px;color:#0d6045;margin:22px 0 8px;break-after:avoid}p{line-height:1.55}table{border-collapse:collapse;width:100%;font-size:9px;table-layout:auto}thead{display:table-header-group}th{background:#e9f3ed;text-align:left}th,td{border:1px solid #cbd9d0;padding:6px 5px;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}.metrics{display:flex;flex-wrap:wrap;gap:8px}.metric{border:1px solid #cbd9d0;padding:9px;min-width:115px}.metric span{display:block;font-size:9px}.metric b{font-size:18px;color:#0d6045}.empty{color:#666;font-style:italic}footer{border-top:1px solid #cbd9d0;margin-top:20px;padding-top:8px;color:#666;font-size:9px}';
+ const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+mtReportEsc(name)+'</title><style>'+style+'</style></head><body><header><b>M&amp;T HACCP</b><h1>'+mtReportEsc(name)+'</h1><p><strong>Établissement :</strong> '+mtReportEsc(site)+'<br><strong>Période :</strong> '+mtReportEsc(from)+' au '+mtReportEsc(to)+' (inclus)<br><strong>Édité le :</strong> '+mtReportEsc(issued)+'</p></header>'+html+'<footer>Document établi à partir des enregistrements disponibles dans M&T HACCP. Une absence de relevé ne prouve pas la conformité. • '+mtReportEsc(site)+'</footer></body></html>';
+ const w=window.open('','_blank');
+ if(!w){alert('Autorisez les fenêtres contextuelles pour exporter le PDF.');return}
+ w.document.open();w.document.write(doc);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){console.error('Impression PDF',e)}},450);
+}
+
 function mtPremiumHome(){
  CURRENT_VIEW='home';
  document.body.classList.remove('on-login');
@@ -1493,10 +1599,11 @@ function mtPremiumHome(){
   ['trace','Traçabilité','trace',"mtOpenModule('trace')",'#cf3443'],
   ['direction','Tableau de bord<br>Direction','chart','openDashboard()','#09a4a6'],
   ['parametres','Paramètres','gear','settings()','#225a7d'],
+  ...(SITE_ID!=='main'?[['rapports','Rapports PDF','chart','mtReports()','#17694d']]:[]),
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports PDF','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Notifications">'+mtSvg('bell')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
@@ -1521,7 +1628,7 @@ function mtOpenModule(action){
 
 function mtPcNavigate(module){
  if(window.innerWidth<=850)return;
- const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,supervision:openEstablishmentSupervision};
+ const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,rapports:mtReports,supervision:openEstablishmentSupervision};
  const fn=routes[module];if(typeof fn!=='function')return;
  document.body.classList.remove('on-home','mt-premium-active');
  const legacyNav=document.querySelector('body > nav');if(legacyNav)legacyNav.style.display='none';
@@ -1538,7 +1645,7 @@ function home(){
  let mainNav=document.querySelector('nav');if(mainNav)mainNav.style.display='none';
  let pcShell=document.getElementById('mtPcShell');
  if(!pcShell){pcShell=document.createElement('div');pcShell.id='mtPcShell';document.body.appendChild(pcShell)}
- pcShell.innerHTML=`<svg class="mt-ref-defs" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute"><defs><symbol id="mt-ref-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol><symbol id="mt-ref-box" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol><symbol id="mt-ref-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></symbol><symbol id="mt-ref-therm" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol><symbol id="mt-ref-spark" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol><symbol id="mt-ref-tag" viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol><symbol id="mt-ref-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol><symbol id="mt-ref-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol><symbol id="mt-ref-out" viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="mt-ref-bld" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></symbol><symbol id="mt-ref-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol><symbol id="mt-ref-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="mt-ref-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol><symbol id="mt-ref-truck" viewBox="0 0 24 24"><path d="M3 5h12v12H3zM15 9h4l3 4v4h-7M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M19 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></symbol><symbol id="mt-ref-layers" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M12 4v16M16 4v16"/></symbol><symbol id="mt-ref-building" viewBox="0 0 24 24"><path d="M4 21V3h16v18M8 7h2M14 7h2M8 12h2M14 12h2M9 21v-5h6v5"/></symbol></defs></svg><aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo"><b class="mt-pc-logo-mark"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg></b><span>M&amp;T HACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-home"/></svg>Accueil</button><button onclick="mtPcNavigate('reception')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg>Réception</button><button onclick="mtPcNavigate('fournisseurs')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-truck"/></svg>Fournisseurs</button><button onclick="mtPcNavigate('etiquetage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-tag"/></svg>Étiquetage HACCP</button><button onclick="mtPcNavigate('stock')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-layers"/></svg>Stock et DLC</button><button onclick="mtPcNavigate('temperatures')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-therm"/></svg>Températures</button><button onclick="mtPcNavigate('nettoyage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-spark"/></svg>Nettoyage</button><button onclick="mtPcNavigate('tracabilite')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-search"/></svg>Traçabilité</button><button onclick="mtPcNavigate('direction')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-chart"/></svg>Tableau de bord Direction</button><button onclick="mtPcNavigate('parametres')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-gear"/></svg>Paramètres</button>${SITE_ID==='main'?'<button onclick="mtPcNavigate(&#39;supervision&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-building"/></svg>Supervision établissements</button>':''}</div><button type="button" class="mt-pc-logout" onclick="logoutAppUser()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-out"/></svg>Se déconnecter</button></aside>`;
+ pcShell.innerHTML=`<svg class="mt-ref-defs" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute"><defs><symbol id="mt-ref-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol><symbol id="mt-ref-box" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol><symbol id="mt-ref-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></symbol><symbol id="mt-ref-therm" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol><symbol id="mt-ref-spark" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol><symbol id="mt-ref-tag" viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol><symbol id="mt-ref-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol><symbol id="mt-ref-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol><symbol id="mt-ref-out" viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="mt-ref-bld" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></symbol><symbol id="mt-ref-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol><symbol id="mt-ref-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="mt-ref-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol><symbol id="mt-ref-truck" viewBox="0 0 24 24"><path d="M3 5h12v12H3zM15 9h4l3 4v4h-7M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M19 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></symbol><symbol id="mt-ref-layers" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M12 4v16M16 4v16"/></symbol><symbol id="mt-ref-building" viewBox="0 0 24 24"><path d="M4 21V3h16v18M8 7h2M14 7h2M8 12h2M14 12h2M9 21v-5h6v5"/></symbol></defs></svg><aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo"><b class="mt-pc-logo-mark"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg></b><span>M&amp;T HACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-home"/></svg>Accueil</button><button onclick="mtPcNavigate('reception')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg>Réception</button><button onclick="mtPcNavigate('fournisseurs')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-truck"/></svg>Fournisseurs</button><button onclick="mtPcNavigate('etiquetage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-tag"/></svg>Étiquetage HACCP</button><button onclick="mtPcNavigate('stock')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-layers"/></svg>Stock et DLC</button><button onclick="mtPcNavigate('temperatures')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-therm"/></svg>Températures</button><button onclick="mtPcNavigate('nettoyage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-spark"/></svg>Nettoyage</button><button onclick="mtPcNavigate('tracabilite')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-search"/></svg>Traçabilité</button><button onclick="mtPcNavigate('direction')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-chart"/></svg>Tableau de bord Direction</button>${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;rapports&#39;)">Rapports PDF</button>':''}<button onclick="mtPcNavigate('parametres')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-gear"/></svg>Paramètres</button>${SITE_ID==='main'?'<button onclick="mtPcNavigate(&#39;supervision&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-building"/></svg>Supervision établissements</button>':''}</div><button type="button" class="mt-pc-logout" onclick="logoutAppUser()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-out"/></svg>Se déconnecter</button></aside>`;
  app.innerHTML=`<div class="home-shell"><div class="mt-pc-topbar"><strong>M&T HACCP · Espace de travail</strong><div class="mt-pc-right"><span class="mt-pc-site-wrap"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-bld"/></svg><span class="mt-pc-site" id="mtPcSite"></span></span><details class="mt-pc-profile"><summary><span class="mt-pc-avatar"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-user"/></svg></span> Mon profil <svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-down"/></svg></summary><button type="button" onclick="logoutAppUser()">Déconnexion</button></details></div></div>
   <div class="mt-mobile-top">
     <div class="mt-mobile-brand"><span class="mt-brand-leaf" aria-hidden="true">🍃</span><div><strong>M&amp;T<span>HACCP</span></strong><small>Sécurité Alimentaire<br>Qualité • Traçabilité</small></div></div>
@@ -1562,6 +1669,7 @@ function home(){
 </div>
 <div class="mtpc-photo-grid mtpc-admin-grid">
 <button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"></span><span class="mtpc-tile-footer"><span class="mtpc-tile-icon" style="background:#0f8a8a">▥</span><strong>Tableau de bord Direction</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+${SITE_ID!=='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;rapports&#39;)"><span class="mtp-photo mtp-photo-direction"></span><span class="mtpc-tile-footer"><strong>Rapports PDF</strong></span></button>':''}
 <button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"></span><span class="mtpc-tile-footer"><span class="mtpc-tile-icon" style="background:#2a6fb0">⚙</span><strong>Paramètres</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
 </div>
 <div class="mtpc-photo-grid mtpc-supervision-grid">
