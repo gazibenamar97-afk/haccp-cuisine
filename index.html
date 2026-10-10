@@ -352,6 +352,51 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-go svg{width:19px!important;height:19px!important}
  body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card:hover{transform:translateY(-3px)!important;box-shadow:0 9px 22px rgba(13,74,54,.25)!important}
 
+ /* Les six modules partagent exactement la même géométrie. */
+ body.on-home:has(#mtPcShell) .mtpc-work-grid{align-items:stretch!important;grid-auto-rows:1fr!important}
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card{
+   height:100%!important;min-height:0!important;margin:0!important;padding:0!important;
+   display:flex!important;flex-direction:column!important;align-self:stretch!important;
+   box-sizing:border-box!important;transform:none;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtp-photo{
+   height:100px!important;min-height:100px!important;flex:0 0 100px!important;
+   margin:0!important;padding:0!important;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer{
+   flex:1 0 auto!important;min-height:0!important;margin:0!important;
+   padding:22px 14px 10px!important;display:flex!important;align-items:center!important;
+   box-sizing:border-box!important;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer strong{
+   margin:0!important;padding:0!important;line-height:1.25!important;
+ }
+ /* Couleurs, contours et survol homogènes : aucune photo ni alerte modifiée. */
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card{
+   border:1px solid #b4cdbf!important;
+   box-shadow:0 2px 8px rgba(13,74,54,.18)!important;
+   transition:transform .15s,box-shadow .15s!important;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer{
+   background:#d5e6db!important;color:#0f2d22!important;
+   transition:background .15s!important;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer strong,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer strong{color:#0f2d22!important}
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card:hover,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card:hover{
+   transform:translateY(-2px)!important;
+   box-shadow:0 6px 16px rgba(13,74,54,.25)!important;
+ }
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card:hover .mtpc-tile-footer,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card:hover .mtpc-tile-footer{background:#c8ddd0!important}
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-go,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-go{background:#0f5a3f!important;color:#fff!important}
+ body.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-go svg,
+ body.on-home:has(#mtPcShell) .mtpc-admin-grid .mtpc-go svg{stroke:#fff!important;color:#fff!important}
+
 }
 
 </style>
