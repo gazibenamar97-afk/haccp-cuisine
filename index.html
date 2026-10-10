@@ -1050,7 +1050,56 @@ function mtReceptionLanding(){
  app.innerHTML='<div class="mtp-module"><div class="mtp-module-hero"><button onclick="home()">'+mtSvg('back')+' Réception de marchandises</button></div><div class="mtp-module-body"><span class="mtp-module-icon">'+mtSvg('box')+'</span><h1>Réception<br>de marchandises</h1><p>Enregistrer et contrôler vos réceptions</p><button class="mtp-module-primary" onclick="reception()">'+mtSvg('plus')+' Nouvelle réception '+mtSvg('chevron')+'</button><button onclick="trace()">'+mtSvg('clock')+' Historique des réceptions '+mtSvg('chevron')+'</button><button onclick="stock()">'+mtSvg('box')+' Produits '+mtSvg('chevron')+'</button><button onclick="suppliers()">'+mtSvg('truck')+' Fournisseurs '+mtSvg('chevron')+'</button><button onclick="openDashboard()">'+mtSvg('chart')+' Rapports '+mtSvg('chevron')+'</button></div></div>';
 }
 /* Navigation PC dédiée : les modules remplacent l'accueil, sans affecter la navigation mobile. */
+
+/* Pont de données PC : maquette HTML/CSS d'origine, sans styles supplémentaires. */
+let mtMockFrame=null,mtMockView='accueil';
+function mtMockSnapshot(){
+ const stock=Array.isArray(S.stock)?S.stock:[],trace=Array.isArray(S.trace)?S.trace:[],temps=Array.isArray(S.temps)?S.temps:[];
+ const now=new Date();now.setHours(0,0,0,0);
+ const rec=stock.map((x,i)=>({index:i,date:x.date||x.createdAt||'',supplier:x.supplier||x.fournisseur||'',product:x.product||x.produit||'',category:x.category||x.categorie||'',quantity:[x.quantity||x.qty||'',x.unit||''].filter(Boolean).join(' '),temp:x.temp||x.temperature||'',status:x.ok===false||x.status==='Non conforme'?'Non conforme':'Conforme',photo:x.photo||x.photoUrl||x.image||''}));
+ const tra=trace.map((x,i)=>({index:i,date:x.date||x.createdAt||'',type:x.type||'',product:x.product||x.equipment||x.zone||'',operator:x.operator||x.operateur||'',detail:x.lot||x.note||x.value||'',status:x.ok===false||x.status==='Non conforme'?'Non conforme':'Conforme'}));
+ const nc=trace.filter(x=>x&&(x.ok===false||x.status==='Non conforme')).length;
+ const dlc=stock.filter(x=>{if(!x||!x.dlc)return false;let d=new Date(x.dlc);return Number.isFinite(+d)&&Math.ceil((d-now)/86400000)<=3}).length;
+ const categories={};stock.forEach(x=>{const k=x.category||x.categorie||'Autres';categories[k]=(categories[k]||0)+1});
+ const ncTrend=Array.from({length:9},(_,i)=>{const day=new Date();day.setDate(day.getDate()-(8-i));const date=day.toLocaleDateString('fr-FR');return trace.filter(x=>x&&(x.ok===false||x.status==='Non conforme')&&String(x.date||'').includes(date)).length});
+ return {mtMockData:true,site:(typeof currentUserProfile!=='undefined'&&(currentUserProfile?.siteName||currentUserProfile?.establishmentName))||SITE_ID,user:(typeof currentUserProfile!=='undefined'&&(currentUserProfile?.name||currentUserProfile?.username))||firebase.auth().currentUser?.email||'',rec,tra,recCount:stock.length,nc,dlc,tempNc:temps.filter(x=>x&&x.ok===false).length,categories:Object.entries(categories).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count),ncTrend,dashboardAllowed:typeof mtCanViewDirection==='function'&&mtCanViewDirection()&&sessionStorage.getItem('haccpDashboardUnlocked')==='1',view:mtMockView};
+}
+function mtMockSend(){if(mtMockFrame&&mtMockFrame.style.display!=='none'&&mtMockFrame.contentWindow){try{mtMockFrame.contentWindow.postMessage(mtMockSnapshot(),location.origin)}catch(e){console.warn('Maquette PC',e)}}}
+function mtMockHide(){if(mtMockFrame)mtMockFrame.style.display='none'}
+function mtMockShow(view='accueil'){
+ if(window.innerWidth<=850||!firebase.auth().currentUser)return false;
+ if(view==='dashboard'&&(!mtCanViewDirection()||sessionStorage.getItem('haccpDashboardUnlocked')!=='1')){mtMockHide();openDashboard();return true}
+ mtMockView=view;
+ if(!mtMockFrame){
+  mtMockFrame=document.createElement('iframe');mtMockFrame.id='mtLivePcMock';mtMockFrame.title='M&T HACCP — Espace PC';mtMockFrame.src='./mt-haccp-maquette2-live.html';
+  Object.assign(mtMockFrame.style,{position:'fixed',inset:'0',width:'100vw',height:'100vh',border:'0',zIndex:'900',background:'#f3f5f4'});
+  document.body.appendChild(mtMockFrame);
+ }
+ mtMockFrame.style.display='block';mtMockSend();return true;
+}
+window.addEventListener('message',function(event){
+ if(event.origin!==location.origin||!mtMockFrame||event.source!==mtMockFrame.contentWindow||!event.data||event.data.mtMock!==true)return;
+ const m=event.data;
+ if(m.action==='ready'){mtMockSend();return}
+ if(m.action==='logout'){mtMockHide();logoutAppUser();return}
+ if(m.action==='recDetail'){const x=S.stock?.[m.index];if(x){mtMockHide();if(typeof openTraceRecord==='function')openTraceRecord({type:'Réception',...x});else trace()}return}
+ if(m.action==='traDetail'){mtMockHide();if(typeof openTraceIndex==='function')openTraceIndex(m.index);return}
+ if(m.action==='navigate'){
+  const route=m.route;
+  if(route==='direction'){mtMockShow('dashboard');return}
+  if(route==='reception'){mtMockShow('reception');return}
+  if(route==='tracabilite'){mtMockShow('tracabilite');return}
+  mtMockHide();
+  if(route==='reception-form'){reception();return}
+  if(route==='stock')mtPcNavigate('stock');
+  else if(['temperatures','nettoyage','etiquetage','parametres','fournisseurs','supervision'].includes(route))mtPcNavigate(route);
+ }
+});
+setInterval(()=>{if(mtMockFrame&&mtMockFrame.style.display!=='none')mtMockSend()},3500);
+
 function mtPcNavigate(module){
+ if(window.innerWidth>850&&['reception','tracabilite','direction'].includes(module)){mtMockShow(module==='direction'?'dashboard':module);return}
+ mtMockHide();
  if(window.innerWidth<=850)return;
  const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,supervision:openEstablishmentSupervision};
  const fn=routes[module];if(typeof fn!=='function')return;
@@ -1116,6 +1165,7 @@ ${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;s
  const pcSiteEl=document.getElementById('mtPcSite');if(pcSiteEl)pcSiteEl.textContent=mtSite;
  const pcNc=document.getElementById('mtPcNcCount');if(pcNc)pcNc.textContent=(S.stock||[]).filter(x=>x&&(x.ok===false||x.conforme===false||x.status==='Non conforme')).length+(S.temps||[]).filter(x=>x&&x.ok===false).length;
  const pcDlc=document.getElementById('mtPcDlcCount');if(pcDlc){const now=new Date();now.setHours(0,0,0,0);pcDlc.textContent=(S.stock||[]).filter(x=>x&&x.dlc&&Math.ceil((new Date(x.dlc+'T00:00:00')-now)/86400000)<=3).length;}
+ setTimeout(()=>mtMockShow('accueil'),0);
  const drawerSite=document.getElementById('mtDrawerSite');if(drawerSite)drawerSite.textContent=mtSite;
  const dateEl=document.getElementById('mtHomeDate');if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short'}).format(new Date());
 }
