@@ -277,6 +277,33 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  body:has(#mtPcShell) .mtpc-admin-grid{grid-template-columns:1fr!important}
 }
 
+
+/* Accueil PC : contraste doux et relief des 8 tuiles — style uniquement */
+@media (min-width:851px){
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card,
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card{
+   border:1px solid #cfdcd4!important;
+   box-shadow:0 2px 8px rgba(13,74,54,.12)!important;
+   border-radius:14px!important;
+   overflow:hidden!important;
+   transition:box-shadow .15s,transform .15s!important;
+ }
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card:hover,
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card:hover{
+   box-shadow:0 6px 16px rgba(13,74,54,.2)!important;
+   transform:translateY(-2px)!important;
+ }
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer,
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer{
+   background:#eaf2ed!important;
+   color:#12372a!important;
+ }
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-tile-footer strong,
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer strong{
+   color:#12372a!important;
+ }
+}
+
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
