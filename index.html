@@ -2511,14 +2511,14 @@ function selectReceptionPhotoProduct(p,category){
 }
 function updateReceptionSide(){let cat=(document.getElementById('rc')||{}).value||'',p=(document.getElementById('rp')||{}).value||'',rule=receivingTempRule(cat,p),sel=document.getElementById('selectedProduct'),st=document.getElementById('sideTemp'),tr=document.getElementById('tempRecommendation'),adv=document.getElementById('sideAdvice');if(sel)sel.innerHTML=p?'<div class="selected-food">'+foodThumb(cat,p,58)+'<div><b>'+esc(p)+'</b><span>Catégorie : '+esc(cat)+'</span></div></div>':'<b>Aucun produit sélectionné</b><span>Choisissez une catégorie et un produit</span>';if(st)st.innerHTML='🌡️ Température recommandée<br><strong>'+(rule?esc(rule.label):'—')+'</strong>';if(tr)tr.innerHTML='🌡️ <span>Température recommandée</span><strong>'+(rule?esc(rule.label):'Choisissez un produit')+'</strong>';if(adv)adv.innerHTML=rule&&p?'<b>'+esc(p)+'</b> : contrôlez la température à la réception. Recommandation : <b>'+esc(rule.label)+'</b>. En cas de dépassement, une action corrective doit être enregistrée.':'Sélectionnez un produit pour afficher les recommandations de réception.'}
 function supplierPlateFields(prefix){
- return '<div id="'+prefix+'PlateStandard" style="display:flex;align-items:center;gap:6px;margin-top:5px"><input id="'+prefix+'PlateFirst" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" aria-label="Première partie de la plaque" style="min-width:0;width:34%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><strong style="padding:8px;background:#eaf2ed;border-radius:6px">TE</strong><input id="'+prefix+'PlateLast" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="4567" aria-label="Deuxième partie de la plaque" style="min-width:0;width:40%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"></div><input id="'+prefix+'PlateManual" type="text" placeholder="Saisir la plaque librement" aria-label="Plaque d’immatriculation manuelle" style="display:none;width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><button type="button" class="mini-add" style="margin-top:6px" onclick="supplierPlateToggle(\''+prefix+'\')"><span id="'+prefix+'PlateToggleLabel">Saisie manuelle</span></button>';
+ return '<div id="'+prefix+'PlateStandard" style="display:flex;align-items:center;gap:6px;margin-top:5px"><input id="'+prefix+'PlateFirst" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" aria-label="Première partie de la plaque" style="min-width:0;width:34%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><strong style="padding:8px;background:#eaf2ed;border-radius:6px">TU</strong><input id="'+prefix+'PlateLast" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="4567" aria-label="Deuxième partie de la plaque" style="min-width:0;width:40%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"></div><input id="'+prefix+'PlateManual" type="text" placeholder="Saisir la plaque librement" aria-label="Plaque d’immatriculation manuelle" style="display:none;width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><button type="button" class="mini-add" style="margin-top:6px" onclick="supplierPlateToggle(\''+prefix+'\')"><span id="'+prefix+'PlateToggleLabel">Saisie manuelle</span></button>';
 }
 function supplierPlateToggle(prefix){
  const standard=document.getElementById(prefix+'PlateStandard'),manual=document.getElementById(prefix+'PlateManual'),label=document.getElementById(prefix+'PlateToggleLabel');
  if(!standard||!manual)return;
  const manualMode=manual.style.display==='none';
  standard.style.display=manualMode?'none':'flex';manual.style.display=manualMode?'block':'none';
- if(label)label.textContent=manualMode?'Utiliser le format TE':'Saisie manuelle';
+ if(label)label.textContent=manualMode?'Utiliser le format TU':'Saisie manuelle';
  if(manualMode){manual.value='';manual.focus()}else{document.getElementById(prefix+'PlateFirst').value='';document.getElementById(prefix+'PlateLast').value='';document.getElementById(prefix+'PlateFirst').focus()}
 }
 function supplierPlateValue(prefix){
@@ -2526,7 +2526,7 @@ function supplierPlateValue(prefix){
  if(manual&&manual.style.display!=='none')return manual.value.trim();
  const first=(document.getElementById(prefix+'PlateFirst')||{}).value||'',last=(document.getElementById(prefix+'PlateLast')||{}).value||'';
  if(!first.trim()&&!last.trim())return '';
- return (first.trim()+' TE '+last.trim()).trim();
+ return (first.trim()+' TU '+last.trim()).trim();
 }
 function quickAddSupplier(){
  const existing=document.getElementById('supplierQuickModal');if(existing)existing.remove();
