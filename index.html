@@ -112,6 +112,24 @@ body:not(.on-login) #app th{background:#f1f4f2;color:#1d2b25;font-size:12px;text
 body:not(.on-login) #app td{padding:11px 14px;border-bottom:1px solid #e3e8e5;font-size:13px}
 }
 
+
+/* PC — modules agrandis pour écran large, sans changement de données */
+@media(min-width:851px){
+body:has(#mtPcShell):not(.on-login) main{max-width:none!important;width:calc(100% - 250px)!important;padding-left:16px!important;padding-right:16px!important}
+body.on-home .home-shell{width:100%!important;max-width:none!important;margin:0!important}
+body.on-home .home-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:22px!important}
+body.on-home .home-card{height:235px!important;min-height:235px!important;padding:165px 18px 16px!important;border-radius:15px!important;background-size:100% 158px!important}
+body.on-home .home-card b{font-size:18px!important;font-weight:700!important;line-height:1.25!important}
+body:has(#mtPcShell) .mt-pc-nav button{font-size:16px!important;padding:13px 14px!important}
+body:has(#mtPcShell) .mt-pc-topbar strong{font-size:19px!important}
+body.on-home .mtpc-alerts,body.on-home .mt-pc-alerts{gap:16px!important}
+body.on-home .mtpc-alerts *,body.on-home .mt-pc-alerts *{font-size:15px}
+}
+@media(min-width:1550px){
+body.on-home .home-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+body.on-home .home-card{height:255px!important;min-height:255px!important;padding-top:185px!important;background-size:100% 178px!important}
+}
+
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
