@@ -68,9 +68,9 @@ body:has(#mtPcShell) .mt-mobile-top,body:has(#mtPcShell) .mt-site-pill,body:has(
  body:has(#mtPcShell) .mtpc-alerts button+button{background:#fff8eb;border-color:#f0d4a4;color:#bf7800}
  body:has(#mtPcShell) .mtpc-alerts button>span{font-size:26px}body:has(#mtPcShell) .mtpc-alerts button div{flex:1}body:has(#mtPcShell) .mtpc-alerts b,body:has(#mtPcShell) .mtpc-alerts small{display:block}body:has(#mtPcShell) .mtpc-alerts small{font-size:11px;margin-top:5px}
  body:has(#mtPcShell) .mtpc-alerts button>strong{font-size:29px}
- body:has(#mtPcShell) .mtpc-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
- body:has(#mtPcShell) .mtpc-photo-card{display:flex;flex-direction:column;position:relative;text-align:left;border:1px solid #e2e9e5;background:#fff;border-radius:13px;overflow:hidden;min-width:0;min-height:172px;height:auto;padding:0 0 12px;box-shadow:0 2px 8px #082f2214;color:#152921;cursor:pointer;appearance:none}
- body:has(#mtPcShell) .mtpc-photo-card .mtp-photo{display:block;width:100%;height:108px;min-height:108px;flex:none;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#d1e4d9}
+ body:has(#mtPcShell) .mtpc-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+ body:has(#mtPcShell) .mtpc-photo-card{display:flex;flex-direction:column;position:relative;text-align:left;border:1px solid #e2e9e5;background:#fff;border-radius:13px;overflow:hidden;min-width:0;min-height:184px;height:auto;padding:0;box-shadow:0 2px 8px #082f2214;color:#152921;cursor:pointer;appearance:none}
+ body:has(#mtPcShell) .mtpc-photo-card .mtp-photo{display:block;width:100%;height:120px;min-height:120px;position:relative;flex:none;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#d1e4d9}
  body:has(#mtPcShell) .mtpc-photo-card .mtp-photo-reception{background-image:url("https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80")}
  body:has(#mtPcShell) .mtpc-photo-card .mtp-photo-trace{background-image:url("https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=500&q=80")}
  body:has(#mtPcShell) .mtpc-photo-card .mtp-photo-temperature{background-image:url("https://www.thermoworks.com/cdn/shop/files/TGrip-t-grip-heavy-duty-waterproof-thermometer-g01.jpg?v=1762382777&width=1200")}
@@ -81,8 +81,10 @@ body:has(#mtPcShell) .mt-mobile-top,body:has(#mtPcShell) .mt-site-pill,body:has(
  body:has(#mtPcShell) .mtpc-photo-card .mtp-photo-supervision{background-image:url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80")}
  body:has(#mtPcShell) .mtpc-photo-card .mtp-photo-stock{background-image:url("https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600&q=85");background-color:#d1e4d9}
 
- body:has(#mtPcShell) .mtpc-photo-card strong{display:block;padding:12px 35px 0 12px;font-size:13px;min-height:36px}
- body:has(#mtPcShell) .mtpc-go{position:absolute;right:10px;bottom:12px;border-radius:50%;background:#006d51;color:white;width:23px;height:23px;display:grid;place-items:center;font-size:21px}
+ body:has(#mtPcShell) .mtpc-tile-icon{position:absolute;left:10px;bottom:-16px;width:38px;height:38px;border-radius:9px;border:2px solid white;color:white;display:grid;place-items:center;font-size:23px;box-shadow:0 2px 5px #0002}
+ body:has(#mtPcShell) .mtpc-tile-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:22px 12px 14px;min-height:65px;width:100%}
+ body:has(#mtPcShell) .mtpc-photo-card strong{display:block;padding:0;font-size:13px;line-height:1.25;min-height:0}
+ body:has(#mtPcShell) .mtpc-go{position:static;flex:none;border-radius:50%;background:#0f5a3f;color:white;width:26px;height:26px;display:grid;place-items:center;font-size:21px}
  body:has(#mtPcShell) .mtpc-photo-card:hover{box-shadow:0 7px 20px #082f2230;transform:translateY(-1px)}
 }
 @media(min-width:851px) and (max-width:1100px){body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -1083,14 +1085,15 @@ function home(){
   <div class="mtpc-hero"><div><h1>M&amp;T HACCP</h1><p>Hygiène • Sécurité • Qualité</p></div></div>
   <div class="mtpc-alerts"><button onclick="mtPcNavigate('direction')"><span>❗</span><div><b>Non-conformités</b><small>Consulter les alertes</small></div><strong id="mtPcNcCount">—</strong></button><button onclick="mtPcNavigate('stock')"><span>◷</span><div><b>Alertes DLC</b><small>Produits à contrôler</small></div><strong id="mtPcDlcCount">—</strong></button></div>
   <div class="mtpc-photo-grid">
-<button class="mtpc-photo-card" onclick="mtPcNavigate('reception')"><span class="mtp-photo mtp-photo-reception"></span><strong>Réception de marchandises</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('tracabilite')"><span class="mtp-photo mtp-photo-trace"></span><strong>Traçabilité</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('temperatures')"><span class="mtp-photo mtp-photo-temperature"></span><strong>Température</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('nettoyage')"><span class="mtp-photo mtp-photo-clean"></span><strong>Nettoyage</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('etiquetage')"><span class="mtp-photo mtp-photo-etiquetage"></span><strong>Étiquetage HACCP</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"></span><strong>Tableau de bord Direction</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"></span><strong>Paramètres</strong><span class="mtpc-go">›</span></button>
-<button class="mtpc-photo-card" onclick="mtPcNavigate('stock')"><span class="mtp-photo mtp-photo-stock"></span><strong>Stock et DLC</strong><span class="mtpc-go">›</span></button>${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"></span><strong>Supervision des établissements</strong><span class="mtpc-go">›</span></button>':''}
+<button class="mtpc-photo-card" onclick="mtPcNavigate('reception')"><span class="mtp-photo mtp-photo-reception"><span class="mtpc-tile-icon" style="background:#0f6b45">▣</span></span><span class="mtpc-tile-footer"><strong>Réception de marchandises</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('tracabilite')"><span class="mtp-photo mtp-photo-trace"><span class="mtpc-tile-icon" style="background:#e5383b">⌕</span></span><span class="mtpc-tile-footer"><strong>Traçabilité</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('temperatures')"><span class="mtp-photo mtp-photo-temperature"><span class="mtpc-tile-icon" style="background:#2f7de1">♧</span></span><span class="mtpc-tile-footer"><strong>Température</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('nettoyage')"><span class="mtp-photo mtp-photo-clean"><span class="mtpc-tile-icon" style="background:#f5a000">✧</span></span><span class="mtpc-tile-footer"><strong>Nettoyage</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('etiquetage')"><span class="mtp-photo mtp-photo-etiquetage"><span class="mtpc-tile-icon" style="background:#7a4fd1">◇</span></span><span class="mtpc-tile-footer"><strong>Étiquetage HACCP</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"><span class="mtpc-tile-icon" style="background:#0f8a8a">▥</span></span><span class="mtpc-tile-footer"><strong>Tableau de bord Direction</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"><span class="mtpc-tile-icon" style="background:#2a6fb0">⚙</span></span><span class="mtpc-tile-footer"><strong>Paramètres</strong><span class="mtpc-go">›</span></span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('stock')"><span class="mtp-photo mtp-photo-stock"><span class="mtpc-tile-icon" style="background:#c9732a">⬡</span></span><span class="mtpc-tile-footer"><strong>Stock et DLC</strong><span class="mtpc-go">›</span></span></button>
+${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"><span class="mtpc-tile-icon" style="background:#0f6b45">▤</span></span><span class="mtpc-tile-footer"><strong>Supervision des établissements</strong><span class="mtpc-go">›</span></span></button>':''}
   </div>
   <div class="mt-home-drawer" id="mtHomeDrawer" hidden>
     <button class="mt-drawer-backdrop" onclick="mtHomeMenu(false)" aria-label="Fermer le menu"></button>
