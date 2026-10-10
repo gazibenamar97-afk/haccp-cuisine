@@ -589,6 +589,23 @@ input:focus,select:focus,textarea:focus{border-color:#11966d;box-shadow:0 0 0 3p
 .photo-product span:last-child{font-size:11px;line-height:1.15;text-align:center}
 @media(max-width:700px){.photo-product-grid{grid-template-columns:repeat(3,1fr);max-height:360px}.photo-product{padding:6px}.photo-catalogue{margin-top:10px}}
 
+/* Mobile : grille produits de Réception uniquement, mêmes photos et icônes que sur PC. */
+@media (max-width:850px){
+ .rec-page #photoCatalogue{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+ .rec-page #photoCatalogue .photo-product-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+ .rec-page #photoCatalogue .photo-product{width:100%!important;height:110px!important;min-height:110px!important;max-height:110px!important;box-sizing:border-box!important;padding:7px 5px!important;gap:6px!important}
+ .rec-page #photoCatalogue .photo-product .food-thumb{height:60px!important;min-height:60px!important;max-height:60px!important;flex:0 0 60px!important}
+ .rec-page #photoCatalogue .photo-product .food-thumb img{object-fit:cover!important;object-position:center center!important}
+ .rec-page #photoCatalogue .photo-product>span:last-child{font-size:12px!important;line-height:15px!important;text-align:center!important;-webkit-line-clamp:2!important;max-height:30px!important}
+ .rec-page #tempRecommendation strong,.rec-page #sideTemp strong{font-size:18px!important;font-weight:700!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:break-word!important}
+ .rec-page .rec-layout{grid-template-columns:minmax(0,1fr)!important}
+ .rec-page .rec-main{min-width:0!important;width:100%!important}
+ .rec-page .rec-main>.rec-section:first-child .row{grid-template-columns:minmax(0,1fr)!important}
+ .rec-page .rec-main>.rec-section:first-child .row>div{min-width:0!important;width:100%!important}
+}
+@media (max-width:359px){
+ .rec-page #photoCatalogue .photo-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
 /* Réception : grille catalogue photo, présentation uniquement. */
 .rec-page #photoCatalogue .photo-product-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;width:100%;box-sizing:border-box}
 .rec-page #photoCatalogue .photo-product{height:110px!important;min-height:110px!important;max-height:110px!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;margin:0!important;padding:7px 5px!important;overflow:hidden!important}
