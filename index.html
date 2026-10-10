@@ -3512,4 +3512,124 @@ startApplication();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(reg=>reg.update()).catch(e=>console.warn('PWA service worker',e))})}
 </script>
 
+
+<style id="mt-modules-final-style">
+@media(min-width:851px){
+body:has(#mtPcShell):not(.on-home) #app{padding-top:12px!important}
+body:has(#mtPcShell):not(.on-home) .mt-module-topbar{height:64px;display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #e3e8e5;border-radius:12px;padding:0 18px;margin:0 0 22px;box-shadow:0 2px 8px #0d4a3610}
+body:has(#mtPcShell):not(.on-home) .mt-module-topbar strong{color:#0f5a3f;font-size:16px}
+body:has(#mtPcShell):not(.on-home) .mt-module-right{display:flex;align-items:center;gap:22px}
+body:has(#mtPcShell):not(.on-home) .mt-module-site{display:flex;align-items:center;gap:7px;color:#0f5a3f;font-weight:600}
+body:has(#mtPcShell):not(.on-home) .mt-module-topbar svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body:has(#mtPcShell):not(.on-home) .mt-module-profile{position:relative}
+body:has(#mtPcShell):not(.on-home) .mt-module-profile summary{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;color:#0f5a3f;list-style:none}
+body:has(#mtPcShell):not(.on-home) .mt-module-profile button{position:absolute;right:0;top:32px;z-index:50;border:1px solid #e3e8e5;background:white;border-radius:8px;padding:10px 15px;cursor:pointer;white-space:nowrap}
+body:has(#mtPcShell):not(.on-home) .mt-pc-nav button.mt-module-active{background:#2a8a55!important;color:#fff!important}
+body:has(#mtPcShell):not(.on-home) #app .mt-module-heading{display:flex!important;align-items:center;gap:12px;font:700 24px "Segoe UI",Inter,Arial,sans-serif!important;color:#0f2d22!important}
+body:has(#mtPcShell):not(.on-home) #app .mt-module-heading::before{display:none!important}
+body:has(#mtPcShell):not(.on-home) .mt-module-heading-icon{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border-radius:11px;background:#0f5a3f;color:white}
+body:has(#mtPcShell):not(.on-home) .mt-module-heading-icon svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body:has(#mtPcShell):not(.on-home) #app .mt-data-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:auto}
+body:has(#mtPcShell):not(.on-home) #app .mt-data-table th{text-align:left;background:#f1f4f2;color:#0f5a3f;font-weight:700;padding:13px;border-bottom:1px solid #d8e3dc}
+body:has(#mtPcShell):not(.on-home) #app .mt-data-table td{padding:11px 13px;border-bottom:1px solid #e3e8e5;vertical-align:middle}
+body:has(#mtPcShell):not(.on-home) #app .mt-data-table td .record{padding:0!important;border:0!important;background:transparent!important}
+body:has(#mtPcShell):not(.on-home) #app .mt-status-pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#dcefe2;color:#17603b;font-size:12px;font-weight:700}
+body:has(#mtPcShell):not(.on-home) #app .mt-status-pill.bad{background:#fdecee;color:#a21c2b}
+body:has(#mtPcShell):not(.on-home) #app .mt-data-table .btn{font-size:13px!important;padding:8px!important;min-width:0!important}
+body:has(#mtPcShell):not(.on-home) #app .mt-dashboard-detail{font-size:14px!important}
+body:has(#mtPcShell):not(.on-home) #app [style*="background:#fdecee"]{border-color:#e5383b!important}
+}
+</style>
+<script>
+/* Présentation uniquement : les actions et les données existantes restent inchangées. */
+(function(){
+const paths={
+reception:'<path d="M12 2 21 7v10l-9 5-9-5V7Z M3 7l9 5 9-5 M12 12v10"/>',
+fournisseurs:'<path d="M3 7h11v10H3z M14 10h4l3 4v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
+etiquetage:'<path d="M3 3h9l9 9-9 9-9-9Z"/><circle cx="8" cy="8" r="1"/>',
+stock:'<path d="m12 2 9 5-9 5-9-5 9-5Z M3 12l9 5 9-5 M3 17l9 5 9-5"/>',
+temperatures:'<path d="M14 14V5a3 3 0 0 0-6 0v9a5 5 0 1 0 6 0Z M11 9v9"/>',
+nettoyage:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
+tracabilite:'<circle cx="10" cy="10" r="7"/><path d="m16 16 5 5"/>',
+direction:'<path d="M3 3v18h18 M8 17v-5 M13 17V8 M18 17V5"/>',
+parametres:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M19 5l-2 2 M7 17l-2 2"/>',
+building:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-5h6v5 M8 7h2 M14 7h2 M8 11h2 M14 11h2"/>',
+user:'<circle cx="12" cy="7" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>',
+camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/>',
+gallery:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',
+lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
+};
+function svg(key){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[key]||paths.reception)+'</svg>'}
+const titles={reception:'Réception des marchandises',fournisseurs:'Fournisseurs',etiquetage:'Étiquetage HACCP',stock:'Stock et DLC',temperatures:'Contrôle des températures',nettoyage:'Nettoyage',tracabilite:'Traçabilité',direction:'Tableau de bord Direction',parametres:'Paramètres'};
+function moduleKey(){
+const view=typeof CURRENT_VIEW==='string'?CURRENT_VIEW:'';
+const map={reception:'reception',stock:'stock',temperatures:'temperatures',labeling:'etiquetage',trace:'tracabilite',dashboard:'direction',settings:'parametres'};
+if(map[view])return map[view];
+const t=(document.querySelector('#app>h1,#app>section h1')||{}).textContent||'';
+return Object.keys(titles).find(k=>t.includes(titles[k]))||(/Fournisseur/i.test(t)?'fournisseurs':/Nettoyage/i.test(t)?'nettoyage':null);
+}
+function decorate(){
+const app=document.getElementById('app'),shell=document.getElementById('mtPcShell');
+if(!app||!shell||document.body.classList.contains('on-home')||innerWidth<=850)return;
+const key=moduleKey();if(!key)return;
+const nav=shell.querySelector('.mt-pc-nav');
+if(nav)nav.querySelectorAll('button').forEach(b=>{
+ const on=(b.getAttribute('onclick')||'').includes("'"+key+"'");
+ b.classList.toggle('mt-module-active',on);
+ b.style.background=on?'#2a8a55':'transparent';
+ b.style.color=on?'#fff':'#edf8f2';
+});
+if(!app.querySelector('.mt-module-topbar')){
+ const bar=document.createElement('div');bar.className='mt-module-topbar';
+ const site=typeof siteDisplayName!=='undefined'&&siteDisplayName?siteDisplayName:(typeof SITE_ID!=='undefined'?SITE_ID:'Établissement');
+ bar.innerHTML='<strong>M&T HACCP · Espace de travail</strong><div class="mt-module-right"><span class="mt-module-site">'+svg('building')+'<span></span></span><details class="mt-module-profile"><summary>'+svg('user')+' Mon profil</summary><button type="button" onclick="logoutAppUser()">Déconnexion</button></details></div>';
+ bar.querySelector('.mt-module-site span').textContent=site;
+ app.prepend(bar);
+}
+const h=app.querySelector('.rec-head h1, :scope > h1, :scope > section h1');
+if(h&&!h.classList.contains('mt-module-heading')){
+ h.classList.add('mt-module-heading');
+ const icon=document.createElement('span');icon.className='mt-module-heading-icon';icon.innerHTML=svg(key);h.prepend(icon);
+ const textNodes=Array.from(h.childNodes).filter(n=>n.nodeType===3);
+ textNodes.forEach(n=>{n.textContent=n.textContent.replace(/^[\\s\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}]+/gu,'')});
+}
+if(key==='reception'){
+ app.querySelectorAll('.photo-actions button').forEach((b,i)=>{
+  if(b.dataset.mtSvg)return;b.dataset.mtSvg='1';
+  const text=Array.from(b.childNodes).filter(n=>n.nodeType===3);
+  text.forEach(n=>n.textContent=n.textContent.replace(/[📷🖼️]/gu,'').trim());
+  const icon=document.createElement('span');icon.className='mt-action-svg';icon.innerHTML=svg(i?'gallery':'camera');b.prepend(icon);
+ });
+}
+if(key==='stock'||key==='tracabilite'){
+ const panel=Array.from(app.querySelectorAll('.panel')).find(p=>p.querySelector('.record'));
+ if(panel&&!panel.querySelector('.mt-data-table')){
+  const records=Array.from(panel.children).filter(e=>e.classList.contains('record'));
+  if(records.length){
+   const table=document.createElement('table');table.className='mt-data-table';
+   const labels=key==='stock'?['Produit et informations','Statut','Action']:['Activité et détails','Statut','Action'];
+   table.innerHTML='<thead><tr>'+labels.map(l=>'<th>'+l+'</th>').join('')+'</tr></thead><tbody></tbody>';
+   const tbody=table.querySelector('tbody');
+   records.forEach(record=>{
+    const tr=document.createElement('tr'),td=document.createElement('td'),status=document.createElement('td'),action=document.createElement('td');
+    const btn=record.querySelector('button');if(btn){action.append(btn);btn.title=btn.textContent.trim();}
+    const text=record.textContent;
+    const bad=/Non conforme|non-conforme/i.test(text);
+    status.innerHTML='<span class="mt-status-pill'+(bad?' bad':'')+'">'+(bad?'Non conforme':'Conforme')+'</span>';
+    td.append(record);tr.append(td,status,action);tbody.append(tr);
+   });
+   panel.append(table);
+  }
+ }
+}
+if(key==='direction'){
+ app.querySelectorAll('a,button,span').forEach(el=>{if(el.textContent.trim()==='Voir le détail →')el.classList.add('mt-dashboard-detail')});
+}
+}
+const obs=new MutationObserver(()=>{if(!document.body.classList.contains('on-home'))decorate()});
+const app=document.getElementById('app');if(app)obs.observe(app,{childList:true,subtree:false});
+document.addEventListener('click',e=>{if(e.target.closest('.mt-pc-nav'))requestAnimationFrame(decorate)});
+setTimeout(decorate,0);
+})();
+</script>
 </body></html>
