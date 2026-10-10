@@ -1497,12 +1497,7 @@ function mtOpenModule(action){
  }
 }
 
-function mtReceptionLanding(){
- CURRENT_VIEW='reception-landing';
- document.body.classList.remove('on-home','mt-premium-active');
- const nav=document.querySelector('nav');if(nav)nav.style.display='none';
- app.innerHTML='<div class="mtp-module"><div class="mtp-module-hero"><button onclick="home()">'+mtSvg('back')+' Réception de marchandises</button></div><div class="mtp-module-body"><span class="mtp-module-icon">'+mtSvg('box')+'</span><h1>Réception<br>de marchandises</h1><p>Enregistrer et contrôler vos réceptions</p><button class="mtp-module-primary" onclick="reception()">'+mtSvg('plus')+' Nouvelle réception '+mtSvg('chevron')+'</button><button onclick="trace()">'+mtSvg('clock')+' Historique des réceptions '+mtSvg('chevron')+'</button><button onclick="stock()">'+mtSvg('box')+' Produits '+mtSvg('chevron')+'</button><button onclick="suppliers()">'+mtSvg('truck')+' Fournisseurs '+mtSvg('chevron')+'</button><button onclick="openDashboard()">'+mtSvg('chart')+' Rapports '+mtSvg('chevron')+'</button></div></div>';
-}
+
 /* Navigation PC dédiée : les modules remplacent l'accueil, sans affecter la navigation mobile. */
 
 function mtPcNavigate(module){
