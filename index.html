@@ -2392,11 +2392,15 @@ function renderPhotoCatalogue(){
  if(!box)return;
  if(selected){box.innerHTML='';return}
  if(!cat||!CAT[cat]){box.innerHTML='';return}
- let products=[];Object.values(CAT[cat]).forEach(g=>g.forEach(x=>products.push(x[0])));
- box.innerHTML='<div class="photo-cat-head"><b>'+esc(cat)+'</b></div><div class="photo-product-grid">'+products.map(p=>'<button type="button" class="photo-product" data-reception-product="'+encodeURIComponent(p)+'" onclick="selectReceptionPhotoProduct(decodeURIComponent(this.getAttribute(\'data-reception-product\')))">'+foodThumb(cat,p,64)+'<span>'+esc(p)+'</span></button>').join('')+'</div>';
+ let all=receptionSearchItems(),categories=Object.keys(CAT);
+ let invalid=(S.customProducts||[]).filter(x=>x.active!==false&&(!x.category||!categories.includes(x.category)));
+ let products=all.filter(x=>x.category===cat);
+ let original=products.filter(x=>!x.custom),created=products.filter(x=>x.custom);
+ products=original.concat(created);
+ box.innerHTML='<div class="photo-cat-head"><b>'+esc(cat)+'</b></div>'+(invalid.length?'<div class="note" role="alert" style="color:#b42318;margin:8px 0">Produit(s) créé(s) sans catégorie valide : '+invalid.map(x=>esc(x.name||'Sans nom')+' ('+esc(x.category||'aucune catégorie')+')').join(', ')+'</div>':'')+'<div class="photo-product-grid">'+products.map(x=>'<button type="button" class="photo-product" data-reception-product="'+encodeURIComponent(x.name)+'" data-reception-category="'+encodeURIComponent(x.category)+'" onclick="selectReceptionPhotoProduct(decodeURIComponent(this.getAttribute(\'data-reception-product\')),decodeURIComponent(this.getAttribute(\'data-reception-category\')))">'+(foodThumb(x.category,x.name,64)||'<span class="food-thumb" style="width:100%;height:60px;display:grid;place-items:center">📦</span>')+'<span>'+esc(x.name)+'</span></button>').join('')+'</div>';
 }
-function selectReceptionPhotoProduct(p){
- let item=receptionSearchItems().find(function(x){return x.name===p});
+function selectReceptionPhotoProduct(p,category){
+ let item=receptionSearchItems().find(function(x){return x.name===p&&(!category||x.category===category)});
  if(!item)return;
  let catEl=document.getElementById('rc'),hidden=document.getElementById('rp'),input=document.getElementById('rpSearch'),box=document.getElementById('rpList');
  if(catEl&&catEl.value!==item.category)catEl.value=item.category;
