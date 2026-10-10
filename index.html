@@ -236,36 +236,40 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
 /* Accueil PC : 6 modules de travail + 2 cartes horizontales de gestion */
 @media (min-width:851px){
  body:has(#mtPcShell) .mtpc-work-grid{
-   display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:18px!important;
+   display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:16px!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid{
    display:grid!important;grid-template-columns:repeat(2,1fr)!important;
-   gap:18px!important;margin-top:18px!important;
+   gap:16px!important;margin-top:16px!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card{
    display:flex!important;flex-direction:row!important;align-items:stretch!important;
-   height:120px!important;min-height:120px!important;
+   height:100px!important;min-height:100px!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card .mtp-photo{
-   flex:0 0 40%!important;width:40%!important;height:120px!important;
-   min-height:120px!important;background-size:cover!important;background-position:center!important;
+   flex:0 0 40%!important;width:40%!important;height:100px!important;
+   min-height:100px!important;background-size:cover!important;background-position:center!important;
    object-fit:cover!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer{
    flex:1!important;min-width:0!important;display:flex!important;
-   align-items:center!important;gap:10px!important;padding:16px!important;
+   align-items:center!important;gap:14px!important;padding:0 18px!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer strong{
    font:600 18px "Segoe UI",Inter,Arial,sans-serif!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-icon{
-   top:50%!important;left:auto!important;right:-19px!important;
-   transform:translateY(-50%)!important;margin:0!important;
+   position:static!important;top:auto!important;left:auto!important;right:auto!important;
+   transform:none!important;margin:0!important;order:0!important;
  }
- body:has(#mtPcShell) .mtpc-admin-grid .mtpc-go{margin-left:auto!important}
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-go{margin-left:auto!important;order:2!important}
+ body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer strong{order:1!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card .mtp-photo{height:100px!important;min-height:100px!important;object-fit:cover!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card{min-height:0!important}
+ body:has(#mtPcShell) .home-shell{padding-bottom:16px!important}
  body:has(#mtPcShell) .mtpc-supervision-grid{
    display:grid!important;grid-template-columns:repeat(3,1fr)!important;
-   gap:18px!important;margin-top:18px!important;
+   gap:16px!important;margin-top:16px!important;
  }
 }
 @media (min-width:851px) and (max-width:1099px){
