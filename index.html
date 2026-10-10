@@ -434,6 +434,78 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  body:has(.rec-page):has(#mtPcShell) .rec-side{min-width:0!important}
 }
 
+
+/* Harmonisation des modules PC : CSS seulement ; accueil explicitement exclu. */
+@media(min-width:851px){
+ body:has(#mtPcShell):not(.on-home):not(.on-login){font-family:"Segoe UI",Inter,Arial,sans-serif!important;overflow-x:hidden!important}
+ body:has(#mtPcShell):not(.on-home):not(.on-login)>main{
+   margin-left:250px!important;width:calc(100% - 250px)!important;
+   max-width:none!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app{
+   width:100%!important;max-width:none!important;min-width:0!important;
+   margin:0!important;padding:24px 28px!important;box-sizing:border-box!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app>section,
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app>.rec-page{
+   max-width:none!important;width:100%!important;margin-left:0!important;margin-right:0!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .cards{
+   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+   gap:18px!important;max-width:100%!important;min-width:0!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .cards>*{min-width:0!important}
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .metric,
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .panel,
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .rec-section{
+   background-color:#fff;border:1px solid #e3e8e5;border-radius:14px;
+   box-shadow:0 2px 8px rgba(13,74,54,.08);box-sizing:border-box;min-width:0;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app label{
+   font-family:inherit!important;font-size:13px!important;font-weight:600!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]),
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app select,
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app textarea{
+   min-height:44px;box-sizing:border-box;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .btn.primary,
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app button.primary{
+   background:#0f5a3f!important;border-color:#0f5a3f!important;color:#fff!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app>h1{
+   font-family:inherit!important;font-size:24px!important;font-weight:700!important;
+   color:#0f2d22!important;display:flex;align-items:center;gap:12px;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app>h1::before{
+   content:"";width:46px;height:46px;flex:none;border-radius:11px;
+   background:#0f5a3f;box-shadow:inset 0 0 0 12px #0f5a3f;
+ }
+ body:has(#mtPcShell):not(.on-home):not(.on-login) .mt-pc-nav button:first-child{
+   background:transparent!important;color:#edf8f2!important;
+ }
+ /* Le menu Réception conserve sa règle de sélection propre. */
+ body:has(#mtPcShell):not(.on-home):has(#app .rec-page) .mt-pc-nav button:nth-child(2){
+   background:#2a8a55!important;color:#fff!important;
+ }
+ body:has(#mtPcShell):not(.on-home):not(:has(#app .rec-page)) .mt-pc-nav button:nth-child(2){
+   background:transparent!important;color:#edf8f2!important;
+ }
+ body:has(#mtPcShell):not(.on-home) #app .record{
+   border-bottom:1px solid #e3e8e5!important;padding:13px 12px!important;
+ }
+ body:has(#mtPcShell):not(.on-home) #app .record:nth-child(even){background:#f8faf9}
+ body:has(#mtPcShell):not(.on-home) #app .record:first-child{border-top:1px solid #e3e8e5}
+ body:has(#mtPcShell):not(.on-home) #app .record .note{font-size:13px}
+}
+@media(min-width:851px) and (max-width:1099px){
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body:has(#mtPcShell):not(.on-home):has(#app .rec-page) .rec-layout{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(min-width:851px) and (max-width:920px){
+ body:has(#mtPcShell):not(.on-home):not(.on-login) #app .cards{grid-template-columns:minmax(0,1fr)!important}
+}
+
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
