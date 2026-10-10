@@ -1386,7 +1386,7 @@ function mtMobileNavClose(){
 function mtMobileNavGo(action){
  mtMobileNavClose();
  if(action==='home')home();
- else if(action==='reception')mtReceptionLanding();
+ else if(action==='reception')reception();
  else if(action==='trace')mtOpenModule('trace');
  else if(action==='temperature')temperatures();
  else if(action==='cleaning')cleaning();
@@ -1477,7 +1477,7 @@ function mtPremiumHome(){
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[['stock','Stock et DLC','box',"mtOpenModule('stock')",'#9c6846']])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','mtReceptionLanding()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Température','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Étiquetage HACCP','tag','dlcCats()'],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[['Stock et DLC','box',"mtOpenModule('stock')"]])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Température','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Étiquetage HACCP','tag','dlcCats()'],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[['Stock et DLC','box',"mtOpenModule('stock')"]])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Notifications">'+mtSvg('bell')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
