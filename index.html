@@ -100,7 +100,7 @@ body:has(#mtPcShell) .mt-pc-nav button{border-radius:9px!important;padding:11px 
 body:has(#mtPcShell) .mt-pc-nav button:hover,body:has(#mtPcShell) .mt-pc-nav button:first-child{background:#2a8a55!important;color:#fff!important}
 body:has(#mtPcShell):not(.on-login) main{margin-left:250px!important}
 body:has(#mtPcShell) .mt-pc-topbar{background:#fff!important;border-bottom:1px solid #e3e8e5!important;height:60px!important}
-body:has(#mtPcShell) .mt-home-hero,body:has(#mtPcShell) .mt-home-alerts{display:block!important}
+body:has(#mtPcShell) .mt-home-hero{display:none!important}\nbody:has(#mtPcShell) .mtpc-hero{margin-top:0!important}\nbody:has(#mtPcShell) .mtpc-alerts{margin-top:12px!important}\nbody:has(#mtPcShell) .home-shell{max-width:100%!important;width:100%!important}\nbody:has(#mtPcShell) #app{min-width:0!important}
 body.on-home .home-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important}
 body.on-home .home-card{height:182px!important;min-height:182px!important;border-radius:14px!important;padding:125px 12px 12px!important;box-shadow:0 1px 4px #00000019!important;background-color:#fff!important;background-size:100% 120px!important;background-position:center top!important;background-repeat:no-repeat!important;overflow:hidden!important}
 body.on-home .home-card:after{display:none!important}
@@ -1103,7 +1103,6 @@ function home(){
   <div class="mt-site-pill"><span>▣</span><div><b id="mtHomeSite"></b><small>Établissement</small></div></div>
   <div class="mt-home-hero" role="img" aria-label="Restaurant en bord de mer"></div>
   <div class="mt-home-welcome"><div><b>Bienvenue sur M&amp;T HACCP 👋</b><small>Vos contrôles HACCP du jour</small></div><time id="mtHomeDate"></time></div>
-  <div class="mt-home-alerts"><button type="button" onclick="mtPcNavigate('direction')"><span>⚠</span><b>Non-conformités</b><small>Consulter les alertes</small><i>›</i></button><button type="button" onclick="mtPcNavigate('stock')"><span>◷</span><b>Alertes DLC</b><small>Consulter les produits</small><i>›</i></button></div>
   <div class="home-brand">M&T <span>HACCP</span></div>
   <div class="home-kicker">Sécurité alimentaire, simplement</div>
   <div class="home-head"><h1>Vos modules</h1><p>Sélectionnez une activité</p></div>
