@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M&amp;T HACCP</title>
+<style>
+:root{--side:#0d4a36;--side2:#0a3a2a;--act:#2a8a55;--pri:#0f5a3f;--bg:#f3f5f4;--txt:#1d2b25;--mut:#6b7872;--bd:#e3e8e5;--red:#e5383b;--org:#f5a000;--blu:#2f7de1;--ok:#1a8a4f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Segoe UI,Inter,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{display:flex;min-height:100vh}
+/* sidebar */
+.side{width:250px;background:var(--side);color:#fff;display:flex;flex-direction:column;padding:14px 12px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;padding:6px 8px 18px}
+.logo b{width:36px;height:36px;border-radius:9px;background:#fff;color:var(--side);display:grid;place-items:center;font-size:12px}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:9px;color:#e6f1ec;cursor:pointer;margin-bottom:4px;font-size:14.5px}
+.nav a:hover{background:rgba(255,255,255,.08)}
+.nav a.on{background:var(--act);color:#fff}
+.out{margin-top:auto;border:1px solid rgba(255,255,255,.5);border-radius:9px;padding:11px 14px;display:flex;gap:10px;align-items:center;cursor:pointer}
+/* main */
+.main{flex:1;min-width:0}
+.top{display:flex;justify-content:flex-end;gap:34px;align-items:center;padding:12px 28px;background:#fff;border-bottom:1px solid var(--bd);font-weight:600;font-size:13px}
+.top span{display:flex;align-items:center;gap:8px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--side);color:#fff;display:grid;place-items:center}
+.scr{display:none}.scr.on{display:block}
+.pad{padding:22px 28px}
+/* accueil */
+.ph{background-size:cover;background-position:center;background-color:#4a6b4f}
+.hero{height:170px;position:relative;background-image:url(img/hero.jpg),linear-gradient(120deg,#26412f,#7a8f55)}
+.hero div{position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(15,25,20,.72);padding:16px 26px;border-radius:12px;color:#fff}
+.hero h1{font-size:40px;letter-spacing:.5px}.hero p{color:#bde8cf;font-size:15px;margin-top:2px}
+.alerts{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:20px}
+.al{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:14px;border:1px solid}
+.al.r{background:#fdecee;border-color:#f6cfd3}.al.o{background:#fff5e0;border-color:#f7dfae}
+.al .c{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:26px}
+.al.r .c{background:var(--red)}.al.o .c{background:var(--org)}
+.al small{font-weight:600}.al.r small{color:var(--red)}.al.o small{color:#c77d00}
+.al strong{display:block;font-size:30px;line-height:1.1}.al em{font-style:normal;font-size:12px;color:var(--mut)}
+.al .ch{margin-left:auto;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.tile{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1);cursor:pointer}
+.tile .ph{height:120px;position:relative}
+.tile .ic{position:absolute;left:10px;bottom:-16px;width:38px;height:38px;border-radius:9px;color:#fff;display:grid;place-items:center;border:2px solid #fff}
+.tile .ft{display:flex;align-items:center;justify-content:space-between;padding:22px 12px 14px;font-weight:600}
+.tile .go{width:26px;height:26px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center}
+.tile .go svg{width:14px;height:14px}
+/* pages */
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
+.ph-t{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.ph-t i{width:46px;height:46px;border-radius:11px;color:#fff;display:grid;place-items:center}
+.ph-t h2{font-size:24px}
+.btn{margin-left:auto;background:var(--pri);color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:600;display:flex;gap:8px;align-items:center;cursor:pointer}
+.flt{display:flex;gap:18px;align-items:flex-end;padding:16px 20px;border-bottom:1px solid var(--bd)}
+.flt label{font-size:12px;font-weight:700;display:block;margin-bottom:5px}
+.flt .f{border:1px solid var(--bd);border-radius:7px;padding:9px 12px;min-width:150px;display:flex;justify-content:space-between;color:var(--mut);background:#fff}
+table{width:100%;border-collapse:collapse}
+th{background:#f1f4f2;text-align:left;font-size:12px;padding:11px 14px;border-bottom:1px solid var(--bd)}
+td{padding:11px 14px;border-bottom:1px solid var(--bd);font-size:13px}
+.ok,.nc{padding:3px 9px;border-radius:5px;font-size:12px;font-weight:600}
+.ok{color:var(--ok);background:#e3f4ea}.nc{color:var(--red);background:#fde7e8}
+.thumb{width:44px;height:36px;border-radius:8px;background-size:cover;background-color:#c9d3cd}
+.act{display:flex;gap:6px}.act b{width:28px;height:28px;border-radius:7px;color:#fff;display:grid;place-items:center}
+.act svg{width:15px;height:15px}
+.pg{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;color:var(--mut);font-size:12px}
+.pg span{display:inline-grid;place-items:center;width:28px;height:28px;border:1px solid var(--bd);border-radius:6px;margin-right:6px;color:var(--txt)}
+.pg .cur{background:var(--pri);color:#fff;border-color:var(--pri)}
+/* dashboard */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.k{border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:center;border:1px solid}
+.k .c{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.k small{font-weight:600;font-size:12px;display:block}.k strong{font-size:30px}.k em{display:block;font-style:normal;font-size:11px;color:var(--mut)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.box{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.box h3{font-size:14px;margin-bottom:14px}
+.don{display:flex;align-items:center;gap:34px}
+.ring{width:170px;height:170px;border-radius:50%;background:conic-gradient(#0f6b45 0 28%,#e5383b 28% 50%,#2f7de1 50% 68%,#6fa8e8 68% 83%,#8fb4e6 83% 93%,#f5b73b 93%);display:grid;place-items:center}
+.ring div{width:104px;height:104px;border-radius:50%;background:#fff;text-align:center;padding-top:26px;font-size:11px;color:var(--mut)}
+.ring b{display:block;font-size:30px;color:var(--txt);line-height:1}
+.lg div{display:flex;gap:10px;align-items:center;font-size:12px;margin:6px 0;min-width:150px}
+.lg i{width:9px;height:9px;border-radius:2px}.lg span{margin-left:auto;font-weight:600}
+.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.on-l{color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+<symbol id="box" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></symbol>
+<symbol id="therm" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol>
+<symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol>
+<symbol id="tag" viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="out" viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></symbol>
+<symbol id="bld" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></symbol>
+<symbol id="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></symbol>
+<symbol id="trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+</defs></svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo"><b>HACCP</b>M&amp;T HACCP</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="out"><svg class="i"><use href="#out"/></svg>Se déconnecter</div>
+  </aside>
+  <div class="main">
+    <div class="top"><span><svg class="i"><use href="#bld"/></svg>Le Grand Bleu <svg class="i" style="width:14px"><use href="#down"/></svg></span><span><i class="av"><svg class="i" style="width:15px"><use href="#home"/></svg></i>H. Ben Amar <svg class="i" style="width:14px"><use href="#down"/></svg></span></div>
+
+    <!-- ACCUEIL -->
+    <section class="scr on" id="accueil">
+      <div class="hero ph"><div><h1>M&amp;T HACCP</h1><p>Hygiène • Sécurité • Qualité</p></div></div>
+      <div class="pad">
+        <div class="alerts">
+          <div class="al r"><span class="c">!</span><div><small>Non-conformités</small><strong>3</strong><em>Consulter les alertes</em></div><svg class="i ch"><use href="#chev"/></svg></div>
+          <div class="al o"><span class="c"><svg class="i" style="width:28px;height:28px"><use href="#clock"/></svg></span><div><small>Alertes DLC</small><strong>5</strong><em>Produits à contrôler</em></div><svg class="i ch"><use href="#chev"/></svg></div>
+        </div>
+        <div class="grid" id="tiles"></div>
+      </div>
+    </section>
+
+    <!-- RECEPTION -->
+    <section class="scr" id="reception"><div class="pad">
+      <div class="ph-t"><i style="background:var(--pri)"><svg class="i"><use href="#box"/></svg></i><h2>Réception de marchandises</h2><button class="btn"><svg class="i"><use href="#plus"/></svg>Nouvelle réception</button></div>
+      <div class="card">
+        <div class="flt">
+          <div><label>Date</label><div class="f">08/10/2026 <svg class="i"><use href="#cal"/></svg></div></div>
+          <div><label>Fournisseur</label><div class="f">Tous <svg class="i"><use href="#down"/></svg></div></div>
+          <div><label>Catégorie</label><div class="f">Toutes <svg class="i"><use href="#down"/></svg></div></div>
+          <div style="margin-left:auto"><label style="font-weight:400;color:var(--mut)">Rechercher un produit</label><div class="f" style="min-width:230px"><span></span><svg class="i"><use href="#search"/></svg></div></div>
+        </div>
+        <table><thead><tr><th>Date</th><th>Fournisseur</th><th>Produit</th><th>Catégorie</th><th>Quantité</th><th>T°C</th><th>Statut</th><th>Photo</th><th>Actions</th></tr></thead><tbody id="rec"></tbody></table>
+        <div class="pg"><div><span>&lsaquo;</span><span class="cur">1</span><span>2</span><span>3</span><span>…</span><span>&rsaquo;</span></div>Affichage : 1-5 sur 24</div>
+      </div>
+    </div></section>
+
+    <!-- TRACABILITE -->
+    <section class="scr" id="tracabilite"><div class="pad">
+      <div class="ph-t"><i style="background:var(--red)"><svg class="i"><use href="#search"/></svg></i><h2>Traçabilité</h2></div>
+      <div class="card">
+        <div class="flt">
+          <div><label>Type</label><div class="f">Tous <svg class="i"><use href="#down"/></svg></div></div>
+          <div><label>Date du</label><div class="f">01/10/2026 <svg class="i"><use href="#cal"/></svg></div></div>
+          <div><label>au</label><div class="f">08/10/2026 <svg class="i"><use href="#cal"/></svg></div></div>
+          <div style="flex:1"><label>Rechercher</label><div class="f">Produit, lot, opérateur...</div></div>
+          <button class="btn" style="margin:0">Rechercher</button>
+        </div>
+        <table><thead><tr><th>Date</th><th>Module</th><th>Produit / Équipement</th><th>Opérateur</th><th>Détail</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="tra"></tbody></table>
+        <div class="pg"><div><span>&lsaquo;</span><span class="cur">1</span><span>2</span><span>3</span><span>…</span><span>&rsaquo;</span></div>Affichage : 1-6 sur 28</div>
+      </div>
+    </div></section>
+
+    <!-- DASHBOARD -->
+    <section class="scr" id="dashboard"><div class="pad">
+      <div class="ph-t"><i style="background:var(--pri)"><svg class="i"><use href="#chart"/></svg></i><h2>Tableau de bord Direction</h2>
+        <div style="margin-left:auto;display:flex;gap:16px"><div><label style="font-size:11px;font-weight:700">Période</label><div class="f" style="border:1px solid var(--bd);border-radius:7px;padding:7px 12px;background:#fff;min-width:130px">Ce mois</div></div><div><label style="font-size:11px;font-weight:700">Établissement</label><div style="border:1px solid var(--bd);border-radius:7px;padding:7px 12px;background:#fff;min-width:150px">Le Grand Bleu</div></div></div></div>
+      <div class="kpi">
+        <div class="k" style="background:#eaf6ee;border-color:#cfe8d8"><span class="c" style="background:var(--ok)"><svg class="i"><use href="#box"/></svg></span><div><small style="color:var(--ok)">Réceptions</small><strong>128</strong><em>+12% par rapport au mois précédent</em></div></div>
+        <div class="k" style="background:#fdecee;border-color:#f6cfd3"><span class="c" style="background:var(--red)">!</span><div><small style="color:var(--red)">Non-conformités</small><strong>3</strong><em>-40% par rapport au mois précédent</em></div></div>
+        <div class="k" style="background:#fff5e0;border-color:#f7dfae"><span class="c" style="background:var(--org)"><svg class="i"><use href="#clock"/></svg></span><div><small style="color:#c77d00">Alertes DLC</small><strong>5</strong><em>Produits à contrôler</em></div></div>
+        <div class="k" style="background:#e8f1fc;border-color:#c9dcf5"><span class="c" style="background:var(--blu)"><svg class="i"><use href="#therm"/></svg></span><div><small style="color:var(--blu)">Températures hors plage</small><strong>2</strong><em>+1 par rapport au mois précédent</em></div></div>
+      </div>
+      <div class="two">
+        <div class="box"><h3>Réceptions par catégorie</h3><div class="don"><div class="ring"><div><b>128</b>Réceptions</div></div>
+          <div class="lg"><div><i style="background:#0f6b45"></i>Légumes<span>28%</span></div><div><i style="background:#e5383b"></i>Viandes<span>22%</span></div><div><i style="background:#2f7de1"></i>Poissons<span>18%</span></div><div><i style="background:#6fa8e8"></i>Produits laitiers<span>15%</span></div><div><i style="background:#8fb4e6"></i>Épicerie<span>10%</span></div><div><i style="background:#f5b73b"></i>Autres<span>7%</span></div></div></div></div>
+        <div class="box"><h3>Évolution des non-conformités</h3>
+          <svg viewBox="0 0 440 180" width="100%"><g stroke="#e3e8e5"><path d="M30 20h400M30 55h400M30 90h400M30 125h400M30 160h400"/></g><g font-size="10" fill="#6b7872"><text x="8" y="24">10</text><text x="12" y="59">6</text><text x="12" y="94">4</text><text x="12" y="129">2</text><text x="12" y="164">0</text><text x="30" y="178">01/10</text><text x="120" y="178">03/10</text><text x="215" y="178">05/10</text><text x="310" y="178">07/10</text><text x="395" y="178">09/10</text></g>
+          <polyline fill="none" stroke="#e5383b" stroke-width="2" points="35,40 75,100 120,140 165,125 215,85 265,115 310,140 355,120 420,100"/></svg></div>
+      </div>
+      <div class="two" style="grid-template-columns:1.6fr 1fr">
+        <div class="box"><h3>Dernières activités</h3>
+          <div class="row"><span>08/10 10:15</span><span>Réception - Tomate (Conforme)</span><span style="color:var(--mut)">Hichem.we</span></div>
+          <div class="row"><span>08/10 09:30</span><span>Température - Frigo Viande 1 (Conforme)</span><span style="color:var(--mut)">Sami</span></div>
+          <div class="row" style="border:0"><span>07/10 16:20</span><span>Nettoyage - Plan de travail (Conforme)</span><span style="color:var(--mut)">Fatma</span></div></div>
+        <div class="box"><h3>Établissements</h3>
+          <div class="row"><span>Le Grand Bleu</span><span class="on-l">● En ligne</span></div><div class="row"><span>Restaurant 2</span><span class="on-l">● En ligne</span></div><div class="row" style="border:0"><span>Restaurant 3</span><span class="on-l">● En ligne</span></div></div>
+      </div>
+    </div></section>
+  </div>
+</div>
+
+<script>
+
+const ICON=n=>'<svg class="i"><use href="#'+n+'"/></svg>';
+const NAV=[["Accueil","home","accueil"],["Réception","box","reception"],["Traçabilité","search","tracabilite"],["Température","therm","temperatures"],["Nettoyage","spark","nettoyage"],["Étiquetage HACCP","tag","etiquetage"],["Tableau de bord","chart","dashboard"],["Stock et DLC","box","stock"],["Paramètres","gear","parametres"]];
+const TILES=[["Réception de marchandises","box","#0f6b45","reception","reception"],["Traçabilité","search","#e5383b","tracabilite","tracabilite"],["Température","therm","#2f7de1","temperature","temperatures"],["Nettoyage","spark","#f5a000","nettoyage","nettoyage"],["Étiquetage HACCP","tag","#7a4fd1","etiquetage","etiquetage"],["Tableau de bord Direction","chart","#0f8a8a","direction","dashboard"],["Paramètres","gear","#2a6fb0","parametres","parametres"],["Stock et DLC","box","#c9732a","stock","stock"]];
+const PHOTOS={"reception":"https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80","tracabilite":"https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=500&q=80","temperature":"https://www.thermoworks.com/cdn/shop/files/TGrip-t-grip-heavy-duty-waterproof-thermometer-g01.jpg?v=1762382777&width=1200","nettoyage":"https://www.cleanipedia.com/images/yvwvo5xgjuhg/2pqKnP0ZRPj4srJqytDWxM/bc43446b068632ba43bf87c5b192eca4/VVBST19Gb29kX1NhZmVfMjAyM18wNF8yNV9VUFJPX0RTQ0Y1MjI1X18xXy5qcGc/1200w/a-person-wearing-blue-gloves-is-wiping-a-stainless-steel-surface-with-a-green-microfiber-cloth..jpg","etiquetage":"https://www.cateringsafe.co.uk/cdn/shop/files/DCG-X22-Dual-Printer-Automated-Labeling-System-detail-3.jpg?v=1730306288","direction":"https://static.wixstatic.com/media/f4a1ed_25dce0557c5546a9b08fe3077782d31a~mv2.png","parametres":"./parametres-haccp.jpg","stock":"https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600&q=85","supervision":"https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80"};
+const request=(action,data={})=>parent.postMessage({mtMock:true,action,...data},location.origin);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const go=id=>{
+ if(!['accueil','reception','tracabilite','dashboard'].includes(id)){request('navigate',{route:id});return}
+ if(id==='dashboard'&&!window.mtDashboardAllowed){request('navigate',{route:'direction'});return}
+ document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));
+ document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.s===id));
+ window.scrollTo(0,0);
+};
+document.getElementById('nav').innerHTML=NAV.map(n=>'<a data-s="'+n[2]+'" onclick="go(\''+n[2]+'\')">'+ICON(n[1])+n[0]+'</a>').join('');
+document.getElementById('tiles').innerHTML=TILES.map(t=>'<div class="tile" data-route="'+t[4]+'" onclick="go(\''+t[4]+'\')"><div class="ph" style="background-image:url(&quot;'+esc(PHOTOS[t[3]]||'')+'&quot;)"><span class="ic" style="background:'+t[2]+'">'+ICON(t[1])+'</span></div><div class="ft">'+esc(t[0])+'<span class="go">'+ICON('chev')+'</span></div></div>').join('');
+const out=document.querySelector('.out');if(out)out.onclick=()=>request('logout');
+const btn=document.querySelector('#reception .ph-t .btn');if(btn)btn.onclick=()=>request('navigate',{route:'reception-form'});
+const st=s=>s==='Conforme'?'<span class="ok">Conforme</span>':'<span class="nc">Non conforme</span>';
+const datestr=v=>String(v||'').slice(0,22);
+let allRec=[],allTra=[],perPage=8,recPage=0,traPage=0;
+const showRec=()=>{
+ const f=document.getElementById('mtRecSearch');const q=(f&&f.value||'').toLowerCase();
+ const rows=allRec.filter(r=>Object.values(r).some(v=>String(v||'').toLowerCase().includes(q)));
+ const page=rows.slice(recPage*perPage,(recPage+1)*perPage);
+ document.getElementById('rec').innerHTML=page.length?page.map(r=>'<tr><td>'+esc(datestr(r.date))+'</td><td>'+esc(r.supplier)+'</td><td>'+esc(r.product)+'</td><td>'+esc(r.category)+'</td><td>'+esc(r.quantity)+'</td><td>'+esc(r.temp)+'</td><td>'+st(r.status)+'</td><td>'+(r.photo?'<img class="thumb" src="'+esc(r.photo)+'" style="object-fit:cover" alt="Photo réception">':'—')+'</td><td><button class="btn" onclick="request(\'recDetail\',{index:'+r.index+'})">'+ICON('eye')+'</button></td></tr>').join(''):'<tr><td colspan="9">Aucune réception enregistrée</td></tr>';
+ const pg=document.querySelector('#reception .pg');if(pg)pg.innerHTML='<div><button onclick="recPage=Math.max(0,recPage-1);showRec()">‹</button> Page '+(recPage+1)+' / '+Math.max(1,Math.ceil(rows.length/perPage))+' <button onclick="recPage=Math.min(Math.ceil(rows.length/perPage)-1,recPage+1);showRec()">›</button></div>Affichage : '+rows.length+' réception(s)';
+};
+const showTra=()=>{
+ const rows=allTra.slice(traPage*perPage,(traPage+1)*perPage);
+ document.getElementById('tra').innerHTML=rows.length?rows.map(r=>'<tr><td>'+esc(datestr(r.date))+'</td><td>'+esc(r.type)+'</td><td>'+esc(r.product)+'</td><td>'+esc(r.operator)+'</td><td>'+esc(r.detail)+'</td><td>'+st(r.status)+'</td><td><button class="btn" onclick="request(\'traDetail\',{index:'+r.index+'})">'+ICON('eye')+'</button></td></tr>').join(''):'<tr><td colspan="7">Aucune activité enregistrée</td></tr>';
+ const pg=document.querySelector('#tracabilite .pg');if(pg)pg.innerHTML='<div><button onclick="traPage=Math.max(0,traPage-1);showTra()">‹</button> Page '+(traPage+1)+' / '+Math.max(1,Math.ceil(allTra.length/perPage))+' <button onclick="traPage=Math.min(Math.ceil(allTra.length/perPage)-1,traPage+1);showTra()">›</button></div>Affichage : '+allTra.length+' activité(s)';
+};
+const setData=d=>{
+ window.mtDashboardAllowed=!!d.dashboardAllowed;
+ allRec=d.rec||[];allTra=d.tra||[];
+ const site=d.site||'Établissement';
+ const top=document.querySelector('.top');if(top){const sp=top.querySelectorAll('span');if(sp[0])sp[0].childNodes.forEach(n=>{if(n.nodeType===3)n.textContent=site});if(sp[1])sp[1].lastChild.textContent=' '+(d.user||'Utilisateur');}
+ document.querySelector('#accueil .al.r strong').textContent=d.nc||0;
+ document.querySelector('#accueil .al.o strong').textContent=d.dlc||0;
+ document.querySelectorAll('#accueil .al').forEach((el,i)=>el.onclick=()=>request('navigate',{route:i?'stock':'direction'}));
+ const ks=document.querySelectorAll('#dashboard .k strong');[d.recCount,d.nc,d.dlc,d.tempNc].forEach((v,i)=>{if(ks[i])ks[i].textContent=v||0});
+ document.querySelectorAll('#dashboard .k em').forEach(el=>el.textContent='Données réelles de l’établissement');
+ const ring=document.querySelector('#dashboard .ring');if(ring){const b=ring.querySelector('b');if(b)b.textContent=d.recCount||0;const parts=(d.categories||[]).slice(0,6),colors=['#0f6b45','#e5383b','#2f7de1','#6fa8e8','#8fb4e6','#f5b73b'];let p=0;ring.style.background='conic-gradient('+parts.map((c,i)=>{let start=p;p+=c.count/Math.max(1,d.recCount)*100;return colors[i]+' '+start+'% '+p+'%'}).join(',')+')';const lg=document.querySelector('#dashboard .lg');if(lg)lg.innerHTML=parts.map((c,i)=>'<div><i style="background:'+colors[i]+'"></i>'+esc(c.name)+'<span>'+Math.round(c.count/Math.max(1,d.recCount)*100)+'%</span></div>').join('');}
+ const activity=document.querySelector('#dashboard .two:last-child .box:first-child');if(activity)activity.innerHTML='<h3>Dernières activités</h3>'+allTra.slice(0,5).map(r=>'<div class="row"><span>'+esc(datestr(r.date))+'</span><span>'+esc(r.type+' - '+r.product)+'</span><span>'+esc(r.operator)+'</span></div>').join('');
+ const sites=document.querySelector('#dashboard .two:last-child .box:last-child');if(sites)sites.innerHTML='<h3>Établissement</h3><div class="row">'+esc(site)+'</div>';
+ const dashboardSite=document.querySelector('#dashboard .ph-t .f:last-child');if(dashboardSite)dashboardSite.textContent=site;
+ const graph=document.querySelector('#dashboard .two:first-of-type .box:nth-child(2) svg polyline');if(graph){const values=d.ncTrend||[];let max=Math.max(1,...values);graph.setAttribute('points',values.map((v,i)=>(35+i*385/Math.max(1,values.length-1))+','+(160-v/max*120)).join(' '));}
+ showRec();showTra();
+};
+window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!e.data.mtMockData)return;setData(e.data);if(e.data.view)go(e.data.view)});
+document.querySelectorAll('#reception .flt .f').forEach(x=>{if(x.textContent.includes('Rechercher')){x.innerHTML='<input id="mtRecSearch" placeholder="Rechercher un produit" style="border:0;background:transparent;width:100%;padding:4px" oninput="recPage=0;showRec()">';}});
+go('accueil');request('ready');
+
+</script>
+</body>
+</html>
