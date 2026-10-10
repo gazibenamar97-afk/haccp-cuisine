@@ -1387,6 +1387,7 @@ function mtMobileNavGo(action){
  mtMobileNavClose();
  if(action==='home')home();
  else if(action==='reception')reception();
+ else if(action==='suppliers')suppliers();
  else if(action==='trace')mtOpenModule('trace');
  else if(action==='temperature')temperatures();
  else if(action==='cleaning')cleaning();
@@ -1409,7 +1410,7 @@ function mtEnsureGlobalNav(){
  const isHome=!!(appRoot&&appRoot.querySelector('.mtp-app, .home-shell'));
  if(onLogin||isHome){host.hidden=true;return}
  host.hidden=false;
- const items=[['Accueil','home','box'],['Réception de marchandises','reception','box'],['Traçabilité','trace','trace'],['Température','temperature','thermo'],['Nettoyage','cleaning','clean'],['Étiquetage HACCP','label','tag'],['Tableau de bord Direction','dashboard','chart'],['Paramètres','settings','gear'],...(SITE_ID==='main'?[['Supervision des établissements','supervision','building']]:[['Stock et DLC','stock','box']])];
+ const items=[['Accueil','home','box'],['Réception de marchandises','reception','box'],['Fournisseurs','suppliers','truck'],['Étiquetage HACCP','label','tag'],['Stock et DLC','stock','box'],['Températures','temperature','thermo'],['Nettoyage','cleaning','clean'],['Traçabilité','trace','trace'],['Tableau de bord Direction','dashboard','chart'],['Paramètres','settings','gear'],...(SITE_ID==='main'?[['Supervision des établissements','supervision','building']]:[])];
  const links=items.map(([label,action,icon])=>'<button type="button" onclick="mtMobileNavGo(\''+action+'\')">'+mtSvg(icon)+' '+label+'</button>').join('');
  host.innerHTML='<div class="mt-global-bar"><button type="button" onclick="mtMobileNavOpen()" aria-label="Ouvrir le menu">'+mtSvg('menu')+' <span>Menu</span></button><strong>M&amp;T HACCP</strong><span class="mt-global-bar-spacer" aria-hidden="true"></span></div><button type="button" class="mt-global-floating-home" onclick="mtMobileNavGo(\'home\')" aria-label="Retour à l’accueil">'+mtSvg('home')+' <span>Accueil</span></button><div id="mtGlobalNavDrawer" class="mt-global-drawer" hidden><button type="button" class="mt-global-shade" onclick="mtMobileNavClose()" aria-label="Fermer le menu"></button><aside><div class="mt-global-drawer-title"><strong>M&amp;T HACCP</strong><button onclick="mtMobileNavClose()" aria-label="Fermer">'+mtSvg('close')+'</button></div><nav>'+links+'</nav><button class="mt-global-logout" onclick="logoutAppUser()">'+mtSvg('logout')+' Déconnexion</button></aside></div>';
 }
@@ -1468,16 +1469,18 @@ function mtPremiumHome(){
  let soon=0;try{const now=new Date();now.setHours(0,0,0,0);(S.stock||[]).forEach(x=>{if(!x.dlc)return;const d=new Date(x.dlc+'T00:00:00');const diff=Math.ceil((d-now)/86400000);if(diff<=3)soon++})}catch(e){}
  const cards=[
   ['reception','Réception<br>de marchandises','box','reception()','#11865d'],
-  ['trace','Traçabilité','trace',"mtOpenModule('trace')",'#cf3443'],
-  ['temperature','Température','thermo','temperatures()','#2288df'],
-  ['clean','Nettoyage','clean','cleaning()','#e7a51c'],
+  ['stock','Fournisseurs','truck','suppliers()','#46778e'],
   ['etiquetage','Étiquetage HACCP','tag','dlcCats()','#824cc9'],
+  ['stock','Stock et DLC','box',"mtOpenModule('stock')",'#9c6846'],
+  ['temperature','Températures','thermo','temperatures()','#2288df'],
+  ['clean','Nettoyage','clean','cleaning()','#e7a51c'],
+  ['trace','Traçabilité','trace',"mtOpenModule('trace')",'#cf3443'],
   ['direction','Tableau de bord<br>Direction','chart','openDashboard()','#09a4a6'],
   ['parametres','Paramètres','gear','settings()','#225a7d'],
-  ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[['stock','Stock et DLC','box',"mtOpenModule('stock')",'#9c6846']])
+  ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Température','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Étiquetage HACCP','tag','dlcCats()'],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[['Stock et DLC','box',"mtOpenModule('stock')"]])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Notifications">'+mtSvg('bell')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
