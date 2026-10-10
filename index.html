@@ -2510,12 +2510,30 @@ function selectReceptionPhotoProduct(p,category){
  updateReceptionSide()
 }
 function updateReceptionSide(){let cat=(document.getElementById('rc')||{}).value||'',p=(document.getElementById('rp')||{}).value||'',rule=receivingTempRule(cat,p),sel=document.getElementById('selectedProduct'),st=document.getElementById('sideTemp'),tr=document.getElementById('tempRecommendation'),adv=document.getElementById('sideAdvice');if(sel)sel.innerHTML=p?'<div class="selected-food">'+foodThumb(cat,p,58)+'<div><b>'+esc(p)+'</b><span>Catégorie : '+esc(cat)+'</span></div></div>':'<b>Aucun produit sélectionné</b><span>Choisissez une catégorie et un produit</span>';if(st)st.innerHTML='🌡️ Température recommandée<br><strong>'+(rule?esc(rule.label):'—')+'</strong>';if(tr)tr.innerHTML='🌡️ <span>Température recommandée</span><strong>'+(rule?esc(rule.label):'Choisissez un produit')+'</strong>';if(adv)adv.innerHTML=rule&&p?'<b>'+esc(p)+'</b> : contrôlez la température à la réception. Recommandation : <b>'+esc(rule.label)+'</b>. En cas de dépassement, une action corrective doit être enregistrée.':'Sélectionnez un produit pour afficher les recommandations de réception.'}
+function supplierPlateFields(prefix){
+ return '<div id="'+prefix+'PlateStandard" style="display:flex;align-items:center;gap:6px;margin-top:5px"><input id="'+prefix+'PlateFirst" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123" aria-label="Première partie de la plaque" style="min-width:0;width:34%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><strong style="padding:8px;background:#eaf2ed;border-radius:6px">TE</strong><input id="'+prefix+'PlateLast" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="4567" aria-label="Deuxième partie de la plaque" style="min-width:0;width:40%;padding:10px;border:1px solid #b6c9bf;border-radius:8px"></div><input id="'+prefix+'PlateManual" type="text" placeholder="Saisir la plaque librement" aria-label="Plaque d’immatriculation manuelle" style="display:none;width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px"><button type="button" class="mini-add" style="margin-top:6px" onclick="supplierPlateToggle(\''+prefix+'\')"><span id="'+prefix+'PlateToggleLabel">Saisie manuelle</span></button>';
+}
+function supplierPlateToggle(prefix){
+ const standard=document.getElementById(prefix+'PlateStandard'),manual=document.getElementById(prefix+'PlateManual'),label=document.getElementById(prefix+'PlateToggleLabel');
+ if(!standard||!manual)return;
+ const manualMode=manual.style.display==='none';
+ standard.style.display=manualMode?'none':'flex';manual.style.display=manualMode?'block':'none';
+ if(label)label.textContent=manualMode?'Utiliser le format TE':'Saisie manuelle';
+ if(manualMode){manual.value='';manual.focus()}else{document.getElementById(prefix+'PlateFirst').value='';document.getElementById(prefix+'PlateLast').value='';document.getElementById(prefix+'PlateFirst').focus()}
+}
+function supplierPlateValue(prefix){
+ const manual=document.getElementById(prefix+'PlateManual');
+ if(manual&&manual.style.display!=='none')return manual.value.trim();
+ const first=(document.getElementById(prefix+'PlateFirst')||{}).value||'',last=(document.getElementById(prefix+'PlateLast')||{}).value||'';
+ if(!first.trim()&&!last.trim())return '';
+ return (first.trim()+' TE '+last.trim()).trim();
+}
 function quickAddSupplier(){
  const existing=document.getElementById('supplierQuickModal');if(existing)existing.remove();
  const overlay=document.createElement('div');overlay.id='supplierQuickModal';
  overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px';
  const fields=[['name','Nom du fournisseur *','text'],['phone','Numéro de téléphone','tel'],['plate',"Plaque d'immatriculation du camion / véhicule",'text'],['driver','Nom du livreur / chauffeur','text']];
- const body=fields.map(([key,label,type])=>'<label style="display:block;min-width:0;font-size:13px;font-weight:600">'+label+'<input data-supplier-field="'+key+'" type="'+type+'" style="width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px;font-size:15px" autocomplete="off"></label>').join('');
+ const body=fields.map(([key,label,type])=>'<label style="display:block;min-width:0;font-size:13px;font-weight:600">'+label+(key==='plate'?supplierPlateFields('quick'):'<input data-supplier-field="'+key+'" type="'+type+'" style="width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px;font-size:15px" autocomplete="off">')+'</label>').join('');
  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-label="Fiche fournisseur" style="width:min(750px,100%);max-height:94vh;overflow:auto;background:white;border-radius:14px;padding:18px;color:#1c2925"><h2 style="margin:0 0 5px">Nouvelle fiche fournisseur</h2><p style="margin:0 0 14px;color:#66766f">Renseignez les quatre informations du fournisseur, puis enregistrez.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+body+'</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;position:sticky;bottom:0;background:white;padding:12px 0"><button type="button" class="btn" onclick="document.getElementById(\'supplierQuickModal\').remove()">Annuler</button><button type="button" class="btn primary" onclick="saveQuickSupplierSheet()">Enregistrer le fournisseur</button></div></div>';
  document.body.appendChild(overlay);
  const first=overlay.querySelector('[data-supplier-field="name"]');if(first)first.focus();
@@ -2523,6 +2541,7 @@ function quickAddSupplier(){
 function saveQuickSupplierSheet(){
  const modal=document.getElementById('supplierQuickModal');if(!modal)return;
  const x={};modal.querySelectorAll('[data-supplier-field]').forEach(el=>{x[el.getAttribute('data-supplier-field')]=el.value.trim()});
+ x.plate=supplierPlateValue('quick');
  if(!x.name){alert('Le nom du fournisseur est obligatoire.');modal.querySelector('[data-supplier-field="name"]').focus();return}
  if(S.suppliers.some(s=>String(typeof s==='string'?s:s.name||'').trim().toLowerCase()===x.name.toLowerCase())){alert('Ce fournisseur existe déjà.');return}
  S.suppliers.push(x);save();
@@ -2737,9 +2756,9 @@ function clearReceptionSelectedProduct(){
  updateReceptionQuantityUnit(false);hardClearReceptionTemperature();receptionRules();checkReceivingTemp();renderPhotoCatalogue();updateReceptionSide()
 }
 
-function suppliers(){let rows=S.suppliers.map((s,i)=>{let x=typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s;return `<div class="record"><b>${x.name}</b><br><span class="note">Téléphone : ${x.phone||'—'} · Immatriculation véhicule : ${x.plate||'—'} · Livreur / chauffeur : ${x.driver||'—'}</span><br><button class="btn" style="margin-top:8px;padding:8px 12px" onclick="deleteSupplier(${i})">Supprimer</button></div>`}).join('');app.innerHTML=`<h1>Fournisseurs</h1><div class="panel"><h2>Ajouter un fournisseur</h2><div class="row"><div><label>Nom du fournisseur</label><input id="sname" placeholder="Nom / société"></div><div><label>Numéro de téléphone</label><input id="sphone" type="tel" placeholder="+216 ..."></div></div><div class="row"><div><label>Plaque d'immatriculation du camion / véhicule</label><input id="splate" placeholder="Ex. 123 TU 4567"></div><div><label>Nom du livreur / chauffeur</label><input id="sdriver" placeholder="Nom et prénom"></div></div><br>${B('Enregistrer le fournisseur','saveSupplier()','primary')}</div><div class="panel"><h2>Fournisseurs enregistrés</h2>${rows||'<p class="empty">Aucun fournisseur enregistré.</p>'}</div>`}
+function suppliers(){let rows=S.suppliers.map((s,i)=>{let x=typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s;return `<div class="record"><b>${x.name}</b><br><span class="note">Téléphone : ${x.phone||'—'} · Immatriculation véhicule : ${x.plate||'—'} · Livreur / chauffeur : ${x.driver||'—'}</span><br><button class="btn" style="margin-top:8px;padding:8px 12px" onclick="deleteSupplier(${i})">Supprimer</button></div>`}).join('');app.innerHTML=`<h1>Fournisseurs</h1><div class="panel"><h2>Ajouter un fournisseur</h2><div class="row"><div><label>Nom du fournisseur</label><input id="sname" placeholder="Nom / société"></div><div><label>Numéro de téléphone</label><input id="sphone" type="tel" placeholder="+216 ..."></div></div><div class="row"><div><label>Plaque d'immatriculation du camion / véhicule</label>${supplierPlateFields('module')}</div><div><label>Nom du livreur / chauffeur</label><input id="sdriver" placeholder="Nom et prénom"></div></div><br>${B('Enregistrer le fournisseur','saveSupplier()','primary')}</div><div class="panel"><h2>Fournisseurs enregistrés</h2>${rows||'<p class="empty">Aucun fournisseur enregistré.</p>'}</div>`}
 
-function saveSupplier(){let name=sname.value.trim(),phone=sphone.value.trim(),plate=splate.value.trim(),driver=sdriver.value.trim();if(!name){alert('Veuillez saisir le nom du fournisseur.');return;}S.suppliers.push({name,phone,plate,driver});save();suppliers()}
+function saveSupplier(){let name=sname.value.trim(),phone=sphone.value.trim(),plate=supplierPlateValue('module'),driver=sdriver.value.trim();if(!name){alert('Veuillez saisir le nom du fournisseur.');return;}S.suppliers.push({name,phone,plate,driver});save();suppliers()}
 
 function deleteSupplier(i){if(confirm('Supprimer ce fournisseur ?')){S.suppliers.splice(i,1);save();suppliers()}}
 
