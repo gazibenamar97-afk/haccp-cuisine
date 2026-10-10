@@ -1851,7 +1851,7 @@ const PHOTO_PRODUCT={
 function customPhotoKey(cat,p){return 'haccpProductPhoto::'+cat+'::'+p}
 const haccpProductPhotoCache={};
 const haccpProductPhotoLoading=new Set();
-async async function haccpLoadProductPhoto(path){
+async function haccpLoadProductPhoto(path){
  if(haccpProductPhotoLoading.has(path)||haccpProductPhotoCache[path])return;
  haccpProductPhotoLoading.add(path);
  try{
@@ -1864,7 +1864,7 @@ async async function haccpLoadProductPhoto(path){
   else if(document.getElementById('catalogueProductGrid'))productPhotoManager();
  }catch(e){console.warn('Photo produit',e)}finally{haccpProductPhotoLoading.delete(path)}
 }
-async async function haccpUploadProductPhoto(data,cat,name){
+async function haccpUploadProductPhoto(data,cat,name){
  const a=await haccpPhotoAuth();
  if(!a.tenantReady)throw new Error('Le jeton Firebase ne contient pas encore les autorisations établissement nécessaires. Aucune photo envoyée.');
  const blob=await(await fetch(data)).blob();
@@ -1939,7 +1939,7 @@ function storeNewProductPhoto(cat,name){
 }
 
 function refreshCustomSubs(){let cat=document.getElementById('cpCat').value,el=document.getElementById('cpSub');el.innerHTML=Object.keys(CAT[cat]||{}).map(v=>'<option>'+esc(v)+'</option>').join('')}
-async async async function saveCatalogueProductById(eid){let id=decodeURIComponent(eid||''),old=id?findCatalogueProductById(id):null,name=document.getElementById('cpName').value.trim(),cat=document.getElementById('cpCat').value,sub=document.getElementById('cpSub').value;if(!name||!cat||!sub){alert('Nom, catégorie et sous-catégorie sont obligatoires.');return}let duplicate=allCatalogueItems().some(x=>x.id!==id&&x.category===cat&&x.name.toLowerCase()===name.toLowerCase());if(duplicate){alert('Ce produit existe déjà dans cette catégorie.');return}let newPhotoPath=null;if(newProductPhotoDraft&&newProductPhotoDraft.changed&&newProductPhotoDraft.data){try{newPhotoPath=await haccpUploadProductPhoto(newProductPhotoDraft.data,cat,name)}catch(e){alert('Enregistrement photo impossible : '+e.message+' Le produit n’a pas été modifié.');return}}if(!storeNewProductPhoto(cat,name))return;let data={name:name,category:cat,subCategory:sub,dlcDays:Number(document.getElementById('cpDays').value)||0,maxTemp:document.getElementById('cpTemp').value===''?null:Number(document.getElementById('cpTemp').value),unit:document.getElementById('cpUnit').value,note:document.getElementById('cpNote').value.trim(),active:true};if(!id){data.id=customProductId();S.customProducts.push(data)}else if(id.startsWith('base:')){S.productOverrides[id]=data}else{let i=S.customProducts.findIndex(x=>x.id===id);if(i>=0)S.customProducts[i]=Object.assign({},S.customProducts[i],data)}if(!S.productPhotoPaths)S.productPhotoPaths={};if(old&&(old.name!==name||old.category!==cat)&&S.productPhotoPaths[old.category+'::'+old.name]){S.productPhotoPaths[cat+'::'+name]=S.productPhotoPaths[old.category+'::'+old.name];delete S.productPhotoPaths[old.category+'::'+old.name]}if(newPhotoPath)S.productPhotoPaths[cat+'::'+name]=newPhotoPath;else if(newProductPhotoDraft&&newProductPhotoDraft.changed&&!newProductPhotoDraft.data)delete S.productPhotoPaths[cat+'::'+name];if(old&&(old.name!==name||old.category!==cat)){let photo=localStorage.getItem(customPhotoKey(old.category,old.name));if(photo){localStorage.setItem(customPhotoKey(cat,name),photo);localStorage.removeItem(customPhotoKey(old.category,old.name))}}save();productPhotoManager()}
+async function saveCatalogueProductById(eid){let id=decodeURIComponent(eid||''),old=id?findCatalogueProductById(id):null,name=document.getElementById('cpName').value.trim(),cat=document.getElementById('cpCat').value,sub=document.getElementById('cpSub').value;if(!name||!cat||!sub){alert('Nom, catégorie et sous-catégorie sont obligatoires.');return}let duplicate=allCatalogueItems().some(x=>x.id!==id&&x.category===cat&&x.name.toLowerCase()===name.toLowerCase());if(duplicate){alert('Ce produit existe déjà dans cette catégorie.');return}let newPhotoPath=null;if(newProductPhotoDraft&&newProductPhotoDraft.changed&&newProductPhotoDraft.data){try{newPhotoPath=await haccpUploadProductPhoto(newProductPhotoDraft.data,cat,name)}catch(e){alert('Enregistrement photo impossible : '+e.message+' Le produit n’a pas été modifié.');return}}if(!storeNewProductPhoto(cat,name))return;let data={name:name,category:cat,subCategory:sub,dlcDays:Number(document.getElementById('cpDays').value)||0,maxTemp:document.getElementById('cpTemp').value===''?null:Number(document.getElementById('cpTemp').value),unit:document.getElementById('cpUnit').value,note:document.getElementById('cpNote').value.trim(),active:true};if(!id){data.id=customProductId();S.customProducts.push(data)}else if(id.startsWith('base:')){S.productOverrides[id]=data}else{let i=S.customProducts.findIndex(x=>x.id===id);if(i>=0)S.customProducts[i]=Object.assign({},S.customProducts[i],data)}if(!S.productPhotoPaths)S.productPhotoPaths={};if(old&&(old.name!==name||old.category!==cat)&&S.productPhotoPaths[old.category+'::'+old.name]){S.productPhotoPaths[cat+'::'+name]=S.productPhotoPaths[old.category+'::'+old.name];delete S.productPhotoPaths[old.category+'::'+old.name]}if(newPhotoPath)S.productPhotoPaths[cat+'::'+name]=newPhotoPath;else if(newProductPhotoDraft&&newProductPhotoDraft.changed&&!newProductPhotoDraft.data)delete S.productPhotoPaths[cat+'::'+name];if(old&&(old.name!==name||old.category!==cat)){let photo=localStorage.getItem(customPhotoKey(old.category,old.name));if(photo){localStorage.setItem(customPhotoKey(cat,name),photo);localStorage.removeItem(customPhotoKey(old.category,old.name))}}save();productPhotoManager()}
 function productWasUsed(x){return (S.stock||[]).some(r=>r.product===x.name||r.prod===x.name||r.p===x.name)||(S.trace||[]).some(r=>JSON.stringify(r).includes(x.name))}
 function deleteCatalogueProductById(eid){let id=decodeURIComponent(eid),x=findCatalogueProductById(id);if(!x)return;let used=productWasUsed(x),choice=prompt('Que voulez-vous faire avec « '+x.name+' » ?\n\n1 = Désactiver le produit\n2 = Supprimer définitivement'+(used?' (indisponible : historique existant)':'')+'\n0 = Annuler','1');if(choice===null||choice==='0'||choice==='')return;if(choice==='1'){if(id.startsWith('base:'))S.disabledBaseProducts[id]=true;else{let i=S.customProducts.findIndex(p=>p.id===id);if(i>=0)S.customProducts[i].active=false}save();productPhotoManager();return}if(choice==='2'){if(used){alert('Suppression définitive impossible : ce produit possède déjà un historique HACCP. Vous pouvez uniquement le désactiver.');return}if(!confirm('Supprimer définitivement « '+x.name+' » ? Cette action est irréversible.'))return;if(id.startsWith('base:')){S.disabledBaseProducts[id]=true}else{let i=S.customProducts.findIndex(p=>p.id===id);if(i>=0)S.customProducts.splice(i,1)}localStorage.removeItem(customPhotoKey(x.category,x.name));save();productPhotoManager();return}alert('Choisissez 1 pour désactiver, 2 pour supprimer ou 0 pour annuler.')}
 function filterCatalogueProducts(){let q=normalizeProductSearch((document.getElementById('ppmSearch')||{}).value||'');document.querySelectorAll('#catalogueProductGrid .photo-product').forEach(el=>{let txt=normalizeProductSearch(el.getAttribute('data-search')||'');el.style.display=!q||txt.includes(q)?'':'none'})}
@@ -2721,7 +2721,7 @@ function deleteSupplier(i){if(confirm('Supprimer ce fournisseur ?')){S.suppliers
 // Photos de reception : bucket prive Supabase et jeton Firebase.
 const HACCP_PHOTO_ENDPOINT='https://xtinmuduvwnhnwnmuggt.supabase.co';
 const HACCP_PHOTO_PUBLIC_KEY='sb_publishable_Zjw89hLTIjWeAJGYKWgvlQ_1ovdedwp';
-async async function haccpPhotoAuth(){
+async function haccpPhotoAuth(){
  const user=firebase.auth().currentUser;
  if(!user)throw new Error('Reconnectez-vous a votre compte Firebase');
  const token=await user.getIdToken(true);
@@ -3870,7 +3870,7 @@ if(h&&!h.classList.contains('mt-module-heading')){
  h.classList.add('mt-module-heading');
  const icon=document.createElement('span');icon.className='mt-module-heading-icon';icon.innerHTML=svg(key);h.prepend(icon);
  const textNodes=Array.from(h.childNodes).filter(n=>n.nodeType===3);
- textNodes.forEach(n=>{n.textContent=n.textContent.replace(/^[\\s\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}]+/gu,'')});
+ textNodes.forEach(n=>{n.textContent=n.textContent.replace(/^\s+/u,'')});
 }
 if(key==='reception'){
  app.querySelectorAll('.photo-actions button').forEach((b,i)=>{
