@@ -2438,6 +2438,16 @@ function reception(){CURRENT_VIEW='reception';receptionScanTexts=[];receptionPho
  </div><aside class="rec-side"><div class="side-card success"><h3>✓ Produit sélectionné</h3><div id="selectedProduct"><b>Aucun produit sélectionné</b><span>Choisissez une catégorie et un produit</span></div><div id="sideTemp" class="side-temp">🌡️ Température recommandée<br><strong>—</strong></div></div><div class="side-card"><h3>✓ Rappel des contrôles</h3><p>● Température</p><p>● État de l’emballage</p><p>● DLC / DDM</p><p>● Traçabilité complète</p></div><div class="side-card info"><h3>ⓘ Bon à savoir</h3><p id="sideAdvice">Sélectionnez un produit pour afficher les recommandations de réception.</p></div></aside></div>
 </div>`;receptionRules();updateReceptionProducts();haccpRestoreReceptionDraft();updateReceptionSide()}
 
+function receptionGridPlaceholder(cat){
+ const paths=/Poisson|fruits de mer/i.test(cat)?'<path d="M3 12c5-7 12-7 16 0-4 7-11 7-16 0ZM19 12l3-4v8l-3-4Z"/><circle cx="8" cy="11" r="1"/>':/Viande|Boucherie|Volaille|Charcuterie/i.test(cat)?'<path d="M4 15c-3-5 3-11 9-10l7 7c2 4-2 9-7 8l-4-3-5-2Z"/><path d="m9 10 5 5"/>':/Fruit|Légume/i.test(cat)?'<path d="M12 21C6 17 4 11 9 6c5 0 10 6 3 15ZM12 21c1-7 3-11 8-13-1 7-3 11-8 13Z"/>':'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/>';
+ return '<span class="food-thumb" style="width:100%;height:60px;background:#eaf2ed;border-radius:7px;display:grid;place-items:center"><svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#0f5a3f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg></span>';
+}
+function receptionGridThumb(cat,name){
+ const photo=foodThumb(cat,name,64);
+ if(!photo)return receptionGridPlaceholder(cat);
+ const fallback=receptionGridPlaceholder(cat).replace(/'/g,'&#39;');
+ return photo.replace("this.parentElement.style.display=\\'none\\'","this.parentElement.outerHTML=\\'"+fallback+"\\'");
+}
 function renderPhotoCatalogue(){
  let cat=(document.getElementById('rc')||{}).value||'', selected=((document.getElementById('rp')||{}).value||'').trim(),box=document.getElementById('photoCatalogue');
  if(!box)return;
@@ -2448,7 +2458,7 @@ function renderPhotoCatalogue(){
  let products=all.filter(x=>x.category===cat);
  let original=products.filter(x=>!x.custom),created=products.filter(x=>x.custom);
  products=original.concat(created);
- box.innerHTML='<div class="photo-cat-head"><b>'+esc(cat)+'</b></div>'+(invalid.length?'<div class="note" role="alert" style="color:#b42318;margin:8px 0">Produit(s) créé(s) sans catégorie valide : '+invalid.map(x=>esc(x.name||'Sans nom')+' ('+esc(x.category||'aucune catégorie')+')').join(', ')+'</div>':'')+'<div class="photo-product-grid">'+products.map(x=>'<button type="button" class="photo-product" data-reception-product="'+encodeURIComponent(x.name)+'" data-reception-category="'+encodeURIComponent(x.category)+'" onclick="selectReceptionPhotoProduct(decodeURIComponent(this.getAttribute(\'data-reception-product\')),decodeURIComponent(this.getAttribute(\'data-reception-category\')))">'+foodThumb(x.category,x.name,64).replace("this.parentElement.style.display='none'","this.parentElement.remove()")+'<span>'+esc(x.name)+'</span></button>').join('')+'</div>';
+ box.innerHTML='<div class="photo-cat-head"><b>'+esc(cat)+'</b></div>'+(invalid.length?'<div class="note" role="alert" style="color:#b42318;margin:8px 0">Produit(s) créé(s) sans catégorie valide : '+invalid.map(x=>esc(x.name||'Sans nom')+' ('+esc(x.category||'aucune catégorie')+')').join(', ')+'</div>':'')+'<div class="photo-product-grid">'+products.map(x=>'<button type="button" class="photo-product" data-reception-product="'+encodeURIComponent(x.name)+'" data-reception-category="'+encodeURIComponent(x.category)+'" onclick="selectReceptionPhotoProduct(decodeURIComponent(this.getAttribute(\'data-reception-product\')),decodeURIComponent(this.getAttribute(\'data-reception-category\')))">'+receptionGridThumb(x.category,x.name)+'<span>'+esc(x.name)+'</span></button>').join('')+'</div>';
 }
 function selectReceptionPhotoProduct(p,category){
  let item=receptionSearchItems().find(function(x){return x.name===p&&(!category||x.category===category)});
