@@ -152,10 +152,10 @@ body:has(#mtPcShell):not(.on-login) #app{width:100%!important;max-width:none!imp
 body:has(#mtPcShell) .home-shell{width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0 28px 32px!important;box-sizing:border-box!important}
 body:has(#mtPcShell) .mt-pc-topbar{width:calc(100% + 56px)!important;max-width:none!important;margin:0 -28px!important;padding:12px 28px!important;box-sizing:border-box!important;height:60px!important}
 body:has(#mtPcShell) .mtpc-hero{width:calc(100% + 56px)!important;margin:0 -28px 16px!important;max-width:none!important;box-sizing:border-box!important}
-body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:22px!important;width:100%!important}
-body:has(#mtPcShell) .mtpc-photo-card .mtp-photo{height:185px!important;min-height:185px!important}
-body:has(#mtPcShell) .mtpc-photo-card strong{font-family:"Segoe UI",Inter,Arial,sans-serif!important;font-size:18px!important;font-weight:600!important}
-body:has(#mtPcShell) .mtpc-tile-footer{min-height:72px!important;padding:23px 15px 15px!important}
+body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(4,1fr)!important;gap:18px!important;width:100%!important}
+body:has(#mtPcShell) .mtpc-photo-card .mtp-photo{height:120px!important;min-height:120px!important;object-fit:cover!important}
+body:has(#mtPcShell) .mtpc-photo-card strong{font-family:"Segoe UI",Inter,Arial,sans-serif!important;font-size:14px!important;font-weight:600!important}
+body:has(#mtPcShell) .mtpc-tile-footer{min-height:65px!important;padding:22px 12px 14px!important}
 body:has(#mtPcShell) .mt-pc-sidebar{display:flex!important;flex-direction:column!important;width:250px!important;background:#0d4a36!important;padding:14px 12px!important}
 body:has(#mtPcShell) .mt-pc-logo{display:flex!important;align-items:center!important;gap:10px!important;padding:6px 8px 18px!important;color:#fff!important;font:700 19px "Segoe UI",Inter,Arial,sans-serif!important}
 body:has(#mtPcShell) .mt-pc-logo span{color:#fff!important}
@@ -176,12 +176,16 @@ body:has(#mtPcShell) .mtpc-alert-circle{width:54px;height:54px;flex:none;display
 body:has(#mtPcShell) .mtpc-alert-orange{background:#f5a000}
 body:has(#mtPcShell) .mtpc-alert-circle .mt-ref-icon{width:28px!important;height:28px!important}
 body:has(#mtPcShell) .mtpc-alert-copy{display:flex!important;flex:1!important;flex-direction:column!important;align-items:flex-start!important;gap:3px!important}
-body:has(#mtPcShell) .mtpc-alert-copy b{font-size:12px!important;font-weight:600!important}
+body:has(#mtPcShell) .mtpc-alert-copy b{font-size:12px!important;font-weight:600!important;font-family:"Segoe UI",Inter,Arial,sans-serif!important}
 body:has(#mtPcShell) .mtpc-alert-copy strong{font-size:30px!important;line-height:1.1!important}
 body:has(#mtPcShell) .mtpc-alert-copy small{font-size:12px!important;color:#6b7872!important;margin:0!important}
 body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-size:28px}
 }
 
+
+@media (min-width:851px) and (max-width:1099px){
+ body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(2,1fr)!important}
+}
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
