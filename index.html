@@ -60,6 +60,31 @@ body:has(#mtPcShell) .mt-mobile-top,body:has(#mtPcShell) .mt-site-pill,body:has(
 @media(min-width:851px){body:has(#mtPcShell) .home-grid>.home-direction{grid-column:1/-1!important}body:has(#mtPcShell) .home-grid>.home-card:not(.home-direction){grid-column:auto!important}body:has(#mtPcShell) .home-grid>.home-card{max-width:none!important}body:has(#mtPcShell) #mtPcShell[hidden]{display:none!important}body.on-login #mtPcShell{display:none!important}}
 
 @media(min-width:851px){body.on-login:has(#mtPcShell) #app{padding-left:0!important}body.on-login:has(#mtPcShell) > main{margin-left:0!important;width:100%!important}body.on-home:has(#mtPcShell) .home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* PC visual refresh based on supplied multi-screen reference; mobile remains unchanged */
+@media(min-width:851px){
+ body:has(#mtPcShell):not(.on-login) .mt-pc-sidebar{width:232px;background:linear-gradient(155deg,#075c43,#003a2c);padding:20px 12px}
+ body:has(#mtPcShell) .mt-pc-nav button{padding:10px 12px;border-radius:8px}
+ body:has(#mtPcShell) .home-shell{padding:0 18px 35px}
+ body:has(#mtPcShell) .mt-pc-topbar{height:60px;margin:0 -18px 0;padding:0 22px}
+ body:has(#mtPcShell) .home-head{display:none!important}
+ body:has(#mtPcShell) .mtpc-hero{height:172px;margin:0 -18px 14px;background:linear-gradient(90deg,#061f1c99,#061f1c11),url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1200&q=85') center/cover;display:flex;align-items:center;padding:22px;color:#fff}
+ body:has(#mtPcShell) .mtpc-hero>div{background:#08251fc9;border-radius:15px;padding:12px 23px}
+ body:has(#mtPcShell) .mtpc-hero h1{font-size:35px;line-height:1.05;margin:0;color:#fff}
+ body:has(#mtPcShell) .mtpc-hero p{margin:4px 0 0;color:#c8eadb;font-size:13px}
+ body:has(#mtPcShell) .mtpc-alerts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 15px}
+ body:has(#mtPcShell) .mtpc-alerts button{display:flex;align-items:center;gap:12px;text-align:left;background:#fff0f1;border:1px solid #efb9c0;border-radius:14px;padding:13px 15px;color:#bf1832;min-width:0}
+ body:has(#mtPcShell) .mtpc-alerts button+button{background:#fff8eb;border-color:#f0d4a4;color:#bf7800}
+ body:has(#mtPcShell) .mtpc-alerts button>span{font-size:26px}body:has(#mtPcShell) .mtpc-alerts button div{flex:1}body:has(#mtPcShell) .mtpc-alerts b,body:has(#mtPcShell) .mtpc-alerts small{display:block}body:has(#mtPcShell) .mtpc-alerts small{font-size:11px;margin-top:5px}
+ body:has(#mtPcShell) .mtpc-alerts button>strong{font-size:29px}
+ body:has(#mtPcShell) .mtpc-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ body:has(#mtPcShell) .mtpc-photo-card{display:block;position:relative;text-align:left;border:1px solid #e2e9e5;background:#fff;border-radius:13px;overflow:hidden;min-width:0;padding:0 0 12px;box-shadow:0 2px 8px #082f2214;color:#152921;cursor:pointer}
+ body:has(#mtPcShell) .mtpc-photo-card .mtp-photo{height:108px;background-size:cover!important;background-position:center!important}
+ body:has(#mtPcShell) .mtpc-photo-card strong{display:block;padding:12px 35px 0 12px;font-size:13px;min-height:36px}
+ body:has(#mtPcShell) .mtpc-go{position:absolute;right:10px;bottom:12px;border-radius:50%;background:#006d51;color:white;width:23px;height:23px;display:grid;place-items:center;font-size:21px}
+ body:has(#mtPcShell) .mtpc-photo-card:hover{box-shadow:0 7px 20px #082f2230;transform:translateY(-1px)}
+}
+@media(min-width:851px) and (max-width:1100px){body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
@@ -1054,17 +1079,17 @@ function home(){
   <div class="home-brand">M&T <span>HACCP</span></div>
   <div class="home-kicker">Sécurité alimentaire, simplement</div>
   <div class="home-head"><h1>Vos modules</h1><p>Sélectionnez une activité</p></div>
-  <div class="home-grid">
-   <button class="home-card" onclick="mtPcNavigate('reception')"><span class="home-icon">📦</span><b>Réception</b><small>Contrôlez vos marchandises</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('stock')"><span class="home-icon">▦</span><b>Stock</b><small>Suivez vos stocks et DLC</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('temperatures')"><span class="home-icon">🌡</span><b>Températures</b><small>Contrôlez vos équipements</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('etiquetage')"><span class="home-icon">🏷</span><b>Étiquetage HACCP</b><small>Gérez vos étiquettes DLC</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('nettoyage')"><span class="home-icon">✦</span><b>Nettoyage</b><small>Suivez vos plans de nettoyage</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('fournisseurs')"><span class="home-icon">🚚</span><b>Fournisseurs</b><small>Gérez vos fournisseurs</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('tracabilite')"><span class="home-icon">▤</span><b>Traçabilité</b><small>Consultez l'historique des opérations</small><span class="home-arrow">›</span></button>
-   <button class="home-card" onclick="mtPcNavigate('parametres')"><span class="home-icon">⚙</span><b>Paramètres</b><small>Configuration de l'application</small><span class="home-arrow">›</span></button>
-   <button class="home-card home-direction" onclick="mtPcNavigate('direction')"><span class="home-icon">▥</span><span class="direction-copy"><b>Tableau de bord Direction 🔒</b><small>Vue d'ensemble et rapports</small></span><span class="direction-photo" aria-hidden="true"></span><span class="home-arrow">›</span></button>
-   ${SITE_ID==='main'?'<button class="home-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="home-icon">🏢</span><b>Supervision des établissements</b><small>Consultez chaque établissement en temps réel</small><span class="home-arrow">›</span></button>':''}
+  <div class="mtpc-hero"><div><h1>M&amp;T HACCP</h1><p>Hygiène • Sécurité • Qualité</p></div></div>
+  <div class="mtpc-alerts"><button onclick="mtPcNavigate('direction')"><span>❗</span><div><b>Non-conformités</b><small>Consulter les alertes</small></div><strong id="mtPcNcCount">—</strong></button><button onclick="mtPcNavigate('stock')"><span>◷</span><div><b>Alertes DLC</b><small>Produits à contrôler</small></div><strong id="mtPcDlcCount">—</strong></button></div>
+  <div class="mtpc-photo-grid">
+<button class="mtpc-photo-card" onclick="mtPcNavigate('reception')"><span class="mtp-photo mtp-photo-reception"></span><strong>Réception de marchandises</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('tracabilite')"><span class="mtp-photo mtp-photo-trace"></span><strong>Traçabilité</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('temperatures')"><span class="mtp-photo mtp-photo-temperature"></span><strong>Température</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('nettoyage')"><span class="mtp-photo mtp-photo-clean"></span><strong>Nettoyage</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('etiquetage')"><span class="mtp-photo mtp-photo-etiquetage"></span><strong>Étiquetage HACCP</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"></span><strong>Tableau de bord Direction</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('parametres')"><span class="mtp-photo mtp-photo-parametres"></span><strong>Paramètres</strong><span class="mtpc-go">›</span></button>
+<button class="mtpc-photo-card" onclick="mtPcNavigate('stock')"><span class="mtp-photo mtp-photo-stock"></span><strong>Stock et DLC</strong><span class="mtpc-go">›</span></button>${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"></span><strong>Supervision des établissements</strong><span class="mtpc-go">›</span></button>':''}
   </div>
   <div class="mt-home-drawer" id="mtHomeDrawer" hidden>
     <button class="mt-drawer-backdrop" onclick="mtHomeMenu(false)" aria-label="Fermer le menu"></button>
@@ -1085,6 +1110,8 @@ function home(){
  const mtSite=typeof siteDisplayName!=='undefined'&&siteDisplayName?siteDisplayName:(typeof SITE_ID!=='undefined'?SITE_ID:'Établissement');
  const siteEl=document.getElementById('mtHomeSite');if(siteEl)siteEl.textContent=mtSite;
  const pcSiteEl=document.getElementById('mtPcSite');if(pcSiteEl)pcSiteEl.textContent=mtSite;
+ const pcNc=document.getElementById('mtPcNcCount');if(pcNc)pcNc.textContent=(S.stock||[]).filter(x=>x&&(x.ok===false||x.conforme===false||x.status==='Non conforme')).length+(S.temps||[]).filter(x=>x&&x.ok===false).length;
+ const pcDlc=document.getElementById('mtPcDlcCount');if(pcDlc){const now=new Date();now.setHours(0,0,0,0);pcDlc.textContent=(S.stock||[]).filter(x=>x&&x.dlc&&Math.ceil((new Date(x.dlc+'T00:00:00')-now)/86400000)<=3).length;}
  const drawerSite=document.getElementById('mtDrawerSite');if(drawerSite)drawerSite.textContent=mtSite;
  const dateEl=document.getElementById('mtHomeDate');if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short'}).format(new Date());
 }
