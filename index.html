@@ -2510,7 +2510,27 @@ function selectReceptionPhotoProduct(p,category){
  updateReceptionSide()
 }
 function updateReceptionSide(){let cat=(document.getElementById('rc')||{}).value||'',p=(document.getElementById('rp')||{}).value||'',rule=receivingTempRule(cat,p),sel=document.getElementById('selectedProduct'),st=document.getElementById('sideTemp'),tr=document.getElementById('tempRecommendation'),adv=document.getElementById('sideAdvice');if(sel)sel.innerHTML=p?'<div class="selected-food">'+foodThumb(cat,p,58)+'<div><b>'+esc(p)+'</b><span>Catégorie : '+esc(cat)+'</span></div></div>':'<b>Aucun produit sélectionné</b><span>Choisissez une catégorie et un produit</span>';if(st)st.innerHTML='🌡️ Température recommandée<br><strong>'+(rule?esc(rule.label):'—')+'</strong>';if(tr)tr.innerHTML='🌡️ <span>Température recommandée</span><strong>'+(rule?esc(rule.label):'Choisissez un produit')+'</strong>';if(adv)adv.innerHTML=rule&&p?'<b>'+esc(p)+'</b> : contrôlez la température à la réception. Recommandation : <b>'+esc(rule.label)+'</b>. En cas de dépassement, une action corrective doit être enregistrée.':'Sélectionnez un produit pour afficher les recommandations de réception.'}
-function quickAddSupplier(){let name=prompt('Nom du fournisseur :');if(name===null)return;name=name.trim();if(!name){alert('Veuillez saisir le nom du fournisseur.');return}let existing=S.suppliers.find(s=>(typeof s==='string'?s:s.name).trim().toLowerCase()===name.toLowerCase());if(!existing){S.suppliers.push({name:name,phone:'',plate:'',driver:''});save()}let input=document.getElementById('rf');if(input){if(!Array.from(input.options).some(o=>o.value.toLowerCase()===name.toLowerCase())){let o=document.createElement('option');o.value=name;o.textContent=name;input.appendChild(o)}input.value=name}alert(existing?'Fournisseur déjà enregistré et sélectionné.':'Fournisseur ajouté et sélectionné.')}
+function quickAddSupplier(){
+ const existing=document.getElementById('supplierQuickModal');if(existing)existing.remove();
+ const overlay=document.createElement('div');overlay.id='supplierQuickModal';
+ overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px';
+ const fields=[['name','Nom du fournisseur / société *','text'],['legalName','Raison sociale','text'],['taxId','Matricule fiscal / identifiant fiscal','text'],['registration','Registre de commerce','text'],['address','Adresse','text'],['city','Ville','text'],['postalCode','Code postal','text'],['country','Pays','text'],['phone','Téléphone','tel'],['mobile','Téléphone portable','tel'],['email','Adresse e-mail','email'],['website','Site web','url'],['contact','Personne à contacter','text'],['contactRole','Fonction du contact','text'],['paymentTerms','Conditions de paiement','text'],['products','Produits / familles livrés','text'],['plate','Immatriculation du véhicule','text'],['driver','Livreur / chauffeur','text'],['driverPhone','Téléphone du livreur','tel'],['notes','Observations','text']];
+ const body=fields.map(([key,label,type])=>'<label style="display:block;min-width:0;font-size:13px;font-weight:600">'+label+'<input data-supplier-field="'+key+'" type="'+type+'" style="width:100%;margin-top:5px;padding:10px;border:1px solid #b6c9bf;border-radius:8px;font-size:15px" autocomplete="off"></label>').join('');
+ overlay.innerHTML='<div role="dialog" aria-modal="true" aria-label="Fiche fournisseur" style="width:min(750px,100%);max-height:94vh;overflow:auto;background:white;border-radius:14px;padding:18px;color:#1c2925"><h2 style="margin:0 0 5px">Nouvelle fiche fournisseur</h2><p style="margin:0 0 14px;color:#66766f">Renseignez les informations du fournisseur, puis enregistrez.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+body+'</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;position:sticky;bottom:0;background:white;padding:12px 0"><button type="button" class="btn" onclick="document.getElementById(\'supplierQuickModal\').remove()">Annuler</button><button type="button" class="btn primary" onclick="saveQuickSupplierSheet()">Enregistrer le fournisseur</button></div></div>';
+ document.body.appendChild(overlay);
+ const first=overlay.querySelector('[data-supplier-field="name"]');if(first)first.focus();
+}
+function saveQuickSupplierSheet(){
+ const modal=document.getElementById('supplierQuickModal');if(!modal)return;
+ const x={};modal.querySelectorAll('[data-supplier-field]').forEach(el=>{x[el.getAttribute('data-supplier-field')]=el.value.trim()});
+ if(!x.name){alert('Le nom du fournisseur est obligatoire.');modal.querySelector('[data-supplier-field="name"]').focus();return}
+ if(S.suppliers.some(s=>String(typeof s==='string'?s:s.name||'').trim().toLowerCase()===x.name.toLowerCase())){alert('Ce fournisseur existe déjà.');return}
+ S.suppliers.push(x);save();
+ const input=document.getElementById('rf');
+ if(input){const option=document.createElement('option');option.value=x.name;option.textContent=x.name;input.appendChild(option);input.value=x.name}
+ modal.remove();
+}
+
 
 let receptionScanTexts=[],receptionPhotoCount=0;
 function normText(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]+/g,' ').trim()}
