@@ -186,6 +186,20 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
 @media (min-width:851px) and (max-width:1099px){
  body:has(#mtPcShell) .mtpc-photo-grid{grid-template-columns:repeat(2,1fr)!important}
 }
+
+/* Retouches finales accueil PC : police sans empattements et compteurs d'alerte */
+@media (min-width:851px){
+ body:has(#mtPcShell):not(.on-login),
+ body:has(#mtPcShell):not(.on-login) *{font-family:"Segoe UI",Inter,Arial,sans-serif!important}
+ body:has(#mtPcShell) .mtpc-photo-card,
+ body:has(#mtPcShell) .mtpc-photo-card *,
+ body:has(#mtPcShell) .mt-pc-nav button,
+ body:has(#mtPcShell) .mtpc-alerts button{font-family:inherit!important}
+ body:has(#mtPcShell) .mtpc-alert-copy b{font-size:13px!important;font-weight:600!important}
+ body:has(#mtPcShell) .mtpc-alert-copy strong{font-size:30px!important;font-weight:700!important;color:#e5383b!important}
+ body:has(#mtPcShell) .mtpc-alerts button+button .mtpc-alert-copy strong{color:#c77d00!important}
+}
+
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
