@@ -244,11 +244,11 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card{
    display:flex!important;flex-direction:row!important;align-items:stretch!important;
-   height:100px!important;min-height:100px!important;
+   height:90px!important;min-height:90px!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-photo-card .mtp-photo{
-   flex:0 0 40%!important;width:40%!important;height:100px!important;
-   min-height:100px!important;background-size:cover!important;background-position:center!important;
+   flex:0 0 40%!important;width:40%!important;height:90px!important;
+   min-height:90px!important;background-size:cover!important;background-position:center!important;
    object-fit:cover!important;
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer{
@@ -264,7 +264,10 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  }
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-go{margin-left:auto!important;order:2!important}
  body:has(#mtPcShell) .mtpc-admin-grid .mtpc-tile-footer strong{order:1!important}
- body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card .mtp-photo{height:100px!important;min-height:100px!important;object-fit:cover!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card .mtp-photo{height:130px!important;min-height:130px!important;object-fit:cover!important;background-position:center center!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtp-photo-temperature{background-position:center 35%!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtp-photo-stock{background-position:center 50%!important}
+ body:has(#mtPcShell) .mtpc-work-grid .mtp-photo-etiquetage{background-position:center 45%!important}
  body:has(#mtPcShell) .mtpc-work-grid .mtpc-photo-card{min-height:0!important}
  body:has(#mtPcShell) .home-shell{padding-bottom:16px!important}
  body:has(#mtPcShell) .mtpc-supervision-grid{
@@ -304,6 +307,9 @@ body:has(#mtPcShell) .mtpc-alert-chevron{margin-left:auto;color:#6b7872;font-siz
  }
 }
 
+@media (min-width:851px){
+ body:has(#mtPcShell) .mtpc-alerts button{padding-top:12px!important;padding-bottom:12px!important}
+}
 </style>
 <style>
 :root{--ink:#1c2925;--muted:#66766f;--line:#d9e7df;--bg:#f2f7f4;--card:#fff;--active:#e6f4eb;--accent:#087956;--danger:#c33b43}
