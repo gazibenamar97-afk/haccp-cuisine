@@ -1056,6 +1056,10 @@ body.on-login main{padding-top:12px!important}
  body.on-login #app{height:100%!important;min-height:0!important;margin:0!important;padding:0!important}
  body.on-login .mt-ref-wrap{height:100%!important;min-height:0!important;margin:0!important;overflow:hidden!important}
  body.on-login .mt-ref-login,body.on-login .mt-ref-board{height:100%!important;min-height:0!important;box-sizing:border-box!important}
+ /* Stretch each panel to the full grid height: no split-color band at bottom. */
+ body.on-login .mt-ref-wrap{align-items:stretch!important;grid-template-rows:minmax(0,1fr)!important}
+ body.on-login .mt-ref-login,body.on-login .mt-ref-board{align-self:stretch!important;height:100%!important;min-height:100%!important}
+ body.on-login .mt-ref-login{background:var(--card)!important}
 }
 /* Affichage PC à 90 %, connexion et établissements ; mobile inchangé. */
 @media screen and (min-width:851px){html body{zoom:.9}}
