@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v158-rapports-sticky-20261011">
+<!doctype html><html lang="fr"><head><meta name="mt-haccp-build" content="v159-admin-rapport-20261011">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#2e6a50"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="M&T HACCP"><link rel="manifest" id="appManifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon.svg"><title>M&T HACCP</title>
@@ -1516,7 +1516,6 @@ function mtReportRange(mode){
  return [mtReportLocalDate(start),end]
 }
 function mtReports(){
- if(SITE_ID==='main'){alert('Les rapports sont réservés aux établissements.');return}
  CURRENT_VIEW='reports';document.body.classList.remove('on-home','mt-premium-active');
  const range=mtReportRange('month');
  app.innerHTML='<section class="mt-report-ui"><button class="btn back" onclick="home()">← Accueil</button><h1>Rapports</h1><p class="note">12 rapports HACCP détaillés — uniquement les données de votre établissement.</p>'+
@@ -1530,7 +1529,6 @@ function mtReports(){
 function mtReportCustomPeriod(){const el=document.getElementById('mtReportPeriod');if(el)el.value='custom'}
 function mtReportSetPeriod(mode){if(mode==='custom')return;const r=mtReportRange(mode);document.getElementById('mtReportFrom').value=r[0];document.getElementById('mtReportTo').value=r[1]}
 function mtReportGenerate(asPDF){
- if(SITE_ID==='main'){alert('Rapports indisponibles pour le compte administrateur.');return}
  const type=document.getElementById('mtReportType').value,from=document.getElementById('mtReportFrom').value,to=document.getElementById('mtReportTo').value;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to){alert('Veuillez sélectionner une période valide.');return}
  const name=(MT_REPORT_TYPES.find(x=>x[0]===type)||[])[1]||'Rapport HACCP';
@@ -1625,7 +1623,7 @@ function mtPremiumHome(){
   ['clean','Nettoyage','clean','cleaning()','#e7a51c'],
   ['trace','Traçabilité','trace',"mtOpenModule('trace')",'#cf3443'],
   ['direction','Tableau de bord<br>Direction','chart','openDashboard()','#09a4a6'],
-  ...(SITE_ID!=='main'?[['rapports','Rapport','chart','mtReports()','#17694d']]:[]),
+  ['rapports','Rapport','chart','mtReports()','#17694d'],
   ['parametres','Paramètres','gear','settings()','#225a7d'],
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
