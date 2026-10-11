@@ -1,0 +1,6 @@
+name = "mt-haccp-ai-audit"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "mt-haccp"
