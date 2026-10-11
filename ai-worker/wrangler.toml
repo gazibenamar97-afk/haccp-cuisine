@@ -4,3 +4,4 @@ compatibility_date = "2026-10-01"
 
 [vars]
 FIREBASE_PROJECT_ID = "mt-haccp"
+# Déclenchement initial du build GitHub → Cloudflare (2026-10-11).
