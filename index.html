@@ -1130,7 +1130,7 @@ function mtReports(){
  '<p class="note">Les rapports reflètent les enregistrements disponibles. Une absence de contrôle n’est jamais comptée comme une conformité.</p>'+
  '<div class="mt-report-actions"><button type="button" class="btn primary" onclick="mtReportGenerate(false)">Imprimer</button><button type="button" class="btn primary" onclick="mtReportGenerate(true)">Générer PDF</button></div></div>'+
  '<div class="panel" id="mtAiReportPanel"><h2>Assistant IA HACCP — Gemini</h2><p class="note">Analyse commentée à partir des données de votre établissement uniquement. Le rapport est en lecture seule et doit être vérifié par le responsable HACCP.</p><p class="note">Utilise les dates choisies ci-dessus.</p><div class="mt-report-actions"><button type="button" class="btn primary" id="mtAiReportButton" onclick="mtAiReportGenerate()">Générer l’analyse IA réelle</button><button type="button" class="btn" onclick="mtAiReportPrint()">Imprimer / PDF IA</button></div><div id="mtAiReportStatus" role="status" aria-live="polite"></div><div id="mtAiReportOutput" style="line-height:1.6;overflow-wrap:anywhere"></div><div id="mtAiReportProofs" style="line-height:1.5;overflow-wrap:anywhere"></div></div>'+ 
- '<div class="panel"><h2>Les 12 rapports disponibles</h2>'+MT_REPORT_TYPES.map((x,i)=>'<div class="record">'+(i+1)+'. '+mtReportEsc(x[1])+'</div>').join('')+'</div></section>';
+ '</section>';
 }
 /* Assistant IA dans Rapports : aucun identifiant établissement fourni par le navigateur.
    Le Worker détermine le site exclusivement depuis le profil Firebase authentifié. */
