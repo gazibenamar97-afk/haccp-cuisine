@@ -1022,6 +1022,23 @@ body.on-login main{padding-top:12px!important}
  }
 }
 </style>
+<style id="mt-pc-login-viewport-fix">
+/* PC login: avoid two nested scrollbars and keep both columns inside the viewport. */
+@media screen and (min-width:851px){
+ body.on-login{overflow:hidden!important}
+ body.on-login #app{height:100dvh!important;overflow:hidden!important}
+ body.on-login .mt-ref-wrap{height:100dvh!important;min-height:0!important;overflow:hidden!important;box-sizing:border-box!important}
+ body.on-login .mt-ref-login,body.on-login .mt-ref-board{
+  height:100%!important;min-height:0!important;overflow:hidden!important;
+  box-sizing:border-box!important;justify-content:center!important;
+  padding-top:clamp(16px,2.2vh,32px)!important;
+  padding-bottom:clamp(16px,2.2vh,32px)!important;
+  gap:clamp(8px,1.6vh,18px)!important;
+ }
+ body.on-login .mt-ref-board h2{font-size:clamp(36px,3.5vw,60px)!important}
+ body.on-login .mt-ref-gauge{max-height:clamp(240px,42vh,410px)!important}
+}
+</style>
 <style id="mt-pc-display-scale">/* Affichage PC à 90 %, connexion et établissements ; mobile inchangé. */
 @media screen and (min-width:851px){html body{zoom:.9}}
 </style>
