@@ -1039,6 +1039,21 @@ body.on-login main{padding-top:12px!important}
  body.on-login .mt-ref-gauge{max-height:clamp(240px,42vh,410px)!important}
 }
 </style>
+<style id="mt-pc-full-width-fix">
+/* PC: fill the entire viewport to the right of the fixed 250px sidebar. */
+@media screen and (min-width:851px){
+ body.on-home:has(#mtPcShell)>main{
+  margin-left:250px!important;width:calc(100% - 250px)!important;
+  max-width:none!important;min-width:0!important;padding:0!important;
+  box-sizing:border-box!important;
+ }
+ body.on-home:has(#mtPcShell) #app,
+ body.on-home:has(#mtPcShell) .home-shell{
+  width:100%!important;max-width:none!important;min-width:0!important;
+  margin-left:0!important;margin-right:0!important;box-sizing:border-box!important;
+ }
+}
+</style>
 <style id="mt-pc-display-scale">/* Affichage PC à 90 %, connexion et établissements ; mobile inchangé. */
 @media screen and (min-width:851px){html body{zoom:.9}}
 </style>
