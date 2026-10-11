@@ -71,7 +71,16 @@ const token=await auth.currentUser.getIdToken();
 const response=await fetch("https://mt-haccp-ai-audit.gazibenamar97.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({from,to})});
 const data=await response.json();if(!response.ok)throw Error(data.error||"Erreur HTTP "+response.status);
 msg.textContent="Analyse Gemini reçue — "+from+" au "+to+" · "+(data.site||"");
-out.textContent=data.commentary||"Aucune analyse reçue.";
+const raw=String(data.commentary||"").trim();
+let parsed=null;
+try{let candidate=raw.replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,"").trim();parsed=JSON.parse(candidate)}catch(e){}
+if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed)){
+  out.textContent="";
+  const sections=[["Bilan",parsed.bilan],["Points à vérifier",parsed.points_a_verifier||parsed.pointsAVerifier],["Actions prioritaires",parsed.actions_prioritaires||parsed.actionsPrioritaires]];
+  for(const [heading,value] of sections){if(value==null)continue;const h=document.createElement("h3");h.textContent=heading;out.appendChild(h);const items=Array.isArray(value)?value:[value];for(const item of items){const p=document.createElement("p");p.textContent=typeof item==="string"?item:JSON.stringify(item);out.appendChild(p)}}
+  if(!out.textContent.trim())out.textContent=raw;
+}else{out.textContent=raw||"Aucune analyse reçue."}
+
 const counts=data.facts&&data.facts.counts;if(counts){const p=document.createElement("p");p.textContent="Justificatifs : "+counts.receptions+" réception(s), "+counts.temperatures+" relevé(s) de température, "+counts.nettoyages+" nettoyage(s).";proof.appendChild(p)}
 for(const item of (data.facts?.refs||[])){const p=document.createElement("p");p.className="v2note";p.textContent=item.id+" — "+item.label+" : "+item.details;proof.appendChild(p)}
 const warning=document.createElement("p");warning.className="v2note";warning.textContent=data.warning||"Vérifiez les conclusions de l’IA avant toute décision HACCP.";proof.appendChild(warning);
