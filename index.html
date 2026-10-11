@@ -1159,34 +1159,47 @@ function mtAiBadge(label,parent){
  badge.style.cssText="display:inline-block;margin:6px 0;padding:4px 10px;border:1px solid "+color+";color:"+color+";border-radius:12px;font-size:12px;font-weight:bold";
  return badge;
 }
+function mtAiFormatDates(value){
+ return String(value??"").replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g,(_,y,m,d)=>d+"/"+m+"/"+y);
+}
+function mtAiField(parent,label,value){
+ const p=document.createElement("p"),strong=document.createElement("strong");strong.textContent=label+" : ";p.appendChild(strong);p.appendChild(document.createTextNode(mtAiFormatDates(value)));parent.appendChild(p);
+}
 function mtAiRenderReport(report,facts,site,from,to){
  const out=document.getElementById("mtAiReportOutput"),proof=document.getElementById("mtAiReportProofs");out.replaceChildren();proof.replaceChildren();
  const siteName=typeof siteDisplayName!=="undefined"&&siteDisplayName?siteDisplayName:site;
  mtAiText("h2","Analyse HACCP — "+siteName,out);
  mtAiText("p","Période : "+mtAiDateFr(from)+" au "+mtAiDateFr(to),out);
- mtAiText("h3","Bilan",out);
- if(!facts.anomalies?.length)mtAiText("p","Aucune anomalie détectée sur les données enregistrées",out);
- mtAiText("p",report.bilan,out);
+ const c=facts.counts||{},anomalies=facts.anomalies||[];
+ const summary=(c.receptions??0)+" réceptions (dont "+(c.receptionsNonConformes??0)+" non conformes), "+(c.temperatures??0)+" relevé(s) de température, "+(c.nettoyages??0)+" nettoyage(s), "+(c.dlcASurveiller??0)+" DLC à surveiller.";
+ mtAiText("h3","Bilan",out);mtAiText("p",summary,out);
+ if(!anomalies.length)mtAiText("p","Aucune anomalie détectée sur les données enregistrées",out);
+ const conclusion=mtAiFormatDates(report.bilan||"").replace(/^\s*\d+\s+réceptions[\s\S]*?(?:\.\s+|$)/i,"").trim();
+ if(conclusion)mtAiText("p",conclusion.split(/(?<=[.!?])\s+/).slice(0,2).join(" "),out);
  mtAiText("h3","Points à vérifier",out);
  const rank={"critique":0,"important":1,"à surveiller":2};
  const pts=report.points.slice().sort((x,y)=>(rank[x.urgence]??3)-(rank[y.urgence]??3));
  if(!pts.length)mtAiText("p","Aucun point supplémentaire signalé.",out);
  for(const p of pts){
-  const item=document.createElement("div");item.style.cssText="padding:12px 0;border-bottom:1px solid #dce6e0";out.appendChild(item);
-  mtAiBadge(p.urgence,item);
-  mtAiText("p","Constat : "+p.constat,item);
-  mtAiText("p","Preuve : "+p.preuve,item);
-  mtAiText("p","Risque : "+p.risque,item);
-  mtAiText("p","Action corrective suggérée : "+p.action,item);
-  mtAiText("p","Urgence : "+p.urgence+" — Délai suggéré : "+p.delaiSuggere,item);
+  const item=document.createElement("div"),severity=String(p.urgence||"à surveiller").toLowerCase();
+  const color=severity==="critique"?"#a32d32":severity==="important"?"#aa6413":"#63726c";
+  item.style.cssText="border:2px solid "+color+";border-radius:12px;padding:14px;margin:14px 0;break-inside:avoid";out.appendChild(item);
+  mtAiBadge(severity,item);
+  mtAiField(item,"Constat",p.constat);
+  mtAiField(item,"Preuve",p.preuve);
+  mtAiField(item,"Risque",p.risque);
+  mtAiField(item,"Action",p.action);
+  mtAiField(item,"Urgence",severity+" — "+p.delaiSuggere);
  }
  mtAiText("h3","Actions prioritaires",out);
- if(!report.priorites.length)mtAiText("p","Aucune action supplémentaire proposée.",out);
- for(const v of report.priorites)mtAiText("p",v,out);
+ const important=anomalies.filter(x=>x.gravite==="critique"||x.gravite==="important");
+ const priorities=[...new Set(important.map(x=>x.action).filter(Boolean))].slice(0,3);
+ if(!priorities.length)mtAiText("p","Aucune action prioritaire fondée sur un point critique ou important.",out);
+ for(const action of priorities)mtAiText("p",mtAiFormatDates(action),out);
  mtAiText("h3","Données manquantes",out);
- const missing=[...new Set([...(facts.donneesManquantes||[]),...report.donneesManquantes])];
+ const missing=[...new Set(facts.donneesManquantes||[])];
  if(!missing.length)mtAiText("p","Aucune donnée manquante identifiée dans les catégories contrôlées.",out);
- for(const v of missing)mtAiText("p",v,out);
+ for(const v of missing)mtAiText("p",mtAiFormatDates(v),out);
  mtAiText("p","Texte généré par IA : à vérifier par le responsable HACCP avant toute décision.",proof);
  const user=typeof currentUserProfile!=="undefined"&&currentUserProfile?currentUserProfile:{};
  mtAiReportPrintData={siteName,from,to,userName:user.displayName||user.name||user.username||user.email||"Non renseigné",generated:new Date().toLocaleString("fr-FR")};
