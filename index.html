@@ -1230,15 +1230,74 @@ function mtAiReportPrint(){
  const w=window.open("","_blank");if(!w){alert("Autorisez la fenêtre d’impression.");return}
  const doc=w.document,meta=mtAiReportPrintData;
  doc.title="M&T HACCP — Analyse HACCP";
- const style=doc.createElement("style");style.textContent="body{font:14px Arial,sans-serif;color:#1d322a;max-width:850px;margin:30px auto;padding:20px;line-height:1.55}h1,h2,h3{color:#145740}h1{border-bottom:2px solid #145740;padding-bottom:12px}p{break-inside:avoid}div{break-inside:avoid}.signature{margin-top:40px;padding-top:18px;border-top:1px solid #aaa}@media print{body{margin:0;max-width:none}}";doc.head.appendChild(style);
- mtAiText("h1","M&T HACCP",doc.body);
- mtAiText("p","Établissement : "+meta.siteName,doc.body);
- mtAiText("p","Période : "+mtAiDateFr(meta.from)+" au "+mtAiDateFr(meta.to),doc.body);
- mtAiText("p","Généré le : "+meta.generated,doc.body);
- mtAiText("p","Utilisateur : "+meta.userName,doc.body);
- doc.body.appendChild(out.cloneNode(true));doc.body.appendChild(proof.cloneNode(true));
- const sig=doc.createElement("div");sig.className="signature";doc.body.appendChild(sig);
- mtAiText("h3","Validation",sig);mtAiText("p","Validé par : ____________________________________",sig);mtAiText("p","Date : _________________________________________",sig);mtAiText("p","Signature : _____________________________________",sig);
+ const css=doc.createElement("style");
+ css.textContent=[
+ '@page{size:A4;margin:0}',
+ 'html,body{margin:0;padding:0}',
+ 'body{font:11pt Arial,sans-serif;color:#1d322a;line-height:1.45}',
+ '.print-page{padding:15mm;box-sizing:border-box;min-height:297mm;position:relative}',
+ '.print-header{break-after:avoid;page-break-after:avoid}',
+ '.print-header p{margin:3px 0}',
+ 'h1,h2,h3{color:#145740;break-after:avoid;page-break-after:avoid}',
+ 'h1{font-size:19pt;margin:0 0 7mm;border-bottom:2px solid #145740;padding-bottom:3mm}',
+ 'h2{font-size:15pt;margin:6mm 0 3mm}',
+ 'h3{font-size:12pt;margin:5mm 0 2mm}',
+ 'p{margin:2mm 0;orphans:3;widows:3}',
+ '.print-report>h2:first-child{margin-top:6mm}',
+ '.print-report>p:nth-child(2){display:none}',
+ '.print-report>div{break-inside:avoid;page-break-inside:avoid}',
+ '.print-validation{break-inside:avoid;page-break-inside:avoid;margin-top:9mm;padding-top:4mm;border-top:1px solid #aaa}',
+ '.print-footer{font-size:9pt;text-align:center;color:#52675d;margin-top:8mm}',
+ '@supports (content:counter(page)){@page{ @bottom-center{content:"M&T HACCP — Analyse HACCP — '+String(meta.siteName).replace(/["\\]/g,"")+' — Page " counter(page) " sur " counter(pages);font:9pt Arial;color:#52675d} }}',
+ '@media print{.print-page{min-height:0}.print-footer{display:none}}'
+ ].join("\n");
+ doc.head.appendChild(css);
+ const main=doc.createElement("main");main.className="print-page";doc.body.appendChild(main);
+ const header=doc.createElement("header");header.className="print-header";main.appendChild(header);
+ mtAiText("h1","M&T HACCP",header);
+ mtAiText("p","Établissement : "+meta.siteName,header);
+ mtAiText("p","Période : "+mtAiDateFr(meta.from)+" au "+mtAiDateFr(meta.to),header);
+ mtAiText("p","Généré le : "+meta.generated,header);
+ mtAiText("p","Utilisateur : "+meta.userName,header);
+ const report=out.cloneNode(true);report.classList.add("print-report");main.appendChild(report);
+ const headings=[...report.querySelectorAll("h3")];
+ const bilan=headings.find(x=>x.textContent.trim()==="Bilan");
+ if(bilan){
+  let conclusion=bilan.nextElementSibling?.nextElementSibling;
+  if(conclusion&&conclusion.tagName==="P"){
+   let t=conclusion.textContent.replace(/\b\d+\s+(?:réceptions?|relevés?|nettoyages?|traçabilités?)[^.]*\.\s*/gi,"").replace(/[^.!?]*\btraçabilités?\s+enregistrées?[^.!?]*[.!?]/gi,"").trim();
+   t=t.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0,2).join(" ");
+   conclusion.textContent=t||"Analyse limitée aux contrôles effectivement enregistrés ; les données manquantes ne prouvent pas la conformité.";
+  }
+ }
+ for(const card of report.querySelectorAll("div[style*='border']")){
+  const fields=[...card.querySelectorAll("p")];
+  const findField=label=>fields.find(p=>p.querySelector("strong")?.textContent.trim().startsWith(label+":"));
+  const constat=findField("Constat"),risque=findField("Risque"),action=findField("Action"),urgence=findField("Urgence");
+  const severity=card.querySelector("span")?.textContent.trim().toLowerCase()||"à surveiller";
+  const delay=severity==="critique"?"Immédiat":severity==="important"?"Sous 24 h":"Cette semaine";
+  if(urgence){const strong=urgence.querySelector("strong");urgence.textContent="";if(strong)urgence.appendChild(strong);urgence.appendChild(doc.createTextNode(severity+" — "+delay))}
+  const title=constat?.textContent||"";
+  if(risque){
+   const v=/DLC aujourd'hui/i.test(title)?"Produit à consommer ou à retirer aujourd'hui : risque sanitaire si conservé au-delà de la DLC.":/DLC dépassée/i.test(title)?"Produit périmé : risque sanitaire":/DLC dans [123] jour/i.test(title)?"DLC proche : risque de perte ou de dépassement":null;
+   if(v){const strong=risque.querySelector("strong");risque.textContent="";if(strong)risque.appendChild(strong);risque.appendChild(doc.createTextNode(v))}
+  }
+  if(action&&/comparer avec le planning/i.test(action.textContent)){
+   const strong=action.querySelector("strong");action.textContent="";if(strong)action.appendChild(strong);
+   action.appendChild(doc.createTextNode(/relevé|température/i.test(title)?"Enregistrer au moins un relevé de température par jour pour chaque équipement en service.":"Vérifier les enregistrements et effectuer le contrôle HACCP nécessaire."));
+  }
+ }
+ for(const p of report.querySelectorAll("p")){
+  if(/\btraçabilités?\s+enregistrées?\b/i.test(p.textContent))p.remove();
+  else if(/comparer avec le planning/i.test(p.textContent))p.textContent=/relevé|température/i.test(p.textContent)?"Enregistrer au moins un relevé de température par jour pour chaque équipement en service.":"Effectuer le contrôle HACCP nécessaire et documenter le résultat.";
+ }
+ main.appendChild(proof.cloneNode(true));
+ const sig=doc.createElement("section");sig.className="print-validation";main.appendChild(sig);
+ mtAiText("h3","Validation",sig);
+ mtAiText("p","Validé par : ____________________________________",sig);
+ mtAiText("p","Date : _________________________________________",sig);
+ mtAiText("p","Signature : _____________________________________",sig);
+ const footer=doc.createElement("footer");footer.className="print-footer";footer.textContent="M&T HACCP — Analyse HACCP — "+meta.siteName;main.appendChild(footer);
  w.focus();w.print();
 }
 function mtReportCustomPeriod(){const el=document.getElementById('mtReportPeriod');if(el)el.value='custom'}
