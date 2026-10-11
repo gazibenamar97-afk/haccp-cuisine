@@ -1054,6 +1054,16 @@ body.on-login main{padding-top:12px!important}
  }
 }
 </style>
+<style id="mt-pc-login-edge-to-edge">
+/* Login PC: both panels cover the viewport without a blank strip below. */
+@media screen and (min-width:851px){
+ html:has(body.on-login),body.on-login{height:100%!important;min-height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important}
+ body.on-login>main{height:100vh!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important}
+ body.on-login #app{height:100%!important;min-height:0!important;margin:0!important;padding:0!important}
+ body.on-login .mt-ref-wrap{height:100%!important;min-height:0!important;margin:0!important;overflow:hidden!important}
+ body.on-login .mt-ref-login,body.on-login .mt-ref-board{height:100%!important;min-height:0!important;box-sizing:border-box!important}
+}
+</style>
 <style id="mt-pc-display-scale">/* Affichage PC à 90 %, connexion et établissements ; mobile inchangé. */
 @media screen and (min-width:851px){html body{zoom:.9}}
 </style>
