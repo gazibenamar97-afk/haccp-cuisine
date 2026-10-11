@@ -1247,6 +1247,7 @@ function mtAiReportPrint(){
  '.print-report>p:nth-child(2){display:none}',
  '.print-report>div{break-inside:avoid;page-break-inside:avoid}',
  '.print-validation{break-inside:avoid;page-break-inside:avoid;margin-top:9mm;padding-top:4mm;border-top:1px solid #aaa}',
+ '.print-second-page{break-before:page;page-break-before:always}',
  '.print-footer{font-size:9pt;text-align:center;color:#52675d;margin-top:8mm}',
  '@supports (content:counter(page)){@page{ @bottom-center{content:"M&T HACCP — Analyse HACCP — '+String(meta.siteName).replace(/["\\]/g,"")+' — Page " counter(page) " sur " counter(pages);font:9pt Arial;color:#52675d} }}',
  '@media print{.print-page{min-height:0}.print-footer{display:none}}'
@@ -1290,6 +1291,14 @@ function mtAiReportPrint(){
  for(const p of report.querySelectorAll("p")){
   if(/\btraçabilités?\s+enregistrées?\b/i.test(p.textContent))p.remove();
   else if(/comparer avec le planning/i.test(p.textContent))p.textContent=/relevé|température/i.test(p.textContent)?"Enregistrer au moins un relevé de température par jour pour chaque équipement en service.":"Effectuer le contrôle HACCP nécessaire et documenter le résultat.";
+ }
+ // Commencer la section des actions sur la deuxième page, avec les données manquantes.
+ const prioritiesHeading=[...report.querySelectorAll("h3")].find(h=>h.textContent.trim()==="Actions prioritaires");
+ if(prioritiesHeading){
+  const section=doc.createElement("section");section.className="print-second-page";
+  let node=prioritiesHeading;
+  while(node){const next=node.nextSibling;section.appendChild(node);node=next}
+  report.appendChild(section);
  }
  main.appendChild(proof.cloneNode(true));
  const sig=doc.createElement("section");sig.className="print-validation";main.appendChild(sig);
