@@ -1139,7 +1139,7 @@ async function mtAiReportGenerate(){
  const btn=document.getElementById('mtAiReportButton'),status=document.getElementById('mtAiReportStatus'),out=document.getElementById('mtAiReportOutput'),proof=document.getElementById('mtAiReportProofs');
  if(!btn||!status||!out||!proof)return;
  const from=document.getElementById('mtReportFrom')?.value,to=document.getElementById('mtReportTo')?.value;
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(from||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(to||'')||from>to){status.textContent='Sélectionnez une période valide.';return}
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(from||'')||!/^\d{4}-\d{2}-\d{2}$/.test(to||'')||from>to){status.textContent='Sélectionnez une période valide.';return}
  if(typeof SITE_ID==='undefined'||SITE_ID==='main'){status.textContent='Disponible uniquement pour les établissements.';return}
  const user=window.firebase?.auth?.()?.currentUser;
  if(!user){status.textContent='Reconnectez-vous à votre établissement.';return}
@@ -1152,7 +1152,7 @@ async function mtAiReportGenerate(){
  if(data.site!==SITE_ID)throw Error('Sécurité : établissement différent du compte connecté.');
  status.textContent='Analyse Gemini reçue — '+from+' au '+to;
  const raw=String(data.commentary||'').trim();let parsed=null;
- try{parsed=JSON.parse(raw.replace(/^\\x60{3}(?:json)?\\s*/i,'').replace(/\\s*\\x60{3}$/,'').trim())}catch(e){}
+ try{parsed=JSON.parse(raw.replace(/^\x60{3}(?:json)?\s*/i,'').replace(/\s*\x60{3}$/,'').trim())}catch(e){}
  if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed)){
  for(const [heading,value] of [['Bilan',parsed.bilan],['Points à vérifier',parsed.points_a_verifier||parsed.pointsAVerifier],['Actions prioritaires',parsed.actions_prioritaires||parsed.actionsPrioritaires]]){
  if(value==null)continue;const h=document.createElement('h3');h.textContent=heading;out.appendChild(h);
