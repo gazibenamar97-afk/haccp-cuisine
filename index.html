@@ -2168,7 +2168,21 @@ function stampRecentAuditIdentity(){if(!currentUserProfile)return;['temps','clea
 function save(){stampRecentAuditIdentity();syncLocalSettingsIntoState();localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));cloudWrite()}
 async function initCloudSync(){if(!cloudDb)return;syncLocalSettingsIntoState();let ref=cloudDb.collection('appState').doc(SITE_ID);try{let snap=await ref.get();if(!snap.exists){let seed=sanitizeCloudState(S);delete seed.userDirectory;seed._cloudUpdatedAt=new Date().toISOString();await ref.set(seed);localStorage.setItem('haccpCloudLinked','1')}else{let cleaned=sanitizeCloudState(snap.data());cloudApply(cleaned);let original=snap.data();if(cloudComparable(cleaned)!==cloudComparable(original)){let fixed=JSON.parse(JSON.stringify(cleaned));delete fixed.userDirectory;fixed._cloudUpdatedAt=new Date().toISOString();await ref.set(fixed,{merge:true})}}cloudReady=true;ref.onSnapshot({includeMetadataChanges:false},s=>{if(!s.exists||s.metadata.hasPendingWrites)return;let remote=s.data();if(cloudComparable(remote)!==cloudComparable(S))cloudApply(remote)},e=>console.warn('Cloud listen',e))}catch(e){console.warn('Cloud sync unavailable',e)}}
 function B(t,f,c=''){return `<button class="btn ${c}" onclick="${f}">${t}</button>`}
-function authorizeStockEdit(i){let pin=localStorage.getItem('haccpAdminPin');if(!pin){alert('Aucun code PIN administrateur n’est configuré. Allez dans Paramètres → Sécurité pour le créer.');settings();return}let entered=prompt('Code PIN Responsable / Administrateur :');if(entered===null)return;if(entered!==pin){alert('Code PIN incorrect. Modification refusée.');return}editStock(i)}
+async function authorizeStockEdit(i){
+ const profile=currentUserProfile||{},user=firebase.auth().currentUser;
+ const allowed=!!(user&&profile.uid===user.uid&&profile.site===SITE_ID&&profile.active!==false&&['admin','responsable','responsable etablissement','responsable_etablissement','haccp'].includes(String(profile.role||'').toLowerCase()));
+ if(!allowed){alert('Modification réservée au responsable de l’établissement ou au responsable HACCP autorisé.');return}
+ if(!S.stock||!S.stock[i]){alert('Cette réception est introuvable.');return}
+ const password=prompt('Confirmez avec le mot de passe de votre compte M&T HACCP :');
+ if(password===null)return;
+ if(!password||!user.email){alert('Le mot de passe du compte est obligatoire.');return}
+ try{
+  const credential=firebase.auth.EmailAuthProvider.credential(user.email,password);
+  await user.reauthenticateWithCredential(credential);
+  if(firebase.auth().currentUser?.uid!==user.uid||currentUserProfile?.site!==SITE_ID)return;
+  editStock(i);
+ }catch(e){console.warn('Stock edit reauthentication',e.code||e.message);alert(e.code==='auth/too-many-requests'?'Trop de tentatives. Veuillez patienter avant de réessayer.':'Mot de passe du compte incorrect ou vérification impossible. Modification refusée.')}
+}
 let CURRENT_VIEW='reception';
 function mtCanViewDirection(){const p=currentUserProfile||{};return !!(p.uid&&p.site===SITE_ID&&p.active!==false&&['admin','responsable','haccp'].includes(p.role))}
 function openDashboard(){CURRENT_VIEW='dashboard';dashboard()}
