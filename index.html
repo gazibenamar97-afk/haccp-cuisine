@@ -1139,48 +1139,94 @@ function mtReports(){
  '<div class="row"><div><label for="mtReportFrom">Date de début (incluse)</label><input type="date" id="mtReportFrom" value="'+range[0]+'" onchange="mtReportCustomPeriod()"></div><div><label for="mtReportTo">Date de fin (incluse)</label><input type="date" id="mtReportTo" value="'+range[1]+'" onchange="mtReportCustomPeriod()"></div></div>'+
  '<p class="note">Les rapports reflètent les enregistrements disponibles. Une absence de contrôle n’est jamais comptée comme une conformité.</p>'+
  '<div class="mt-report-actions"><button type="button" class="btn primary" onclick="mtReportGenerate(false)">Imprimer</button><button type="button" class="btn primary" onclick="mtReportGenerate(true)">Générer PDF</button></div></div>'+
- '<div class="panel" id="mtAiReportPanel"><h2>Assistant IA HACCP — Gemini</h2><p class="note">Analyse commentée à partir des données de votre établissement uniquement. Le rapport est en lecture seule et doit être vérifié par le responsable HACCP.</p><p class="note">Utilise les dates choisies ci-dessus.</p><div class="mt-report-actions"><button type="button" class="btn primary" id="mtAiReportButton" onclick="mtAiReportGenerate()">Générer l’analyse IA réelle</button><button type="button" class="btn" onclick="mtAiReportPrint()">Imprimer / PDF IA</button></div><div id="mtAiReportStatus" role="status" aria-live="polite"></div><div id="mtAiReportOutput" style="line-height:1.6;overflow-wrap:anywhere"></div><div id="mtAiReportProofs" style="line-height:1.5;overflow-wrap:anywhere"></div></div>'+ 
+ '<div class="panel" id="mtAiReportPanel"><h2>Assistant IA HACCP — Gemini</h2><p class="note">Analyse commentée à partir des données de votre établissement uniquement. Le rapport est en lecture seule et doit être vérifié par le responsable HACCP.</p><p class="note">Utilise les dates choisies ci-dessus.</p><div class="mt-report-actions"><button type="button" class="btn primary" id="mtAiReportButton" onclick="mtAiReportGenerate()">Générer l’analyse IA réelle</button><button type="button" class="btn" onclick="mtAiReportPrint()">Imprimer / PDF IA</button></div><div id="mtAiReportCooldown" role="status" aria-live="polite" style="font-size:13px;margin:8px 0"></div><div id="mtAiReportStatus" role="status" aria-live="polite"></div><div id="mtAiReportOutput" style="line-height:1.6;overflow-wrap:anywhere"></div><div id="mtAiReportProofs" style="line-height:1.5;overflow-wrap:anywhere"></div></div>'+ 
  '</section>';
 }
 /* Assistant IA dans Rapports : aucun identifiant établissement fourni par le navigateur.
    Le Worker détermine le site exclusivement depuis le profil Firebase authentifié. */
-let mtAiReportLastRequest=0;
+let mtAiReportLastRequest=0,mtAiReportCooldownTimer=null,mtAiReportPrintData=null;
+function mtAiDateFr(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+"/"+m[2]+"/"+m[1]:String(value||"")}
+function mtAiText(tag,value,parent,cls){const el=document.createElement(tag);el.textContent=String(value??"");if(cls)el.className=cls;parent.appendChild(el);return el}
+function mtAiCooldown(){
+ const box=document.getElementById("mtAiReportCooldown");if(!box)return;
+ const left=Math.max(0,Math.ceil((mtAiReportLastRequest+60000-Date.now())/1000));
+ box.textContent=left?"Veuillez attendre "+left+" seconde"+(left>1?"s":"")+" avant une nouvelle analyse.":"";
+ if(!left&&mtAiReportCooldownTimer){clearInterval(mtAiReportCooldownTimer);mtAiReportCooldownTimer=null}
+}
+function mtAiBadge(label,parent){
+ const badge=mtAiText("span",label,parent);
+ const color=label==="critique"?"#a32d32":label==="important"?"#aa6413":"#63726c";
+ badge.style.cssText="display:inline-block;margin:6px 0;padding:4px 10px;border:1px solid "+color+";color:"+color+";border-radius:12px;font-size:12px;font-weight:bold";
+ return badge;
+}
+function mtAiRenderReport(report,facts,site,from,to){
+ const out=document.getElementById("mtAiReportOutput"),proof=document.getElementById("mtAiReportProofs");out.replaceChildren();proof.replaceChildren();
+ const siteName=typeof siteDisplayName!=="undefined"&&siteDisplayName?siteDisplayName:site;
+ mtAiText("h2","Analyse HACCP — "+siteName,out);
+ mtAiText("p","Période : "+mtAiDateFr(from)+" au "+mtAiDateFr(to),out);
+ mtAiText("h3","Bilan",out);
+ if(!facts.anomalies?.length)mtAiText("p","Aucune anomalie détectée sur les données enregistrées",out);
+ mtAiText("p",report.bilan,out);
+ mtAiText("h3","Points à vérifier",out);
+ const rank={"critique":0,"important":1,"à surveiller":2};
+ const pts=report.points.slice().sort((x,y)=>(rank[x.urgence]??3)-(rank[y.urgence]??3));
+ if(!pts.length)mtAiText("p","Aucun point supplémentaire signalé.",out);
+ for(const p of pts){
+  const item=document.createElement("div");item.style.cssText="padding:12px 0;border-bottom:1px solid #dce6e0";out.appendChild(item);
+  mtAiBadge(p.urgence,item);
+  mtAiText("p","Constat : "+p.constat,item);
+  mtAiText("p","Preuve : "+p.preuve,item);
+  mtAiText("p","Risque : "+p.risque,item);
+  mtAiText("p","Action corrective suggérée : "+p.action,item);
+  mtAiText("p","Urgence : "+p.urgence+" — Délai suggéré : "+p.delaiSuggere,item);
+ }
+ mtAiText("h3","Actions prioritaires",out);
+ if(!report.priorites.length)mtAiText("p","Aucune action supplémentaire proposée.",out);
+ for(const v of report.priorites)mtAiText("p",v,out);
+ mtAiText("h3","Données manquantes",out);
+ const missing=[...new Set([...(facts.donneesManquantes||[]),...report.donneesManquantes])];
+ if(!missing.length)mtAiText("p","Aucune donnée manquante identifiée dans les catégories contrôlées.",out);
+ for(const v of missing)mtAiText("p",v,out);
+ mtAiText("p","Texte généré par IA : à vérifier par le responsable HACCP avant toute décision.",proof);
+ const user=typeof currentUserProfile!=="undefined"&&currentUserProfile?currentUserProfile:{};
+ mtAiReportPrintData={siteName,from,to,userName:user.displayName||user.name||user.username||user.email||"Non renseigné",generated:new Date().toLocaleString("fr-FR")};
+}
 async function mtAiReportGenerate(){
- const btn=document.getElementById('mtAiReportButton'),status=document.getElementById('mtAiReportStatus'),out=document.getElementById('mtAiReportOutput'),proof=document.getElementById('mtAiReportProofs');
+ const btn=document.getElementById("mtAiReportButton"),status=document.getElementById("mtAiReportStatus"),out=document.getElementById("mtAiReportOutput"),proof=document.getElementById("mtAiReportProofs");
  if(!btn||!status||!out||!proof)return;
- const from=document.getElementById('mtReportFrom')?.value,to=document.getElementById('mtReportTo')?.value;
- if(!/^\d{4}-\d{2}-\d{2}$/.test(from||'')||!/^\d{4}-\d{2}-\d{2}$/.test(to||'')||from>to){status.textContent='Sélectionnez une période valide.';return}
- if(typeof SITE_ID==='undefined'||SITE_ID==='main'){status.textContent='Disponible uniquement pour les établissements.';return}
- const user=window.firebase?.auth?.()?.currentUser;
- if(!user){status.textContent='Reconnectez-vous à votre établissement.';return}
- if(Date.now()-mtAiReportLastRequest<60000){status.textContent='Veuillez attendre une minute avant une nouvelle analyse.';return}
- mtAiReportLastRequest=Date.now();btn.disabled=true;out.replaceChildren();proof.replaceChildren();status.textContent='Analyse Gemini en cours…';
+ const from=document.getElementById("mtReportFrom")?.value,to=document.getElementById("mtReportTo")?.value;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(from||"")||!/^\d{4}-\d{2}-\d{2}$/.test(to||"")||from>to){status.textContent="Sélectionnez une période valide.";return}
+ if(typeof SITE_ID==="undefined"||SITE_ID==="main"){status.textContent="Disponible uniquement pour les établissements.";return}
+ const user=window.firebase?.auth?.()?.currentUser;if(!user){status.textContent="Reconnectez-vous à votre établissement.";return}
+ if(Date.now()-mtAiReportLastRequest<60000){mtAiCooldown();return}
+ mtAiReportLastRequest=Date.now();mtAiCooldown();if(mtAiReportCooldownTimer)clearInterval(mtAiReportCooldownTimer);mtAiReportCooldownTimer=setInterval(mtAiCooldown,1000);
+ btn.disabled=true;const oldLabel=btn.textContent;btn.textContent="Analyse en cours…";status.textContent="";
  try{
- const token=await user.getIdToken();
- const res=await fetch('https://mt-haccp-ai-audit.gazibenamar97.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({from,to})});
- const data=await res.json();if(!res.ok)throw Error(data.error||'Erreur '+res.status);
- if(data.site!==SITE_ID)throw Error('Sécurité : établissement différent du compte connecté.');
- status.textContent='Analyse Gemini reçue — '+from+' au '+to;
- const raw=String(data.commentary||'').trim();let parsed=null;
- try{parsed=JSON.parse(raw.replace(/^\x60{3}(?:json)?\s*/i,'').replace(/\s*\x60{3}$/,'').trim())}catch(e){}
- if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed)){
- for(const [heading,value] of [['Bilan',parsed.bilan],['Points à vérifier',parsed.points_a_verifier||parsed.pointsAVerifier],['Actions prioritaires',parsed.actions_prioritaires||parsed.actionsPrioritaires]]){
- if(value==null)continue;const h=document.createElement('h3');h.textContent=heading;out.appendChild(h);
- for(const item of (Array.isArray(value)?value:[value])){const p=document.createElement('p');p.textContent=typeof item==='string'?item:JSON.stringify(item);out.appendChild(p)}
- }if(!out.textContent.trim())out.textContent=raw;
- }else out.textContent=raw||'Aucune analyse reçue.';
- const c=data.facts?.counts;if(c){const p=document.createElement('p');p.textContent='Justificatifs : '+c.receptions+' réception(s), '+c.temperatures+' température(s), '+c.nettoyages+' nettoyage(s).';proof.appendChild(p)}
- for(const item of (data.facts?.refs||[])){const p=document.createElement('p');p.textContent=item.id+' — '+item.label+' : '+item.details;proof.appendChild(p)}
- const note=document.createElement('p');note.textContent=data.warning||'Rapport généré par IA : vérifier les conclusions avant toute décision HACCP.';proof.appendChild(note);
- }catch(e){status.textContent='Analyse indisponible : '+String(e.message||e)}finally{btn.disabled=false}
+  const token=await user.getIdToken();
+  const res=await fetch("https://mt-haccp-ai-audit.gazibenamar97.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({from,to,mode:"detailed"})});
+  const data=await res.json();if(!res.ok)throw Error(data.error||"Erreur "+res.status);
+  if(data.site!==SITE_ID)throw Error("Sécurité : établissement différent du compte connecté.");
+  const report=data.report;
+  if(!report||typeof report.bilan!=="string"||!Array.isArray(report.points)||!Array.isArray(report.priorites)||!Array.isArray(report.donneesManquantes))throw Error("Format du rapport IA invalide. Veuillez réessayer.");
+  mtAiRenderReport(report,data.facts||{},data.site,from,to);
+ }catch(e){status.textContent="Analyse indisponible : "+String(e.message||e)}finally{btn.disabled=false;btn.textContent=oldLabel}
 }
 function mtAiReportPrint(){
- const panel=document.getElementById('mtAiReportPanel');if(!panel||!document.getElementById('mtAiReportOutput')?.textContent.trim()){alert('Générez d’abord une analyse IA.');return}
- const w=window.open('','_blank');if(!w){alert('Autorisez la fenêtre d’impression.');return}
- const content=panel.cloneNode(true);content.querySelectorAll('button').forEach(b=>b.remove());
- const title=document.createElement('h1');title.textContent='M&T HACCP — Rapport Assistant IA';
- const style=w.document.createElement('style');style.textContent='body{font:15px Arial,sans-serif;color:#183d31;max-width:850px;margin:35px auto;padding:15px;line-height:1.6}h1,h2,h3{color:#116149}p{break-inside:avoid}';
- w.document.head.appendChild(style);w.document.body.appendChild(title);w.document.body.appendChild(content);w.focus();w.print();
+ const out=document.getElementById("mtAiReportOutput"),proof=document.getElementById("mtAiReportProofs");
+ if(!mtAiReportPrintData||!out?.textContent.trim()){alert("Générez d’abord une analyse IA.");return}
+ const w=window.open("","_blank");if(!w){alert("Autorisez la fenêtre d’impression.");return}
+ const doc=w.document,meta=mtAiReportPrintData;
+ doc.title="M&T HACCP — Analyse HACCP";
+ const style=doc.createElement("style");style.textContent="body{font:14px Arial,sans-serif;color:#1d322a;max-width:850px;margin:30px auto;padding:20px;line-height:1.55}h1,h2,h3{color:#145740}h1{border-bottom:2px solid #145740;padding-bottom:12px}p{break-inside:avoid}div{break-inside:avoid}.signature{margin-top:40px;padding-top:18px;border-top:1px solid #aaa}@media print{body{margin:0;max-width:none}}";doc.head.appendChild(style);
+ mtAiText("h1","M&T HACCP",doc.body);
+ mtAiText("p","Établissement : "+meta.siteName,doc.body);
+ mtAiText("p","Période : "+mtAiDateFr(meta.from)+" au "+mtAiDateFr(meta.to),doc.body);
+ mtAiText("p","Généré le : "+meta.generated,doc.body);
+ mtAiText("p","Utilisateur : "+meta.userName,doc.body);
+ doc.body.appendChild(out.cloneNode(true));doc.body.appendChild(proof.cloneNode(true));
+ const sig=doc.createElement("div");sig.className="signature";doc.body.appendChild(sig);
+ mtAiText("h3","Validation",sig);mtAiText("p","Validé par : ____________________________________",sig);mtAiText("p","Date : _________________________________________",sig);mtAiText("p","Signature : _____________________________________",sig);
+ w.focus();w.print();
 }
 function mtReportCustomPeriod(){const el=document.getElementById('mtReportPeriod');if(el)el.value='custom'}
 function mtReportSetPeriod(mode){if(mode==='custom')return;const r=mtReportRange(mode);document.getElementById('mtReportFrom').value=r[0];document.getElementById('mtReportTo').value=r[1]}
