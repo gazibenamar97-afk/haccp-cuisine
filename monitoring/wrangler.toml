@@ -2,6 +2,7 @@ name = "mt-haccp-monitoring-api"
 main = "worker.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
+keep_vars = true
 
 # Configure FIREBASE_PROJECT_ID in Cloudflare Worker Settings.
 # Do not place Firebase credentials, Google service-account keys, or
