@@ -5,7 +5,6 @@
  */
 const ALLOWED_ORIGIN = "https://mt-haccp-test.pages.dev";
 const PROJECT = "mt-haccp";
-const MONITORING_CREDENTIAL_PROJECT = "mt-hacqp";
 const KEY_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 function respond(request, data, status = 200) {
   const headers = {
@@ -65,10 +64,12 @@ async function getMonitoringToken(env) {
   catch { throw new Error("google_credentials_invalid_json"); }
   if (!account || typeof account !== "object" || account.type !== "service_account")
     throw new Error("google_credentials_invalid_type");
-  if (account.project_id !== MONITORING_CREDENTIAL_PROJECT)
+  // Service accounts may belong to a separate Google Cloud project.
+  // Their project is not required to match the Firebase project being monitored.
+  if (typeof account.project_id !== "string" || !/^[a-z][a-z0-9-]{4,62}$/.test(account.project_id))
     throw new Error("google_credentials_project_mismatch");
   if (typeof account.client_email !== "string" ||
-      !account.client_email.endsWith("@" + MONITORING_CREDENTIAL_PROJECT + ".iam.gserviceaccount.com"))
+      !account.client_email.endsWith("@" + account.project_id + ".iam.gserviceaccount.com"))
     throw new Error("google_credentials_email_mismatch");
   if (typeof account.private_key !== "string" || !account.private_key.includes("BEGIN PRIVATE KEY"))
     throw new Error("google_credentials_missing_private_key");
@@ -137,10 +138,10 @@ export default {
     if (request.method !== "GET") return respond(request, { error: "method_not_allowed" }, 405);
     if (url.pathname === "/health") {
       return respond(request, { service: "mt-haccp-monitoring-api", status: "ok",
-        projectConfigured: env.FIREBASE_PROJECT_ID === PROJECT || env.FIREBASE_PROJECT_ID === MONITORING_CREDENTIAL_PROJECT, metricsConnected: Boolean(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON) });
+        projectConfigured: env.FIREBASE_PROJECT_ID === PROJECT, metricsConnected: Boolean(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON) });
     }
     if (url.pathname !== "/api/metrics") return respond(request, { error: "not_found" }, 404);
-    if (env.FIREBASE_PROJECT_ID !== PROJECT && env.FIREBASE_PROJECT_ID !== MONITORING_CREDENTIAL_PROJECT) return respond(request, { error: "project_not_configured" }, 503);
+    if (env.FIREBASE_PROJECT_ID !== PROJECT) return respond(request, { error: "project_not_configured" }, 503);
     const authorization = request.headers.get("Authorization") || "";
     if (!authorization.startsWith("Bearer ")) return respond(request, { error: "authentication_required" }, 401);
     let user;
