@@ -4,7 +4,8 @@
  * Firebase ID tokens are verified cryptographically; no client-provided role is trusted.
  */
 const ALLOWED_ORIGIN = "https://mt-haccp-test.pages.dev";
-const PROJECT = "mt-hacqp";
+const PROJECT = "mt-haccp";
+const MONITORING_CREDENTIAL_PROJECT = "mt-hacqp";
 const KEY_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 function respond(request, data, status = 200) {
   const headers = {
@@ -42,7 +43,7 @@ async function verifyFirebaseToken(token, project) {
   const res = await fetch(KEY_URL);
   if (!res.ok) throw new Error("firebase_keys_unavailable");
   const jwks = await res.json();
-  const key = jwks.keys?.find(k => k.kid === header.kid && k.kty === "RSA" && k.use === "sig");
+  const key = jwks.keys?.find(k => k.kid === header.kid && k.kty === "RSA" && (!k.use || k.use === "sig"));
   if (!key) return null;
   const cryptoKey = await crypto.subtle.importKey("jwk", key, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
   const signature = Uint8Array.from(atob(parts[2].replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(parts[2].length / 4) * 4, "=")), c => c.charCodeAt(0));
@@ -63,9 +64,9 @@ async function getMonitoringToken(env) {
   try { account = JSON.parse(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON); }
   catch { throw new Error("google_credentials_invalid"); }
   if (account.type !== "service_account" ||
-      account.project_id !== PROJECT ||
+      account.project_id !== MONITORING_CREDENTIAL_PROJECT ||
       typeof account.client_email !== "string" ||
-      !account.client_email.endsWith("@"+PROJECT+".iam.gserviceaccount.com") ||
+      !account.client_email.endsWith("@"+MONITORING_CREDENTIAL_PROJECT+".iam.gserviceaccount.com") ||
       typeof account.private_key !== "string") throw new Error("google_credentials_invalid");
   const now = Math.floor(Date.now()/1000);
   const header = base64url(new TextEncoder().encode(JSON.stringify({alg:"RS256",typ:"JWT"})));
@@ -132,10 +133,10 @@ export default {
     if (request.method !== "GET") return respond(request, { error: "method_not_allowed" }, 405);
     if (url.pathname === "/health") {
       return respond(request, { service: "mt-haccp-monitoring-api", status: "ok",
-        projectConfigured: env.FIREBASE_PROJECT_ID === PROJECT, metricsConnected: Boolean(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON) });
+        projectConfigured: env.FIREBASE_PROJECT_ID === PROJECT || env.FIREBASE_PROJECT_ID === MONITORING_CREDENTIAL_PROJECT, metricsConnected: Boolean(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON) });
     }
     if (url.pathname !== "/api/metrics") return respond(request, { error: "not_found" }, 404);
-    if (env.FIREBASE_PROJECT_ID !== PROJECT) return respond(request, { error: "project_not_configured" }, 503);
+    if (env.FIREBASE_PROJECT_ID !== PROJECT && env.FIREBASE_PROJECT_ID !== MONITORING_CREDENTIAL_PROJECT) return respond(request, { error: "project_not_configured" }, 503);
     const authorization = request.headers.get("Authorization") || "";
     if (!authorization.startsWith("Bearer ")) return respond(request, { error: "authentication_required" }, 401);
     let user;
