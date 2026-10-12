@@ -1,6 +1,6 @@
 import {createRemoteJWKSet,jwtVerify} from "jose";
 
-const ORIGIN="https://gazibenamar97-afk.github.io";
+const ORIGIN="https://mthaccp.github.io";
 const respond=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","access-control-allow-origin":ORIGIN,"vary":"Origin","cache-control":"no-store","x-content-type-options":"nosniff"}});
 function decode(v){if(!v||typeof v!=="object")return null;if("stringValue"in v)return v.stringValue;if("integerValue"in v)return Number(v.integerValue);if("doubleValue"in v)return v.doubleValue;if("booleanValue"in v)return v.booleanValue;if("nullValue"in v)return null;if("timestampValue"in v)return v.timestampValue;if("arrayValue"in v)return (v.arrayValue.values||[]).map(decode);if("mapValue"in v)return Object.fromEntries(Object.entries(v.mapValue.fields||{}).map(([k,x])=>[k,decode(x)]));return null}
 function doc(d){return Object.fromEntries(Object.entries(d.fields||{}).map(([k,v])=>[k,decode(v)]))}
