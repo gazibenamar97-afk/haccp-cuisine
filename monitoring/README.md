@@ -44,3 +44,32 @@ Tester ensuite :
 Ne jamais committer de clés, de jetons, de mots de passe ni de secrets.
 Le CORS n'est pas un mécanisme d'authentification : le contrôle d'accès
 est effectué par le Worker sur chaque requête privée.
+
+## Connexion réelle Google Cloud Monitoring (préparée, non activée)
+
+Le Worker récupère maintenant les métriques officielles sur 24 heures :
+`firestore.googleapis.com/document/read_ops_count`,
+`firestore.googleapis.com/document/write_ops_count` et
+`firestore.googleapis.com/document/delete_ops_count`.
+
+**Blocage d'authentification :** Cloudflare ne dispose pas automatiquement
+d'une identité OIDC Google compatible. Le pool Workload Identity Federation
+seul ne fournit pas de jeton utilisable au Worker.
+
+**Option de déploiement disponible :** le code accepte un secret Cloudflare
+`GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON` contenant un compte de service Google
+autorisé à lire Cloud Monitoring. Cette option utilise une clé privée
+longue durée, donc elle doit être considérée comme une solution de repli,
+avec rotation et révocation planifiées, et seulement après accord explicite.
+Ne jamais transmettre cette clé dans le chat, dans GitHub ou dans un fichier
+public. Préférer un mécanisme sans clé si une identité OIDC fiable peut être
+fournie à Cloudflare.
+
+La route `/health` indique si ce secret est présent, pas si l'API Google
+répond réellement. La route `/api/metrics` exige un jeton Firebase
+authentifié et un profil Firestore administrateur actif. Une erreur 503
+n'est pas un succès.
+
+Les résultats sont des compteurs Cloud Monitoring, pas une facture ni un
+relevé exact des quotas Firebase Spark. Un résultat `null` indique
+l'absence de points mesurés et ne doit pas être converti en zéro.
