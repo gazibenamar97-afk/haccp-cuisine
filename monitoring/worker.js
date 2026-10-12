@@ -1,37 +1,83 @@
 /**
- * M&T HACCP — Cloudflare Worker monitoring (staging)
- * This file is a deployable starting point, NOT yet connected to Google Monitoring.
- * No credentials are stored here. Private metrics remain closed until authentication
- * and Google access-token exchange are implemented and verified.
+ * M&T HACCP / Cloudflare Worker - staging only.
+ * Google Monitoring access is NOT enabled until a secure workload identity is configured.
+ * Firebase ID tokens are verified cryptographically; no client-provided role is trusted.
  */
-const json = (data, status = 200) => new Response(JSON.stringify(data), {
-  status,
-  headers: {
+const ALLOWED_ORIGIN = "https://mt-haccp-test.pages.dev";
+const PROJECT = "mt-hacqp";
+const KEY_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
+function respond(request, data, status = 200) {
+  const headers = {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
     "x-content-type-options": "nosniff",
-    "access-control-allow-origin": "https://mt-haccp-test.pages.dev",
     "vary": "Origin"
+  };
+  if (request.headers.get("Origin") === ALLOWED_ORIGIN) {
+    headers["access-control-allow-origin"] = ALLOWED_ORIGIN;
   }
-});
+  return new Response(JSON.stringify(data), { status, headers });
+}
+function decodePart(part) {
+  const s = part.replace(/-/g, "+").replace(/_/g, "/");
+  const bytes = Uint8Array.from(atob(s.padEnd(Math.ceil(s.length / 4) * 4, "=")), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+async function verifyFirebaseToken(token, project) {
+  if (!token || token.length > 8192) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  let header, payload;
+  try {
+    header = decodePart(parts[0]);
+    payload = decodePart(parts[1]);
+  } catch { return null; }
+  const now = Math.floor(Date.now() / 1000);
+  if (header.alg !== "RS256" || typeof header.kid !== "string" ||
+      payload.aud !== project || payload.iss !== "https://securetoken.google.com/" + project ||
+      typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 128 ||
+      typeof payload.exp !== "number" || payload.exp <= now ||
+      typeof payload.iat !== "number" || payload.iat > now ||
+      typeof payload.auth_time !== "number" || payload.auth_time > now) return null;
+  const res = await fetch(KEY_URL);
+  if (!res.ok) throw new Error("firebase_keys_unavailable");
+  const jwks = await res.json();
+  const key = jwks.keys?.find(k => k.kid === header.kid && k.kty === "RSA" && k.use === "sig");
+  if (!key) return null;
+  const cryptoKey = await crypto.subtle.importKey("jwk", key, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+  const signature = Uint8Array.from(atob(parts[2].replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(parts[2].length / 4) * 4, "=")), c => c.charCodeAt(0));
+  const valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, signature, new TextEncoder().encode(parts[0] + "." + parts[1]));
+  return valid ? payload : null;
+}
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+    if (request.method === "OPTIONS") {
+      if (request.headers.get("Origin") !== ALLOWED_ORIGIN) return respond(request, { error: "origin_forbidden" }, 403);
+      const response = respond(request, {}, 204);
+      response.headers.set("access-control-allow-methods", "GET, OPTIONS");
+      response.headers.set("access-control-allow-headers", "Authorization");
+      response.headers.set("access-control-max-age", "600");
+      return response;
+    }
+    if (request.method !== "GET") return respond(request, { error: "method_not_allowed" }, 405);
     if (url.pathname === "/health") {
-      return json({
-        service: "mt-haccp-monitoring-api",
-        status: "ok",
-        projectConfigured: Boolean(env.FIREBASE_PROJECT_ID),
-        metricsConnected: false
-      });
+      return respond(request, { service: "mt-haccp-monitoring-api", status: "ok",
+        projectConfigured: env.FIREBASE_PROJECT_ID === PROJECT, metricsConnected: false });
     }
-    if (url.pathname === "/api/metrics") {
-      return json({
-        error: "not_configured",
-        message: "Authentification administrateur et connexion Google Cloud Monitoring non encore configurées. Aucune métrique simulée."
-      }, 503);
-    }
-    return json({ error: "not_found" }, 404);
+    if (url.pathname !== "/api/metrics") return respond(request, { error: "not_found" }, 404);
+    if (env.FIREBASE_PROJECT_ID !== PROJECT) return respond(request, { error: "project_not_configured" }, 503);
+    const authorization = request.headers.get("Authorization") || "";
+    if (!authorization.startsWith("Bearer ")) return respond(request, { error: "authentication_required" }, 401);
+    let user;
+    try { user = await verifyFirebaseToken(authorization.slice(7), PROJECT); }
+    catch { return respond(request, { error: "authentication_unavailable" }, 503); }
+    if (!user) return respond(request, { error: "invalid_token" }, 401);
+    // Admin is a server-signed Firebase custom claim, never a browser-provided flag.
+    // The existing application's Firestore-based admin role must be mapped and verified
+    // before this endpoint can be enabled for its administrators.
+    if (user.admin !== true) return respond(request, { error: "admin_claim_required" }, 403);
+    return respond(request, { error: "metrics_not_connected",
+      message: "Accès authentifié. Connexion Google Cloud Monitoring non encore activée; aucune donnée simulée." }, 503);
   }
 };
