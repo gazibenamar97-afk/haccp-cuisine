@@ -62,12 +62,16 @@ async function getMonitoringToken(env) {
   if (!env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON) return null;
   let account;
   try { account = JSON.parse(env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON); }
-  catch { throw new Error("google_credentials_invalid"); }
-  if (account.type !== "service_account" ||
-      account.project_id !== MONITORING_CREDENTIAL_PROJECT ||
-      typeof account.client_email !== "string" ||
-      !account.client_email.endsWith("@"+MONITORING_CREDENTIAL_PROJECT+".iam.gserviceaccount.com") ||
-      typeof account.private_key !== "string") throw new Error("google_credentials_invalid");
+  catch { throw new Error("google_credentials_invalid_json"); }
+  if (!account || typeof account !== "object" || account.type !== "service_account")
+    throw new Error("google_credentials_invalid_type");
+  if (account.project_id !== MONITORING_CREDENTIAL_PROJECT)
+    throw new Error("google_credentials_project_mismatch");
+  if (typeof account.client_email !== "string" ||
+      !account.client_email.endsWith("@" + MONITORING_CREDENTIAL_PROJECT + ".iam.gserviceaccount.com"))
+    throw new Error("google_credentials_email_mismatch");
+  if (typeof account.private_key !== "string" || !account.private_key.includes("BEGIN PRIVATE KEY"))
+    throw new Error("google_credentials_missing_private_key");
   const now = Math.floor(Date.now()/1000);
   const header = base64url(new TextEncoder().encode(JSON.stringify({alg:"RS256",typ:"JWT"})));
   const claims = base64url(new TextEncoder().encode(JSON.stringify({
@@ -193,8 +197,11 @@ export default {
         note:"Valeur null : aucun point disponible dans la période; ne signifie pas zéro."
       });
     } catch (error) {
-      const safe = ["google_credentials_invalid","google_oauth_failed",
-        "google_monitoring_permission_denied","google_monitoring_request_failed"].includes(error.message)
+      const safe = ["google_credentials_invalid","google_credentials_invalid_json",
+        "google_credentials_invalid_type","google_credentials_project_mismatch",
+        "google_credentials_email_mismatch","google_credentials_missing_private_key",
+        "google_oauth_failed","google_monitoring_permission_denied",
+        "google_monitoring_request_failed"].includes(error.message)
         ? error.message : "monitoring_unavailable";
       return respond(request,{error:safe},503);
     }
