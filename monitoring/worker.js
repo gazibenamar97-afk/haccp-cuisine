@@ -153,13 +153,13 @@ export default {
         headers: { Authorization: "Bearer " + authorization.slice(7) },
         redirect: "error"
       });
-    } catch { return respond(request, { error: "profile_lookup_unavailable" }, 503); }
+    } catch { return respond(request, { error: "profile_network_error" }, 503); }
     if (profileResponse.status === 401 || profileResponse.status === 403)
       return respond(request, { error: "profile_access_denied" }, 403);
     if (profileResponse.status === 404)
       return respond(request, { error: "profile_not_found" }, 403);
     if (!profileResponse.ok)
-      return respond(request, { error: "profile_lookup_unavailable", httpStatus: profileResponse.status }, 503);
+      return respond(request, { error: "profile_http_" + profileResponse.status }, 503);
     let profile;
     try { profile = await profileResponse.json(); }
     catch { return respond(request, { error: "profile_invalid" }, 503); }
