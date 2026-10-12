@@ -73,3 +73,5 @@ n'est pas un succès.
 Les résultats sont des compteurs Cloud Monitoring, pas une facture ni un
 relevé exact des quotas Firebase Spark. Un résultat `null` indique
 l'absence de points mesurés et ne doit pas être converti en zéro.
+
+Deployment staging : GitHub Actions se déclenche lors des modifications du dossier `monitoring/` sur la branche de test. Les secrets Cloudflare restent dans GitHub Actions.
