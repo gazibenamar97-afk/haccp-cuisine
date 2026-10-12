@@ -1,6 +1,12 @@
 name: Deploy monitoring Worker (test only)
 
 on:
+  push:
+    branches:
+      - test-supervision-technique
+    paths:
+      - 'monitoring/**'
+      - '.github/workflows/deploy-monitoring-worker.yml'
   workflow_dispatch:
 
 permissions:
