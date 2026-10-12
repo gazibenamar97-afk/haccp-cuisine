@@ -1137,6 +1137,19 @@ body.on-login main{padding-top:12px!important}
  html body:has(#mtPcShell):not(.on-login) .mt-pc-sidebar{height:auto!important;max-height:none!important}
 }
 </style>
+
+<style id="mt-login-viewport-fit-20261012">
+/* Connexion PC uniquement : garder le formulaire et le thermomètre accessibles
+   sans modifier l'échelle automatique de l'accueil et des modules. */
+@media screen and (min-width:851px){
+ html body.on-login{zoom:1!important;overflow-x:hidden!important;overflow-y:auto!important}
+ html body.on-login>main,html body.on-login #app{height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important}
+ html body.on-login .mt-ref-wrap{height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;align-items:stretch!important}
+ html body.on-login :is(.mt-ref-login,.mt-ref-board){height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;box-sizing:border-box!important}
+ html body.on-login .mt-ref-login{padding-block:clamp(20px,3vh,48px)!important;gap:clamp(10px,1.5vh,22px)!important}
+ html body.on-login .mt-ref-board{padding-block:clamp(20px,3vh,48px)!important}
+}
+</style>
 </head><body class="on-home">
 <main><div id="app"></div></main>
 <script>
