@@ -54,7 +54,7 @@ export default {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") {
       if (request.headers.get("Origin") !== ALLOWED_ORIGIN) return respond(request, { error: "origin_forbidden" }, 403);
-      const response = respond(request, {}, 204);
+      const response = respond(request, {}, 200);
       response.headers.set("access-control-allow-methods", "GET, OPTIONS");
       response.headers.set("access-control-allow-headers", "Authorization");
       response.headers.set("access-control-max-age", "600");
