@@ -73,10 +73,31 @@ export default {
     try { user = await verifyFirebaseToken(authorization.slice(7), PROJECT); }
     catch { return respond(request, { error: "authentication_unavailable" }, 503); }
     if (!user) return respond(request, { error: "invalid_token" }, 401);
-    // Admin is a server-signed Firebase custom claim, never a browser-provided flag.
-    // The existing application's Firestore-based admin role must be mapped and verified
-    // before this endpoint can be enabled for its administrators.
-    if (user.admin !== true) return respond(request, { error: "admin_claim_required" }, 403);
+    // Match the real M&T HACCP admin profile (Firestore users/{uid}).
+    let profileResponse;
+    try {
+      const profileUrl = "https://firestore.googleapis.com/v1/projects/" +
+        encodeURIComponent(PROJECT) + "/databases/(default)/documents/users/" +
+        encodeURIComponent(user.sub);
+      profileResponse = await fetch(profileUrl, {
+        headers: { Authorization: "Bearer " + authorization.slice(7) },
+        redirect: "error"
+      });
+    } catch { return respond(request, { error: "profile_lookup_unavailable" }, 503); }
+    if (profileResponse.status === 401 || profileResponse.status === 403)
+      return respond(request, { error: "profile_access_denied" }, 403);
+    if (profileResponse.status === 404)
+      return respond(request, { error: "profile_not_found" }, 403);
+    if (!profileResponse.ok)
+      return respond(request, { error: "profile_lookup_unavailable" }, 503);
+    let profile;
+    try { profile = await profileResponse.json(); }
+    catch { return respond(request, { error: "profile_invalid" }, 503); }
+    const fields = profile.fields || {};
+    if (fields.role?.stringValue !== "admin" ||
+        fields.site?.stringValue !== "main" ||
+        fields.active?.booleanValue !== true)
+      return respond(request, { error: "admin_access_required" }, 403);
     return respond(request, { error: "metrics_not_connected",
       message: "Accès authentifié. Connexion Google Cloud Monitoring non encore activée; aucune donnée simulée." }, 503);
   }
