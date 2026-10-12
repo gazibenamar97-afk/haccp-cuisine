@@ -1,0 +1,22 @@
+name: Monitoring Worker security tests
+on:
+  push:
+    branches: [test-supervision-technique]
+    paths:
+      - 'monitoring/**'
+      - '.github/workflows/monitoring-worker-tests.yml'
+  workflow_dispatch:
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check monitoring/worker.js
+      - name: Run Worker tests
+        run: node --test monitoring/worker.test.mjs
