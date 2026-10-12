@@ -4200,7 +4200,7 @@ setTimeout(decorate,0);
       method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'
     });
     const data=await response.json();
-    if(!response.ok)throw new Error(data.error||'Erreur Google Monitoring ('+response.status+')');
+    if(!response.ok)throw new Error((data.error||'Erreur Google Monitoring')+(data.httpStatus?' (HTTP '+data.httpStatus+')':''));
     if(!authorized()||!document.getElementById('mt-tech-status'))return;
     for(const name of ['reads','writes','deletes']){
       const el=document.getElementById('mt-tech-'+name);
