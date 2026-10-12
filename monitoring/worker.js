@@ -159,14 +159,14 @@ export default {
     if (profileResponse.status === 404)
       return respond(request, { error: "profile_not_found" }, 403);
     if (!profileResponse.ok)
-      return respond(request, { error: "profile_lookup_unavailable" }, 503);
+      return respond(request, { error: "profile_lookup_unavailable", httpStatus: profileResponse.status }, 503);
     let profile;
     try { profile = await profileResponse.json(); }
     catch { return respond(request, { error: "profile_invalid" }, 503); }
     const fields = profile.fields || {};
     if (fields.role?.stringValue !== "admin" ||
         fields.site?.stringValue !== "main" ||
-        fields.active?.booleanValue !== true)
+        fields.active?.booleanValue === false)
       return respond(request, { error: "admin_access_required" }, 403);
     if (!env.GOOGLE_MONITORING_SERVICE_ACCOUNT_JSON)
       return respond(request, {error:"metrics_not_connected",
