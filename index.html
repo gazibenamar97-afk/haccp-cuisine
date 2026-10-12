@@ -1291,7 +1291,7 @@ async function mtAiReportGenerate(){
   const report=data.report;
   if(!report||typeof report.bilan!=="string"||!Array.isArray(report.points)||!Array.isArray(report.priorites)||!Array.isArray(report.donneesManquantes))throw Error("Format du rapport IA invalide. Veuillez réessayer.");
   mtAiRenderReport(report,data.facts||{},data.site,from,to);
- }catch(e){status.textContent="Analyse indisponible : "+String(e.message||e)}finally{btn.disabled=false;btn.textContent=oldLabel}
+ }catch(e){mtAiReportLastRequest=0;if(mtAiReportCooldownTimer){clearInterval(mtAiReportCooldownTimer);mtAiReportCooldownTimer=null}mtAiCooldown();status.textContent="Analyse indisponible : "+String(e.message||e)+". Vérifiez la connexion au service IA et réessayez."}finally{btn.disabled=false;btn.textContent=oldLabel}
 }
 function mtAiReportPrint(){
  const out=document.getElementById("mtAiReportOutput"),proof=document.getElementById("mtAiReportProofs");
