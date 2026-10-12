@@ -75,3 +75,5 @@ relevé exact des quotas Firebase Spark. Un résultat `null` indique
 l'absence de points mesurés et ne doit pas être converti en zéro.
 
 Deployment staging : GitHub Actions se déclenche lors des modifications du dossier `monitoring/` sur la branche de test. Les secrets Cloudflare restent dans GitHub Actions.
+
+GitHub Actions deployment retry after configuring CLOUDFLARE_ACCOUNT_ID.
