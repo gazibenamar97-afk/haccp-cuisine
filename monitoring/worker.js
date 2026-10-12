@@ -151,9 +151,14 @@ export default {
         encodeURIComponent(user.sub);
       profileResponse = await fetch(profileUrl, {
         headers: { Authorization: "Bearer " + authorization.slice(7) },
-        redirect: "error"
+        redirect: "follow"
       });
-    } catch { return respond(request, { error: "profile_network_error" }, 503); }
+    } catch (error) {
+      const detail = error?.name === "TypeError" ? "fetch_type_error" :
+        error?.name === "AbortError" ? "fetch_aborted" : "fetch_exception";
+      console.error("Firestore profile fetch failed", error?.name, error?.message);
+      return respond(request, { error: "profile_network_error", detail }, 503);
+    }
     if (profileResponse.status === 401 || profileResponse.status === 403)
       return respond(request, { error: "profile_access_denied" }, 403);
     if (profileResponse.status === 404)
