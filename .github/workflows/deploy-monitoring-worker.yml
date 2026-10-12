@@ -1,0 +1,43 @@
+name: Deploy monitoring Worker (test only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mt-haccp-monitoring-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy test monitoring Worker
+    runs-on: ubuntu-latest
+    environment: monitoring-test
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: test-supervision-technique
+          persist-credentials: false
+
+      - name: Validate required Cloudflare credentials
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CF_ACCOUNT" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Deploy Worker to Cloudflare
+        working-directory: monitoring
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 deploy
+
+      - name: Check public health endpoint
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 \
+            https://mt-haccp-monitoring-api.gazibenamar97.workers.dev/health
