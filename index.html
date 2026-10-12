@@ -4185,14 +4185,44 @@ setTimeout(decorate,0);
 /* Module pilote : aucun secret et aucune métrique fictive. */
 (function(){
  function authorized(){return typeof SITE_ID!=='undefined'&&SITE_ID==='main'&&typeof currentUserProfile!=='undefined'&&currentUserProfile&&currentUserProfile.role==='admin'&&currentUserProfile.site==='main'&&currentUserProfile.active!==false}
- window.mtTechnicalSupervision=function(){
+ window.mtTechnicalSupervision=async function(){
   if(!authorized()){if(typeof home==='function')home();return}
   if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='technical-supervision';
   document.body.classList.remove('on-home','mt-premium-active');
   const app=document.getElementById('app');if(!app)return;
-  app.innerHTML='<section class="mt-tech-module" style="max-width:1100px;margin:0 auto;padding:22px"><button class="btn back" onclick="home()">← Accueil</button><h1>Supervision technique</h1><p class="note">Administrateur principal — données de consommation officielles</p><div class="cards"><div class="metric"><span>Lectures Firestore</span><b style="font-size:23px">À connecter</b><p class="note">Google Cloud Monitoring</p></div><div class="metric"><span>Écritures Firestore</span><b style="font-size:23px">À connecter</b><p class="note">Google Cloud Monitoring</p></div><div class="metric"><span>Photos Supabase</span><b style="font-size:23px">À connecter</b><p class="note">API sécurisée nécessaire</p></div></div><div class="panel"><h2>Statistiques réelles</h2><p>Les chiffres ne sont pas encore synchronisés : aucune estimation ne sera présentée comme réelle.</p><p><a href="https://console.firebase.google.com/project/mt-hacqp/firestore/databases/-default-/usage" target="_blank" rel="noopener noreferrer">Ouvrir les statistiques Firebase</a></p><p><a href="https://supabase.com/dashboard/projects" target="_blank" rel="noopener noreferrer">Ouvrir Supabase</a></p></div><div class="panel"><h2>Alertes de consommation</h2><p class="note">À configurer dans Google Cloud Monitoring et Google Cloud Billing. Les alertes ne sont pas encore activées.</p></div></section>';
-  window.scrollTo(0,0);
- }
+  app.innerHTML='<section class="mt-tech-module" style="max-width:1100px;margin:0 auto;padding:22px"><button class="btn back" onclick="home()">← Accueil</button><h1>Supervision technique</h1><p class="note">Administrateur principal — mesures officielles sur les dernières 24 heures</p><div class="cards"><div class="metric"><span>Lectures Firestore</span><b id="mt-tech-reads" style="font-size:23px">Chargement…</b><p class="note">Google Cloud Monitoring</p></div><div class="metric"><span>Écritures Firestore</span><b id="mt-tech-writes" style="font-size:23px">Chargement…</b><p class="note">Google Cloud Monitoring</p></div><div class="metric"><span>Suppressions Firestore</span><b id="mt-tech-deletes" style="font-size:23px">Chargement…</b><p class="note">Google Cloud Monitoring</p></div><div class="metric"><span>Photos Supabase</span><b style="font-size:23px">Non connecté</b><p class="note">API Supabase à intégrer séparément</p></div></div><div class="panel"><h2>Statistiques réelles</h2><p id="mt-tech-status" role="status">Connexion sécurisée à Google Cloud Monitoring…</p><button type="button" class="btn" onclick="window.mtTechnicalSupervision()">Actualiser les statistiques</button><p><a href="https://console.firebase.google.com/project/mt-hacqp/firestore/databases/-default-/usage" target="_blank" rel="noopener noreferrer">Ouvrir les statistiques Firebase</a></p></div><div class="panel"><h2>Alertes de consommation</h2><p class="note">Non activées : à configurer séparément dans Google Cloud Monitoring.</p></div></section>';
+  const status=document.getElementById('mt-tech-status');
+  try {
+    const user=typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser;
+    if(!user)throw new Error('Session Firebase absente. Reconnecte-toi.');
+    const token=await user.getIdToken();
+    const response=await fetch('https://mt-haccp-monitoring-api.gazibenamar97.workers.dev/api/metrics',{
+      method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'
+    });
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||'Erreur Google Monitoring ('+response.status+')');
+    if(!authorized()||!document.getElementById('mt-tech-status'))return;
+    for(const name of ['reads','writes','deletes']){
+      const el=document.getElementById('mt-tech-'+name);
+      const metric=data.metrics&&data.metrics[name];
+      if(el)el.textContent=metric&&typeof metric.value==='number'
+        ?metric.value.toLocaleString('fr-FR'):'Données indisponibles';
+    }
+    status.textContent='Source : '+(data.source||'Google Cloud Monitoring')+
+      ' · Période : '+new Date(data.period.start).toLocaleString('fr-FR')+
+      ' – '+new Date(data.period.end).toLocaleString('fr-FR')+
+      '. Les valeurs indisponibles ne sont pas considérées comme zéro.';
+  }catch(error){
+    if(document.getElementById('mt-tech-status'))
+      status.textContent='Connexion non aboutie : '+(error&&error.message||'Erreur réseau')+
+      '. Aucun chiffre fictif affiché.';
+    for(const name of ['reads','writes','deletes']){
+      const el=document.getElementById('mt-tech-'+name);
+      if(el)el.textContent='Indisponible';
+    }
+  }
+ };
+
  function install(){if(!authorized())return;const host=document.querySelector('.mt-pc-nav');if(host&&!host.querySelector('[data-mt-tech]')){const b=document.createElement('button');b.type='button';b.dataset.mtTech='1';b.textContent='Supervision technique';b.onclick=window.mtTechnicalSupervision;host.appendChild(b)}const mobile=document.querySelector('.mtp-app .mtp-content');if(mobile&&!mobile.querySelector('[data-mt-tech]')){const b=document.createElement('button');b.type='button';b.dataset.mtTech='1';b.className='btn';b.style.margin='12px';b.textContent='Supervision technique';b.onclick=window.mtTechnicalSupervision;mobile.prepend(b)}}
  let busy=false;new MutationObserver(function(){if(busy)return;busy=true;try{install()}finally{busy=false}}).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',install);
 })();
