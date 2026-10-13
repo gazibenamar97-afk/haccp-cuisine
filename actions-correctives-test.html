@@ -4467,7 +4467,7 @@ window.addEventListener('message',async e=>{
 /* Test uniquement : le contenu doit commencer après la barre latérale PC. */
 @media screen and (min-width:851px){
  html body:has(#mtPcShell):not(.on-login):not(.on-home) > main{
-  margin-left:232px!important;width:calc(100% - 232px)!important;max-width:calc(100% - 232px)!important;
+  position:relative!important;left:232px!important;margin-left:0!important;width:calc(100% - 232px)!important;max-width:calc(100% - 232px)!important;
   min-width:0!important;box-sizing:border-box!important;overflow-x:clip!important
  }
  html body:has(#mtPcShell):not(.on-login):not(.on-home) > main #app{
