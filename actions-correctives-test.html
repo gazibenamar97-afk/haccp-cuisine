@@ -1079,7 +1079,7 @@ body.on-login main{padding-top:12px!important}
 <style id="mt-module-fluid-desktop-20261012">
 /* Modules uniquement : aucun effet sur l'accueil, la connexion ou les écrans <851px. */
 @media screen and (min-width:851px){
- body:has(#mtPcShell):not(.on-home):not(.on-login) > main{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+ body:has(#mtPcShell):not(.on-home):not(.on-login) > main{width:calc(100% - 250px)!important;margin-left:250px!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
  body:has(#mtPcShell):not(.on-home):not(.on-login) #app{
   width:100%!important;max-width:1900px!important;min-width:0!important;
   margin-inline:auto!important;padding-inline:clamp(16px,2vw,40px)!important;
@@ -4464,17 +4464,23 @@ window.addEventListener('message',async e=>{
 </script>
 
 <style id="mt-test-desktop-equipment-layout-fix">
-/* Test uniquement : le contenu doit commencer après la barre latérale PC. */
+/* PC test seulement. Un repère unique pour la barre latérale et la zone de travail. */
 @media screen and (min-width:851px){
+ html body:has(#mtPcShell):not(.on-login):not(.on-home){zoom:1!important;overflow-x:hidden!important}
+ html body:has(#mtPcShell):not(.on-login):not(.on-home) .mt-pc-sidebar{
+  left:0!important;width:250px!important;max-width:250px!important;
+  transform:none!important
+ }
  html body:has(#mtPcShell):not(.on-login):not(.on-home) > main{
-  position:relative!important;left:232px!important;margin-left:0!important;width:calc(100% - 232px)!important;max-width:calc(100% - 232px)!important;
-  min-width:0!important;box-sizing:border-box!important;overflow-x:clip!important
+  position:relative!important;left:auto!important;right:auto!important;
+  transform:none!important;margin:0 0 0 250px!important;
+  width:calc(100% - 250px)!important;max-width:calc(100% - 250px)!important;
+  min-width:0!important;padding:0!important;box-sizing:border-box!important;overflow-x:clip!important
  }
  html body:has(#mtPcShell):not(.on-login):not(.on-home) > main #app{
-  width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
-  padding-left:clamp(12px,1.5vw,28px)!important;padding-right:clamp(12px,1.5vw,28px)!important
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  padding:20px clamp(14px,2vw,30px)!important;margin:0!important;box-sizing:border-box!important
  }
- html body:has(#mtPcShell):not(.on-login):not(.on-home) > main #app :is(.row,.grid,.panel){min-width:0;max-width:100%;box-sizing:border-box}
 }
 </style>
 </body></html>
