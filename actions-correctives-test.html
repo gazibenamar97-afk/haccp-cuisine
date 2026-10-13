@@ -4344,6 +4344,11 @@ window.addEventListener('message',async e=>{
 #mtTempCorrectiveSheet input,#mtTempCorrectiveSheet select,#mtTempCorrectiveSheet textarea{box-sizing:border-box;width:100%;padding:11px;border:1px solid #afc5b8;border-radius:9px;font:inherit}
 #mtTempCorrectiveSheet button{border-radius:9px;padding:12px;margin:8px 6px 0 0;cursor:pointer;background:#087657;color:white;border:0;font:inherit}
 #mtTempCorrectiveSheet .secondary{background:#edf5ef;color:#075d44}
+#mtTempCorrectiveSheet .mt-ac-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;border:1px solid #d5e5db;border-radius:9px;margin:7px 0}
+#mtTempCorrectiveSheet .mt-ac-row input[type=checkbox]{width:20px;height:20px;margin:0;flex:none}
+#mtTempCorrectiveSheet .mt-ac-row label{flex:1 1 230px;margin:0;font-weight:normal}
+#mtTempCorrectiveSheet .mt-ac-row select{width:auto;min-width:140px}
+#mtTempCorrectiveSheet .mt-ac-presets{background:#f7faf8;padding:10px;border-radius:10px;margin-top:15px}
 #mtTempCorrectiveSheet .mt-temp-ac-close{position:absolute;top:12px;right:12px;margin:0;width:38px;height:38px;padding:0;border-radius:50%;background:#edf5ef;color:#143d30;font-size:27px;line-height:1;font-weight:600;display:flex;align-items:center;justify-content:center}
 #mtTempCorrectiveSheet .mt-temp-ac-close:hover{background:#dceae0}
 #mtTempCorrectiveSheet .mt-temp-ac-card>h2{padding-right:45px}
@@ -4375,7 +4380,21 @@ window.addEventListener('message',async e=>{
   severity.value='majeure';
   const locationLabel=document.createElement('label');locationLabel.textContent='Lieu / zone de l’équipement';
   const zone=document.createElement('input');zone.value=equipment.zone||equipment.location||'Chambres froides';
-  const immediateLabel=document.createElement('label');immediateLabel.textContent='Mesures immédiates / produits concernés';
+  const presetBox=document.createElement('div');presetBox.className='mt-ac-presets';
+  const presetTitle=document.createElement('strong');presetTitle.textContent='Mesures prédéfinies de prise en charge';presetBox.append(presetTitle);
+  const hint=document.createElement('p');hint.className='note';hint.textContent='Sélectionnez les mesures pertinentes. Pour chacune, précisez si elle est réalisée ou reste à faire.';presetBox.append(hint);
+  const options=['Vérifier le fonctionnement et le réglage de l’équipement','Contrôler la fermeture des portes et les joints','Contrôler la température des denrées','Mettre en quarantaine les denrées concernées','Transférer les denrées vers un équipement conforme','Informer le responsable HACCP','Contacter le service maintenance','Évaluer le devenir des denrées selon les procédures HACCP','Faire un nouveau relevé après intervention'];
+  const presetRows=[];
+  options.forEach(label=>{
+   const row=document.createElement('div');row.className='mt-ac-row';
+   const check=document.createElement('input');check.type='checkbox';check.setAttribute('aria-label','Choisir '+label);
+   const text=document.createElement('label');text.textContent=label;
+   const status=document.createElement('select');status.disabled=true;
+   for(const [val,caption] of [['a_faire','À faire'],['realisee','Réalisée']]){const o=document.createElement('option');o.value=val;o.textContent=caption;status.append(o)}
+   check.onchange=()=>{status.disabled=!check.checked};text.onclick=()=>{check.checked=!check.checked;check.onchange()};
+   row.append(check,text,status);presetBox.append(row);presetRows.push({label,check,status});
+  });
+  const immediateLabel=document.createElement('label');immediateLabel.textContent='Observations libres / produits concernés';
   const immediate=document.createElement('textarea');immediate.rows=3;immediate.maxLength=900;immediate.value=record.note||'';
   const personLabel=document.createElement('label');personLabel.textContent='Responsable désigné';
   const owner=document.createElement('input');owner.maxLength=120;owner.value=record.operator||'';
@@ -4389,7 +4408,9 @@ window.addEventListener('message',async e=>{
    if(!cloudDb||!currentUserProfile||!firebase.auth().currentUser||currentUserProfile.site!==SITE_ID||SITE_ID==='main'){
     message.textContent='Compte établissement non autorisé.';return;
    }
-   if(severity.value==='critique'&&!immediate.value.trim()){
+   const measures=presetRows.filter(x=>x.check.checked).map(x=>({label:x.label,status:x.status.value}));
+   if(!measures.length&&!immediate.value.trim()){message.textContent='Choisissez une mesure ou renseignez une observation.';return}
+   if(severity.value==='critique'&&!immediate.value.trim()&&!measures.some(x=>x.status==='realisee')){
     message.textContent='En cas de gravité critique, décrivez la mesure immédiate.';return;
    }
    if(severity.value!=='critique'&&!confirm('Confirmer la création de l’action corrective pour ce relevé ?'))return;
@@ -4409,7 +4430,8 @@ window.addEventListener('message',async e=>{
       severity:severity.value,zone:zone.value.trim().slice(0,100)||'Chambres froides',
       equipment:record.equipment,source:'Températures',sourceId,
       problem:'Température non conforme : '+record.equipment+' à '+record.value+' °C (limites '+equipment.min+' à '+equipment.max+' °C)',
-      immediate:immediate.value.trim().slice(0,900),
+      immediate:[...measures.map(x=>(x.status==='realisee'?'[Réalisée] ':'[À faire] ')+x.label),immediate.value.trim()].filter(Boolean).join('\n').slice(0,900),
+      predefinedMeasures:measures,observationLibre:immediate.value.trim().slice(0,900),
       measure:'Vérifier l’équipement, maîtriser le risque sur les denrées et réaliser un nouveau relevé.',
       owner:owner.value.trim().slice(0,120),deadline:deadline.value,status:'Ouverte',
       events:[{at:when,by:record.operator,action:'Création depuis Températures',
@@ -4424,7 +4446,7 @@ window.addEventListener('message',async e=>{
     create.onclick=()=>{clearPanel();window.mtOpenCorrectivesTest()};
    }catch(err){message.textContent='Enregistrement non confirmé : '+err.message;create.disabled=false}
   };
-  card.append(title,info,warning,severityLabel,severity,locationLabel,zone,immediateLabel,immediate,personLabel,owner,dateLabel,deadline,message,create,later);
+  card.append(title,info,warning,severityLabel,severity,locationLabel,zone,presetBox,immediateLabel,immediate,personLabel,owner,dateLabel,deadline,message,create,later);
   panel.append(card);document.body.append(panel);
  }
  saveTemp=function(){
