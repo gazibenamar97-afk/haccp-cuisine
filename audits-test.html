@@ -1635,7 +1635,7 @@ function mtPremiumHome(){
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],...(SITE_ID!=='main'?[['Audits HACCP','chart','mtOpenAudits()']]:[]),['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtHaccpGuide()" aria-label="Ouvrir le guide HACCP" title="Guide HACCP">'+mtSvg('book')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
@@ -2338,7 +2338,7 @@ function syncLocalSettingsIntoState(){S.settings=S.settings||{};let pin=localSto
 function syncStateSettingsToLocal(){if(S.settings&&S.settings.adminPin)localStorage.setItem('haccpAdminPin',S.settings.adminPin)}
 function stableDataKey(x){if(!x||typeof x!=='object')return JSON.stringify(x);let y=JSON.parse(JSON.stringify(x));delete y._cloudUpdatedAt;delete y._syncId;return JSON.stringify(y)}
 function dedupeArray(a){let out=[],seen=new Set();(Array.isArray(a)?a:[]).forEach(x=>{let k=stableDataKey(x);if(!seen.has(k)){seen.add(k);out.push(x)}});return out}
-function sanitizeCloudState(data){let d=JSON.parse(JSON.stringify(data||{}));['stock','temps','clean','trace','suppliers','customProducts','equipment'].forEach(k=>{if(Array.isArray(d[k]))d[k]=dedupeArray(d[k])});return d}
+function sanitizeCloudState(data){let d=JSON.parse(JSON.stringify(data||{}));delete d.auditDraftsByUser;['stock','temps','clean','trace','suppliers','customProducts','equipment'].forEach(k=>{if(Array.isArray(d[k]))d[k]=dedupeArray(d[k])});return d}
 function cloudApply(data){if(!data||typeof data!=='object')return;data=sanitizeCloudState(data);cloudApplying=true;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,JSON.parse(JSON.stringify(data)));delete S._cloudUpdatedAt;['stock','temps','clean','trace','equipment'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[]});if(!Array.isArray(S.suppliers))S.suppliers=[];S.suppliers=S.suppliers.map(s=>typeof s==='string'?{name:s,phone:'',plate:'',driver:''}:s);if(!Array.isArray(S.customProducts))S.customProducts=[];if(!S.productOverrides||typeof S.productOverrides!=='object')S.productOverrides={};if(!S.disabledBaseProducts||typeof S.disabledBaseProducts!=='object')S.disabledBaseProducts={};localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));localStorage.setItem('haccpCloudLinked','1');syncStateSettingsToLocal();cloudApplying=false;refreshCurrentView()}
 function refreshCurrentView(){try{
  // User management is an account screen, not an appState screen.
@@ -4185,7 +4185,7 @@ setTimeout(decorate,0);
 })();
 </script>
 
-<style id="mt-audits-test-style">.mt-audits-view{padding:20px;max-width:1300px;margin:auto}.mt-audits-iframe{width:100%;height:1800px;border:0;background:#fff;border-radius:12px}@media(max-width:850px){.mt-audits-iframe{height:2400px}.mt-audits-view{padding:8px}}</style>
+<style id="mt-audits-test-style">.mt-audits-view{padding:20px;max-width:1300px;margin:auto}.mt-audits-iframe{width:100%;height:1800px;border:0;background:#fff;border-radius:12px}@media(max-width:850px){body:has(.mt-audits-view){overflow-x:hidden!important}.mt-audits-view{padding:9px!important;width:100%;max-width:100%;box-sizing:border-box}.mt-audits-view h1{font-size:22px;margin:8px 0}.mt-audits-view .note{font-size:12px}.mt-audits-iframe{width:100%;height:2800px;min-height:800px;display:block;border:0;border-radius:12px;overflow:hidden}.mt-audits-view .back{min-height:42px}}</style>
 <script id="mt-audits-test-script">
 (function(){
 window.mtOpenAudits=function(){
@@ -4193,12 +4193,24 @@ window.mtOpenAudits=function(){
  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='audits';
  document.body.classList.remove('on-home','mt-premium-active','on-login');
  const root=document.getElementById('app');if(!root)return;
- root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-advanced.html"></iframe></section>';
+ root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-advanced.html?v=185-brouillons-auto"></iframe></section>';
  window.scrollTo(0,0);
 };
 })();
 </script>
 
+<script id="mt-audits-responsive-mobile">
+(function(){
+ window.addEventListener('message',function(event){
+  if(window.innerWidth>850||event.origin!==location.origin||!event.data||event.data.mtAuditResize!==true)return;
+  const frame=document.querySelector('.mt-audits-iframe');
+  if(!frame||event.source!==frame.contentWindow)return;
+  const h=Number(event.data.height);
+  if(!Number.isFinite(h)||h<350||h>15000)return;
+  frame.style.height=Math.ceil(h+12)+'px';
+ });
+})();
+</script>
 <script id="mt-audits-firestore-bridge">
 (function(){
  'use strict';
@@ -4219,13 +4231,42 @@ window.mtOpenAudits=function(){
     const snap=await doc.get({source:'server'});const records=(snap.data()||{}).auditsRecords;
     respond((Array.isArray(records)?records:[]).slice().sort((a,b)=>String(b.savedAt||'').localeCompare(String(a.savedAt||''))));return;
    }
+   // Drafts are isolated by authenticated user and by audit zone in the establishment document.
+   const uid=firebase.auth().currentUser.uid;
+   const zone=String(msg.payload&&msg.payload.zone||'');
+   if(msg.type==='draftGet'){
+    const snap=await doc.get({source:'server'});
+    const all=(snap.data()||{}).auditDraftsByUser||{};
+    respond(all[uid]&&typeof all[uid]==='object'?all[uid]:{});return;
+   }
+   if(msg.type==='draftPut'){
+    const draft=msg.payload&&msg.payload.draft||{};
+    if(!zone||zone.length>100||zone==='__proto__'||zone==='constructor'||draft.zone!==zone||
+       !Array.isArray(draft.entries)||draft.entries.length!==10||
+       draft.entries.some(x=>!['','ok','nc','na'].includes(x.result))||JSON.stringify(draft).length>18000)
+       throw Error('Brouillon HACCP invalide.');
+    const updatedAt=new Date().toISOString();
+    const cleaned={site:SITE_ID,actorUid:uid,zone,updatedAt,
+     date:String(draft.date||'').slice(0,10),auditor:String(draft.auditor||'').slice(0,140),
+     entries:draft.entries.map(x=>({category:String(x.category||'').slice(0,100),
+      question:String(x.question||'').slice(0,300),result:x.result,
+      note:String(x.note||'').slice(0,1500)}))};
+    await doc.update(new firebase.firestore.FieldPath('auditDraftsByUser',uid,zone),cleaned);
+    respond({updatedAt});return;
+   }
+   if(msg.type==='draftRemove'){
+    if(!zone||zone.length>100)throw Error('Lieu d’audit invalide.');
+    await doc.update(new firebase.firestore.FieldPath('auditDraftsByUser',uid,zone),
+      firebase.firestore.FieldValue.delete());
+    respond({removed:true});return;
+   }
    if(msg.type==='save'){
     const a=msg.payload||{};
-    if(a.site!==SITE_ID||!Array.isArray(a.entries)||a.entries.length!==10||a.entries.some(x=>!['ok','nc','na'].includes(x.result))||!a.auditor||!/^\d{4}-\d{2}-\d{2}$/.test(a.date))throw Error('Audit incomplet ou établissement incorrect.');
+    if(a.site!==SITE_ID||!Array.isArray(a.entries)||(a.entries.length!==10||a.entries.some(x=>!['ok','nc','na'].includes(x.result)))||typeof a.zone!=='string'||!a.zone.trim()||a.zone.length>100||!a.auditor||!/^\d{4}-\d{2}-\d{2}$/.test(a.date))throw Error('Audit incomplet ou établissement incorrect.');
     if(JSON.stringify(a).length>18000)throw Error('Les observations dépassent la taille autorisée.');
     const uid=firebase.auth().currentUser.uid;
     const savedAt=new Date().toISOString();
-    const record={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),savedAt,site:SITE_ID,actorUid:uid,actorName:currentUserProfile.name||currentUserProfile.email||'',date:a.date,auditor:a.auditor,entries:a.entries.map(x=>({category:String(x.category||'').slice(0,100),question:String(x.question||'').slice(0,300),result:x.result,note:String(x.note||'').slice(0,1500)})),progress:10,score:a.score,nonConformities:a.nonConformities,status:a.status};
+    const record={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),savedAt,site:SITE_ID,actorUid:uid,actorName:currentUserProfile.name||currentUserProfile.email||'',date:a.date,auditor:a.auditor,zone:a.zone,entries:a.entries.map(x=>({category:String(x.category||'').slice(0,100),question:String(x.question||'').slice(0,300),result:x.result,note:String(x.note||'').slice(0,1500)})),progress:10,score:a.score,nonConformities:a.nonConformities,status:a.status};
     await doc.update({auditsRecords:firebase.firestore.FieldValue.arrayUnion(record)});
     respond({id:record.id,savedAt});return;
    }
