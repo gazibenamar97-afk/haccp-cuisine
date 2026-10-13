@@ -4335,4 +4335,105 @@ window.addEventListener('message',async e=>{
 });
 })();
 </script>
+
+<style id="mt-temp-action-link-style">
+#mtTempCorrectiveSheet{position:fixed;inset:0;background:#10241f99;z-index:999998;overflow:auto;padding:18px}
+#mtTempCorrectiveSheet[hidden]{display:none!important}
+#mtTempCorrectiveSheet .mt-temp-ac-card{background:#fff;color:#143d30;border-radius:16px;margin:3vh auto;max-width:780px;padding:24px;box-shadow:0 16px 45px #0004;font:15px/1.5 Arial,sans-serif}
+#mtTempCorrectiveSheet label{display:block;margin-top:12px;font-weight:600}
+#mtTempCorrectiveSheet input,#mtTempCorrectiveSheet select,#mtTempCorrectiveSheet textarea{box-sizing:border-box;width:100%;padding:11px;border:1px solid #afc5b8;border-radius:9px;font:inherit}
+#mtTempCorrectiveSheet button{border-radius:9px;padding:12px;margin:8px 6px 0 0;cursor:pointer;background:#087657;color:white;border:0;font:inherit}
+#mtTempCorrectiveSheet .secondary{background:#edf5ef;color:#075d44}
+@media(max-width:850px){#mtTempCorrectiveSheet{padding:6px}#mtTempCorrectiveSheet .mt-temp-ac-card{padding:15px}}
+</style>
+<script id="mt-temp-correctives-test-link">
+(function(){
+ 'use strict';
+ if(typeof saveTemp!=='function')return;
+ const originalSaveTemperature=saveTemp;
+ let lastTempId='';
+ function clearPanel(){const panel=document.getElementById('mtTempCorrectiveSheet');if(panel)panel.remove()}
+ function displaySheet(record,equipment){
+  clearPanel();
+  const panel=document.createElement('div');
+  panel.id='mtTempCorrectiveSheet';
+  const card=document.createElement('section');card.className='mt-temp-ac-card';
+  const title=document.createElement('h2');title.textContent='Température non conforme — Action corrective';
+  const info=document.createElement('p');
+  info.textContent='Équipement : '+record.equipment+' · Relevé : '+record.value+' °C · Limites : '+equipment.min+' à '+equipment.max+' °C · Opérateur : '+record.operator;
+  const warning=document.createElement('p');
+  warning.textContent='Le relevé non conforme est déjà conservé dans Températures et Traçabilité. Évaluez le risque avant de créer l’action corrective. Une température hors limites n’est pas automatiquement critique.';
+  const severityLabel=document.createElement('label');severityLabel.textContent='Gravité évaluée';
+  const severity=document.createElement('select');
+  for(const [v,label] of [['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — prise en charge urgente']]){
+   const o=document.createElement('option');o.value=v;o.textContent=label;severity.append(o);
+  }
+  severity.value='majeure';
+  const locationLabel=document.createElement('label');locationLabel.textContent='Lieu / zone de l’équipement';
+  const zone=document.createElement('input');zone.value=equipment.zone||equipment.location||'Chambres froides';
+  const immediateLabel=document.createElement('label');immediateLabel.textContent='Mesures immédiates / produits concernés';
+  const immediate=document.createElement('textarea');immediate.rows=3;immediate.maxLength=900;immediate.value=record.note||'';
+  const personLabel=document.createElement('label');personLabel.textContent='Responsable désigné';
+  const owner=document.createElement('input');owner.maxLength=120;owner.value=record.operator||'';
+  const dateLabel=document.createElement('label');dateLabel.textContent='Échéance';
+  const deadline=document.createElement('input');deadline.type='date';
+  const message=document.createElement('p');message.setAttribute('role','status');
+  const create=document.createElement('button');create.textContent='Créer l’action liée au relevé';
+  const later=document.createElement('button');later.className='secondary';later.textContent='Ne pas créer maintenant';
+  later.onclick=()=>clearPanel();
+  create.onclick=async()=>{
+   if(!cloudDb||!currentUserProfile||!firebase.auth().currentUser||currentUserProfile.site!==SITE_ID||SITE_ID==='main'){
+    message.textContent='Compte établissement non autorisé.';return;
+   }
+   if(severity.value==='critique'&&!immediate.value.trim()){
+    message.textContent='En cas de gravité critique, décrivez la mesure immédiate.';return;
+   }
+   if(severity.value!=='critique'&&!confirm('Confirmer la création de l’action corrective pour ce relevé ?'))return;
+   create.disabled=true;
+   try{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),uid=firebase.auth().currentUser.uid;
+    const sourceId=record.id;let result;
+    await cloudDb.runTransaction(async tx=>{
+     const snap=await tx.get(ref),records=Array.isArray(snap.data()?.correctiveActionsRecords)?snap.data().correctiveActionsRecords:[];
+     const match=records.find(x=>x.status!=='Clôturée'&&x.source==='Températures'&&(x.sourceId===sourceId||
+      (x.equipment===record.equipment&&x.zone===zone.value.trim())));
+     if(match){result={reference:match.reference,duplicate:true};return}
+     const number=1+records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+     const when=new Date().toISOString(),reference='AC-'+String(number).padStart(4,'0');
+     const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+      reference,site:SITE_ID,createdAt:when,actorUid:uid,
+      severity:severity.value,zone:zone.value.trim().slice(0,100)||'Chambres froides',
+      equipment:record.equipment,source:'Températures',sourceId,
+      problem:'Température non conforme : '+record.equipment+' à '+record.value+' °C (limites '+equipment.min+' à '+equipment.max+' °C)',
+      immediate:immediate.value.trim().slice(0,900),
+      measure:'Vérifier l’équipement, maîtriser le risque sur les denrées et réaliser un nouveau relevé.',
+      owner:owner.value.trim().slice(0,120),deadline:deadline.value,status:'Ouverte',
+      events:[{at:when,by:record.operator,action:'Création depuis Températures',
+       note:'Relevé '+sourceId+' · '+(severity.value==='critique'?'Prise en charge urgente':'Anomalie confirmée')}]
+     };
+     tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});
+     result={reference,duplicate:false};
+    });
+    message.textContent=result.duplicate?'Action ouverte déjà existante : '+result.reference:'Action '+result.reference+' enregistrée dans Firebase.';
+    create.textContent='Ouvrir Actions correctives';
+    create.disabled=false;
+    create.onclick=()=>{clearPanel();window.mtOpenCorrectivesTest()};
+   }catch(err){message.textContent='Enregistrement non confirmé : '+err.message;create.disabled=false}
+  };
+  card.append(title,info,warning,severityLabel,severity,locationLabel,zone,immediateLabel,immediate,personLabel,owner,dateLabel,deadline,message,create,later);
+  panel.append(card);document.body.append(panel);
+ }
+ saveTemp=function(){
+  const selected=document.getElementById('te');
+  const idx=selected&&selected.value!==''?Number(selected.value):-1;
+  const e=idx>=0&&typeof S!=='undefined'?S.equipment[idx]:null;
+  const before=S.temps.length;
+  originalSaveTemperature();
+  const latest=S.temps[0];
+  if(e&&S.temps.length===before+1&&latest&&!latest.ok&&latest.id!==lastTempId){
+   lastTempId=latest.id;displaySheet(latest,e);
+  }
+ };
+})();
+</script>
 </body></html>
