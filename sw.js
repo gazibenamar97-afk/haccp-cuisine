@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v180-retour-historique-20261013';
+const CACHE='mt-haccp-shell-v181-retour-module-20261013';
 const CORE=['./index.html','./audits-zones.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
