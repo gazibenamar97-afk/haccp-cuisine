@@ -38,9 +38,9 @@ function auditReportData(rec){
  const r=update();
  return {zone:currentZone,site:bridgeLabel||$('site').value,date:$('date').value,auditor:$('auditor').value||'Non renseigné',savedAt:'',id:'',entries:items.map(([category,question],i)=>({category,question,result:answers[i].value,note:answers[i].note})),score:r.score,nonConformities:r.nc,status:r.done+'/'+items.length+' vérifications'};
 }
-function openAuditReport(rec,autoPrint){
+function openAuditReport(rec,autoPrint,requestedWindow){
  const data=auditReportData(rec);
- const tab=window.open('','_blank');
+ const tab=requestedWindow||window.open('','_blank');
  if(!tab){alert('Autorisez les fenêtres pop-up pour ouvrir la fiche de rapport.');return}
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;':'&#39;'}[c]));
  const labels={ok:'Conforme',nc:'Non conforme',na:'Non applicable'};
@@ -168,7 +168,14 @@ $('historyButton').onclick=async()=>{
     const button=d.createElement('button');button.type='button';button.textContent='Consulter / Imprimer';
     button.onclick=()=>{
      if(!Array.isArray(rec.entries)||!rec.entries.length){historyWindow.alert('Cet audit ne contient pas de questionnaire consultable.');return}
-     openAuditReport(rec,false);
+     // Open using the actual history window where the tap/click happens.
+     // If a second popup is blocked (notably on iOS), reuse the independent
+     // history window rather than silently failing.
+     let reportWindow=null;
+     try{reportWindow=historyWindow.open('','_blank')}catch(_){}
+     if(!reportWindow)reportWindow=historyWindow;
+     try{openAuditReport(rec,false,reportWindow)}
+     catch(err){historyWindow.alert('Impossible d’ouvrir le rapport : '+(err.message||err))}
     };
     row.append(summary,button);container.append(row);
    });
