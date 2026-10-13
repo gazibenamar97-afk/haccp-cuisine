@@ -1,5 +1,5 @@
-const CACHE='mt-haccp-shell-v175-report-monitoring-20261013';
-const CORE=['./index.html','./audits-advanced.html','./manifest.webmanifest','./icon.svg'];
+const CACHE='mt-haccp-shell-v176-audits-zones-20261013';
+const CORE=['./index.html','./audits-zones.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
  self.skipWaiting();
