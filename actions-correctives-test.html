@@ -4287,7 +4287,7 @@ window.mtOpenCorrectivesTest=function(){
  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='correctives-test';
  document.body.classList.remove('on-home','mt-premium-active','on-login');
  const root=document.getElementById('app');if(!root)return;
- root.innerHTML='<section class="mt-ac-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Actions correctives HACCP — Test</h1><iframe class="mt-ac-frame" title="Actions correctives" src="actions-correctives-module-test.html?v=4-prise-en-charge-hybride"></iframe></section>';
+ root.innerHTML='<section class="mt-ac-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Actions correctives HACCP — Test</h1><iframe class="mt-ac-frame" title="Actions correctives" src="actions-correctives-module-test.html?v=5-photo-verification"></iframe></section>';
 };
 window.addEventListener('message',async e=>{
  if(e.origin!==location.origin||!e.data||e.data.mtCorrectives!==true)return;
@@ -4316,9 +4316,19 @@ window.addEventListener('message',async e=>{
    });
    reply({id:saved.id,reference:saved.reference});return;
   }
+  if(m.type==='upload-proof'){
+   const a=m.payload||{};
+   if(!a.id||typeof a.data!=='string'||a.data.length>12000000||!a.data.startsWith('data:image/'))throw Error('Photo non valide.');
+   const snap=await ref.get();
+   if(!(snap.data()?.correctiveActionsRecords||[]).some(x=>x.id===a.id&&x.site===SITE_ID&&x.status!=='Clôturée'))throw Error('Action corrective introuvable.');
+   const blob=await(await fetch(a.data)).blob();
+   const file=new File([blob],'preuve-haccp.jpg',{type:blob.type});
+   const paths=await haccpUploadReceptionPhotos([file]);
+   reply({path:paths[0]});return;
+  }
   if(m.type==='transition'){
    const a=m.payload||{};
-   if(!a.id||!['En cours','À vérifier','À reprendre','Clôturée'].includes(a.status)||!String(a.note||'').trim()||a.note.length>1500)throw Error('Action ou observation invalide.');
+   if(!a.id||!['En cours','À vérifier','À reprendre','Clôturée'].includes(a.status)||!String(a.note||'').trim()||a.note.length>1500|| (a.photoPath&&(!String(a.photoPath).startsWith(firebase.auth().currentUser.uid+'/')&&!String(a.photoPath).startsWith(SITE_ID+'/'))))throw Error('Action, photo ou observation invalide.');
    await cloudDb.runTransaction(async tx=>{
     const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
     const pos=records.findIndex(x=>x.id===a.id&&x.site===SITE_ID);if(pos<0)throw Error('Action introuvable.');
@@ -4326,7 +4336,7 @@ window.addEventListener('message',async e=>{
     if(a.status==='Clôturée'&&before.status!=='À vérifier')throw Error('Vérification obligatoire avant clôture.');
     if(a.status==='Clôturée'&&!['responsable','haccp'].includes(currentUserProfile.role))throw Error('Clôture réservée au responsable.');
     const at=new Date().toISOString();
-    records[pos]={...before,status:a.status,updatedAt:at,events:[...(before.events||[]),{at,by:actor,action:a.status,note:a.note.trim()}]};
+    records[pos]={...before,status:a.status,updatedAt:at,events:[...(before.events||[]),{at,by:actor,action:a.status,note:a.note.trim(),photoPath:a.photoPath||''}]};
     tx.set(ref,{correctiveActionsRecords:records},{merge:true});
    });reply({updated:true});return;
   }
