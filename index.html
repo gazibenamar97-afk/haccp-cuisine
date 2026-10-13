@@ -4208,37 +4208,4 @@ window.mtOpenAudits=function(){
 };
 })();
 </script>
-</body></html>";
-window.mtOpenAudits=function(){
- if(typeof SITE_ID!=='undefined'&&SITE_ID==='main'){alert('Veuillez ouvrir un compte établissement pour effectuer un audit.');return}
- if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='audits';
- document.body.classList.remove('on-home','mt-premium-active','on-login');
- const root=document.getElementById('app');if(!root)return;
- root.replaceChildren();
- const wrap=document.createElement('section');wrap.className='mt-audits-view';
- const back=document.createElement('button');back.className='btn back';back.textContent='← Accueil';back.onclick=function(){home()};
- const heading=document.createElement('h1');heading.textContent='Audits HACCP';
- const note=document.createElement('p');note.className='note';note.textContent='Audit interactif — démonstration. Les réponses ne sont pas encore sauvegardées dans Firebase.';
- const frame=document.createElement('iframe');frame.className='mt-audits-iframe';frame.title='Audit HACCP interactif';frame.srcdoc=auditDocument;
- wrap.append(back,heading,note,frame);root.append(wrap);window.scrollTo(0,0);
-};
-function addTile(){
- if(typeof SITE_ID!=='undefined'&&SITE_ID==='main')return;
- const root=document.getElementById('app');if(!root||!document.body.classList.contains('on-home'))return;
- if(root.querySelector('.mt-audits-home-tile'))return;
- const desktop=window.innerWidth>850;
- const grid=desktop?root.querySelector('.mtpc-work-grid'):root.querySelector('.mtp-grid, .mtp-tiles, .mtp-cards');
- if(!grid)return;
- const tile=document.createElement('button');tile.type='button';tile.className=(desktop?'mtpc-photo-card':'mt-audits-mobile-tile')+' mt-audits-home-tile';
- tile.onclick=window.mtOpenAudits;
- if(desktop){tile.innerHTML='<span class="mtp-photo" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0b6e53,#d4e9de);font-size:48px;color:white">✓</span><span class="mtpc-tile-footer"><strong>Audits HACCP</strong><span class="mtpc-go">›</span></span>'}
- else tile.textContent='✓ Audits HACCP';
- grid.append(tile);
-}
-const observer=new MutationObserver(function(){if(document.body.classList.contains('on-home'))addTile()});
-const root=document.getElementById('app');if(root)observer.observe(root,{childList:true,subtree:false});
-document.addEventListener('click',function(e){if(e.target.closest('.mt-audits-home-tile'))window.mtOpenAudits()});
-if(document.body.classList.contains('on-home'))addTile();
-})();
-</script>
 </body></html>
