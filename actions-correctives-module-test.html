@@ -1,0 +1,87 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M&T HACCP — Actions correctives (test)</title>
+<style>:root{--green:#087657;--navy:#143d30;--border:#d5e5db;--bg:#f3f7f4;--red:#b52738;--amber:#ae7308}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font:15px Arial,sans-serif}header{background:linear-gradient(115deg,#06412f,#087657);color:#fff;padding:20px max(16px,calc((100% - 1150px)/2))}header h1{margin:0 0 7px;font-size:27px}header small{opacity:.9}main{max-width:1150px;padding:16px;margin:auto}h2{font-size:19px;margin:0 0 16px}.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:19px;margin:15px 0;box-shadow:0 3px 16px #1232}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{border:1px solid var(--border);background:#fff;border-radius:12px;padding:15px}.stat strong{display:block;font-size:28px;margin-top:7px}.muted{color:#657a6e;font-size:13px}label{display:block;margin:7px 0 5px;font-weight:600}input,select,textarea{width:100%;font:inherit;border:1px solid #bdcec3;border-radius:8px;padding:10px;color:var(--navy);background:#fff}textarea{min-height:75px}button{background:var(--green);color:#fff;border:1px solid var(--green);border-radius:9px;font:inherit;padding:11px 15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.secondary{background:#fff;color:var(--green)}.alert{background:#fff3ee;border:1px solid #f1c1b5;color:#8b2730;padding:12px;border-radius:9px;margin-top:10px}.notice{background:#ecf6ee;padding:11px;border-radius:9px;margin-top:10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.item{padding:14px 0;border-bottom:1px solid var(--border)}.item:last-child{border:0}.pill{border:1px solid var(--border);background:#f2f7f4;border-radius:40px;font-size:12px;padding:5px 9px}.red{color:var(--red)}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}@media(max-width:850px){header{padding:17px}header h1{font-size:22px}.grid,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:9px}.card{padding:13px}.wide{grid-column:1/-1}}@media(max-width:520px){.grid,.stats{grid-template-columns:1fr}.wide{grid-column:1}.row button{flex:1 1 100%}}</style></head>
+<body><header><h1>Actions correctives HACCP</h1><small>Version de test · Gestion hybride des non-conformités</small></header><main><div id="state" class="notice" role="status">Vérification de l’établissement…</div>
+<section class="stats" style="margin:16px 0"><div class="stat">Ouvertes<strong id="openCount">0</strong></div><div class="stat">Critiques<strong id="criticalCount">0</strong></div><div class="stat">En retard<strong id="lateCount">0</strong></div><div class="stat">Clôturées<strong id="closedCount">0</strong></div></section>
+<section class="card"><h2>Nouvelle action corrective</h2><div class="grid">
+<div><label>Lieu</label><select id="zone"><option>Cuisine centrale</option><option>Économat</option><option>Plonge</option><option>Locaux communs</option><option>Chambres froides</option><option>Réception des marchandises</option><option>Pâtisserie</option><option>Salle de restauration</option><option>Vestiaires et sanitaires</option><option>Local déchets</option></select></div>
+<div><label>Source</label><select id="source"><option>Audit HACCP</option><option>Réception de marchandises</option><option>Températures</option><option>Nettoyage</option><option>Stock et DLC</option><option>Traçabilité</option><option>Signalement manuel</option></select></div>
+<div><label>Gravité</label><select id="severity"><option value="mineure">Mineure</option><option value="majeure">Majeure</option><option value="critique">Critique</option></select></div>
+<div class="wide"><label>Non-conformité constatée</label><textarea id="problem" maxlength="900" placeholder="Décrire la non-conformité"></textarea></div>
+<div class="wide"><label>Mesure immédiate prise</label><textarea id="immediate" maxlength="900" placeholder="Ex. isoler les produits concernés"></textarea></div>
+<div class="wide"><label>Action corrective envisagée</label><textarea id="measure" maxlength="900" placeholder="Décrire la correction à effectuer"></textarea></div>
+<div><label>Responsable désigné</label><input id="owner" maxlength="120" placeholder="Nom du responsable"></div>
+<div><label>Échéance</label><input type="date" id="deadline"></div>
+</div><div id="riskInfo" class="notice">Mineure / majeure : création après confirmation.</div><div class="row" style="margin-top:14px"><button id="create">Créer l’action corrective</button><button id="clear" class="secondary">Effacer le formulaire</button></div></section>
+<section class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Registre des actions</h2><button id="reload" class="secondary">Actualiser</button></div><div class="grid" style="margin:12px 0"><div><label>Statut</label><select id="statusFilter"><option value="">Tous les statuts</option><option>Ouverte</option><option>En cours</option><option>À vérifier</option><option>À reprendre</option><option>Clôturée</option></select></div><div><label>Recherche</label><input id="search" placeholder="Lieu, responsable, problème"></div></div><div id="records" class="muted">Chargement des actions…</div></section></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let context=null,records=[],pending=new Map(),counter=0;
+function request(type,payload={}){
+ const id='ac-'+(++counter)+'-'+Date.now();
+ return new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Aucune réponse de M&T HACCP.'))},15000);
+  pending.set(id,{resolve,reject,timeout});
+  window.parent.postMessage({mtCorrectives:true,id,type,payload},location.origin);
+ });
+}
+window.addEventListener('message',e=>{
+ if(e.origin!==location.origin||e.source!==window.parent)return;
+ const m=e.data||{};if(!m.mtCorrectivesResponse)return;
+ const p=pending.get(m.id);if(!p)return;clearTimeout(p.timeout);pending.delete(m.id);
+ if(m.error)p.reject(Error(m.error));else p.resolve(m.result);
+});
+function notify(msg,error=false){$('state').className=error?'alert':'notice';$('state').textContent=msg}
+function view(){
+ const active=records.filter(r=>r.status!=='Clôturée');
+ $('openCount').textContent=active.length;
+ $('criticalCount').textContent=active.filter(r=>r.severity==='critique').length;
+ $('lateCount').textContent=active.filter(r=>r.deadline&&r.deadline<new Date().toISOString().slice(0,10)).length;
+ $('closedCount').textContent=records.length-active.length;
+ const filter=$('statusFilter').value,term=$('search').value.toLowerCase().trim();
+ $('records').replaceChildren();
+ const visible=records.filter(r=>(!filter||r.status===filter)&&(!term||[r.zone,r.problem,r.owner,r.source].join(' ').toLowerCase().includes(term)));
+ if(!visible.length){$('records').textContent='Aucune action correspondante.';return}
+ visible.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).forEach(r=>{
+  const card=document.createElement('div');card.className='item';
+  const title=document.createElement('strong');title.textContent=(r.reference||'AC')+' · '+r.zone+' · '+r.severity.toUpperCase();if(r.severity==='critique')title.className='red';
+  const summary=document.createElement('p');summary.textContent=r.problem;
+  const info=document.createElement('div');info.className='muted';info.textContent='Statut : '+r.status+' · Responsable : '+(r.owner||'Non attribué')+' · Échéance : '+(r.deadline||'Non définie')+' · Source : '+r.source;
+  const actions=document.createElement('div');actions.className='actions';
+  if(r.status!=='Clôturée'){
+   for(const [label,next] of [['Prendre en charge','En cours'],['Demander vérification','À vérifier'],['À reprendre','À reprendre'],['Clôturer','Clôturée']]){
+    if(next===r.status)continue;
+    const b=document.createElement('button');b.textContent=label;b.className='secondary';
+    b.onclick=async()=>{
+      if(next==='Clôturée'&&r.status!=='À vérifier'){alert('La clôture exige d’abord une demande de vérification.');return}
+      const observation=prompt(next==='Clôturée'?'Résultat de la vérification et preuve de conformité :':'Observation / mesure réalisée :','');
+      if(observation===null)return;if(!observation.trim()){alert('Une observation est obligatoire.');return}
+      b.disabled=true;
+      try{await request('transition',{id:r.id,status:next,note:observation.trim()});notify('Action mise à jour dans Firebase.');await load()}
+      catch(e){notify('Échec de la modification : '+e.message,true)}finally{b.disabled=false}
+    };actions.append(b);
+   }
+  }
+  card.append(title,summary,info,actions);$('records').append(card);
+ });
+}
+async function load(){records=await request('list');view()}
+$('statusFilter').onchange=view;$('search').oninput=view;
+$('severity').onchange=()=>{$('riskInfo').className=$('severity').value==='critique'?'alert':'notice';$('riskInfo').textContent=$('severity').value==='critique'?'CRITIQUE : une action urgente sera créée automatiquement dès la déclaration de cette anomalie.':'Mineure / majeure : une confirmation est nécessaire avant la création.'};
+$('clear').onclick=()=>{for(const id of ['problem','immediate','measure','owner','deadline'])$(id).value=''};
+$('create').onclick=async()=>{
+ if(!context){notify('Compte établissement non connecté.',true);return}
+ const payload={zone:$('zone').value,source:$('source').value,severity:$('severity').value,
+ problem:$('problem').value.trim(),immediate:$('immediate').value.trim(),measure:$('measure').value.trim(),
+ owner:$('owner').value.trim(),deadline:$('deadline').value};
+ if(!payload.problem){alert('La description de la non-conformité est obligatoire.');return}
+ if(payload.severity==='critique'&&!payload.immediate){alert('Précisez la mesure immédiate pour le risque critique.');return}
+ if(payload.severity!=='critique'&&!confirm('Confirmer la création de cette action corrective ?'))return;
+ $('create').disabled=true;
+ try{await request('create',payload);notify('Action corrective créée dans Firebase.');$('clear').click();await load()}
+ catch(e){notify('Création non confirmée : '+e.message,true)}
+ finally{$('create').disabled=false}
+};
+$('reload').onclick=()=>load().catch(e=>notify('Actualisation impossible : '+e.message,true));
+request('context').then(c=>{context=c;notify('Connecté à '+c.name+' · Données de cet établissement uniquement.');return load()}).catch(e=>notify('Impossible de charger les actions : '+e.message,true));
+</script></body></html>
