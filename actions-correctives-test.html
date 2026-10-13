@@ -4503,6 +4503,73 @@ window.addEventListener('message',async e=>{
 })();
 </script>
 
+<style id="mt-cleaning-corrective-style">
+#mtCleanAcOverlay{position:fixed;inset:0;background:#10241f99;z-index:999999;overflow:auto;padding:14px}
+#mtCleanAcOverlay .mt-clean-ac-card{background:white;color:#143d30;max-width:700px;margin:4vh auto;padding:20px;border-radius:15px;box-shadow:0 12px 40px #0004;position:relative}
+#mtCleanAcOverlay label{display:block;margin:12px 0 5px;font-weight:600}
+#mtCleanAcOverlay input,#mtCleanAcOverlay textarea,#mtCleanAcOverlay select{width:100%;padding:11px;border:1px solid #bdcec3;border-radius:9px;font:inherit}
+#mtCleanAcOverlay button{border:0;border-radius:8px;padding:11px 14px;background:#087657;color:white;cursor:pointer;margin:12px 8px 0 0}
+#mtCleanAcOverlay .mt-close{position:absolute;top:8px;right:8px;background:#edf5ef;color:#143d30;margin:0;font-size:23px}
+#mtCleanAcOverlay .mt-clean-check{display:flex;gap:10px;align-items:center;margin:9px 0;padding:8px;border:1px solid #d5e5db;border-radius:9px}
+#mtCleanAcOverlay .mt-clean-check input{width:18px;height:18px;flex:none}
+#mtCleanAcOverlay .mt-clean-check span{flex:1}
+</style>
+<script id="mt-cleaning-corrective-test-link">
+(function(){
+ if(typeof saveClean!=='function')return;
+ const original=saveClean;
+ const options=['Isoler la zone concernée','Réaliser un nouveau nettoyage','Réaliser une nouvelle désinfection','Vérifier la concentration et le temps de contact du produit','Contrôler le matériel et les équipements de nettoyage','Informer le responsable HACCP','Former ou rappeler la procédure à l’équipe','Effectuer un contrôle visuel ou microbiologique après intervention'];
+ function close(){document.getElementById('mtCleanAcOverlay')?.remove()}
+ function show(rec){
+  close();const overlay=document.createElement('div');overlay.id='mtCleanAcOverlay';
+  const card=document.createElement('div');card.className='mt-clean-ac-card';
+  const heading=document.createElement('h2');heading.textContent='Nettoyage non conforme — Action corrective';
+  const x=document.createElement('button');x.className='mt-close';x.type='button';x.textContent='×';x.setAttribute('aria-label','Fermer la fiche');x.onclick=close;card.append(x,heading);
+  const info=document.createElement('p');info.textContent=rec.zone+' · '+rec.date+' · '+rec.operator+' · '+rec.note;card.append(info);
+  const add=(label,element)=>{const l=document.createElement('label');l.textContent=label;card.append(l,element);return element};
+  const gravity=add('Gravité évaluée',document.createElement('select'));
+  [['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — urgence']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;gravity.append(o)});gravity.value='majeure';
+  const h=document.createElement('h3');h.textContent='Mesures de prise en charge (facultatives)';card.append(h);
+  const checks=options.map(label=>{const row=document.createElement('label');row.className='mt-clean-check';const input=document.createElement('input');input.type='checkbox';const t=document.createElement('span');t.textContent=label;row.append(input,t);card.append(row);return {label,input}});
+  const note=add('Mesures immédiates / observations complémentaires',document.createElement('textarea'));note.value=rec.note||'';note.rows=3;
+  const owner=add('Responsable désigné',document.createElement('input'));owner.value=rec.operator||'';
+  const deadline=add('Échéance',document.createElement('input'));deadline.type='date';
+  const message=document.createElement('p');message.setAttribute('role','status');card.append(message);
+  const create=document.createElement('button');create.textContent='Créer l’action corrective';
+  const skip=document.createElement('button');skip.textContent='Fermer sans créer';skip.style.background='#edf5ef';skip.style.color='#143d30';skip.onclick=close;
+  create.onclick=async()=>{
+   if(!cloudDb||!firebase.auth().currentUser||!currentUserProfile){message.textContent='Connexion Firebase requise.';return}
+   const chosen=checks.filter(c=>c.input.checked).map(c=>'[À faire] '+c.label);
+   const immediate=[note.value.trim(),...chosen].filter(Boolean).join('\n').slice(0,900);
+   if(gravity.value==='critique'&&!immediate){message.textContent='Décrivez les mesures urgentes.';return}
+   create.disabled=true;
+   try{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),uid=firebase.auth().currentUser.uid;let outcome;
+    await cloudDb.runTransaction(async tx=>{
+     const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+     const existing=records.find(a=>a.source==='Nettoyage'&&a.sourceId===rec.id);
+     if(existing){outcome={reference:existing.reference,duplicate:true};return}
+     const number=1+records.reduce((n,a)=>Math.max(n,parseInt(String(a.reference||'').replace('AC-',''))||0),0);
+     const when=new Date().toISOString(),reference='AC-'+String(number).padStart(4,'0');
+     const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference,site:SITE_ID,createdAt:when,actorUid:uid,severity:gravity.value,zone:rec.zone,source:'Nettoyage',sourceId:rec.id,problem:('Nettoyage non conforme : '+rec.zone+' — '+rec.note).slice(0,900),immediate,measure:'Mettre en œuvre les mesures de nettoyage et contrôler leur efficacité.',owner:owner.value.trim().slice(0,120),deadline:deadline.value,status:'Ouverte',events:[{at:when,by:rec.operator,action:'Création depuis Nettoyage',note:'Contrôle lié '+rec.id}]};
+     tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});outcome={reference,duplicate:false};
+    });
+    message.textContent=(outcome.duplicate?'Action existante : ':'Action créée : ')+outcome.reference;
+    create.textContent='Ouvrir Actions correctives';create.disabled=false;create.onclick=()=>{close();window.mtOpenCorrectivesTest()};
+   }catch(e){message.textContent='Échec : '+e.message;create.disabled=false}
+  };
+  card.append(create,skip);overlay.append(card);document.body.append(overlay);overlay.scrollTop=0;
+ }
+ saveClean=function(){
+  const before=(S.clean||[]).length;
+  original();
+  const rec=S.clean&&S.clean[0];
+  if(S.clean.length!==before+1||!rec||rec.status==='Conforme')return;
+  if(!rec.id){rec.id='clean-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);const t=(S.trace||[]).find(z=>z.type==='Nettoyage'&&z.date===rec.date&&z.product===rec.zone);if(t)t.id=rec.id;save()}
+  show(rec);
+ };
+})();
+</script>
 <style id="mt-test-desktop-equipment-layout-fix">
 /* PC test seulement. Un repère unique pour la barre latérale et la zone de travail. */
 @media screen and (min-width:851px){
