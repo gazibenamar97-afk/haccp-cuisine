@@ -4462,4 +4462,19 @@ window.addEventListener('message',async e=>{
  };
 })();
 </script>
+
+<style id="mt-test-desktop-equipment-layout-fix">
+/* Test uniquement : le contenu doit commencer après la barre latérale PC. */
+@media screen and (min-width:851px){
+ html body:has(#mtPcShell):not(.on-login):not(.on-home) > main{
+  margin-left:232px!important;width:calc(100% - 232px)!important;max-width:calc(100% - 232px)!important;
+  min-width:0!important;box-sizing:border-box!important;overflow-x:clip!important
+ }
+ html body:has(#mtPcShell):not(.on-login):not(.on-home) > main #app{
+  width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  padding-left:clamp(12px,1.5vw,28px)!important;padding-right:clamp(12px,1.5vw,28px)!important
+ }
+ html body:has(#mtPcShell):not(.on-login):not(.on-home) > main #app :is(.row,.grid,.panel){min-width:0;max-width:100%;box-sizing:border-box}
+}
+</style>
 </body></html>
