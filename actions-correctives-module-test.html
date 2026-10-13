@@ -170,6 +170,16 @@ function view(){
     actions.append(b);
    }
   }
+  const proofs=(r.events||[]).filter(ev=>ev.photoPath);
+  if(proofs.length){
+   const proofArea=document.createElement('div');proofArea.style='margin-top:10px';
+   proofs.forEach(ev=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='secondary';btn.textContent='📷 Voir la preuve du '+(ev.at||'').slice(0,10);
+    const display=document.createElement('div');
+    btn.onclick=async()=>{btn.disabled=true;try{const result=await request('view-proof',{id:r.id,path:ev.photoPath});const img=document.createElement('img');img.src=result.data;img.alt='Preuve de vérification';img.style='display:block;max-width:280px;max-height:250px;object-fit:contain;margin:10px 0;border-radius:9px';display.replaceChildren(img)}catch(e){display.textContent='Photo inaccessible : '+e.message}finally{btn.disabled=false}};
+    proofArea.append(btn,display);
+   });card.append(proofArea);
+  }
   card.append(title,summary,info,actions);$('records').append(card);
  });
 }
