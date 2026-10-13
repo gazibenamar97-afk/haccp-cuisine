@@ -122,7 +122,7 @@ function view(){
   const card=document.createElement('div');card.className='item';
   const title=document.createElement('strong');title.textContent=(r.reference||'AC')+' · '+r.zone+' · '+r.severity.toUpperCase();if(r.severity==='critique')title.className='red';
   const summary=document.createElement('p');summary.textContent=r.problem;
-  const info=document.createElement('div');info.className='muted';info.textContent='Statut : '+r.status+' · Responsable : '+(r.owner||'Non attribué')+' · Échéance : '+(r.deadline||'Non définie')+' · Source : '+r.source;
+  const info=document.createElement('div');info.className='muted';info.textContent='Statut : '+r.status+' · Responsable : '+(r.owner||'Non attribué')+' · Échéance : '+(r.deadline||'Non définie')+' · Source : '+r.source+(r.sourceId?' · Relevé lié : '+r.sourceId:'');
   const actions=document.createElement('div');actions.className='actions';
   if(r.status!=='Clôturée'){
    for(const [label,next] of [['Prendre en charge','En cours'],['Demander vérification','À vérifier'],['À reprendre','À reprendre'],['Clôturer','Clôturée']]){
