@@ -4296,7 +4296,7 @@ window.addEventListener('message',async e=>{
  try{
   if(!cloudDb||!firebase.auth().currentUser||!currentUserProfile||currentUserProfile.site!==SITE_ID||SITE_ID==='main'||currentUserProfile.active===false)throw Error('Compte établissement non autorisé.');
   const uid=firebase.auth().currentUser.uid,actor=currentUserProfile.name||currentUserProfile.email||uid,ref=cloudDb.collection('appState').doc(SITE_ID);
-  if(m.type==='context'){reply({site:SITE_ID,name:siteDisplayName||SITE_ID,uid});return}
+  if(m.type==='context'){reply({site:SITE_ID,name:siteDisplayName||SITE_ID,uid,actor:actor,canClose:['responsable','haccp'].includes(currentUserProfile.role)});return}
   if(m.type==='list'){const snap=await ref.get({source:'server'});reply(snap.data()?.correctiveActionsRecords||[]);return}
   if(m.type==='create'){
    const a=m.payload||{};
