@@ -4570,6 +4570,54 @@ window.addEventListener('message',async e=>{
  };
 })();
 </script>
+<script id="mt-reception-cleaning-correctives-link">
+/* Liens de test isolés : Réception et Nettoyage vers Actions correctives. */
+(function(){
+ if(typeof saveRec!=='function'||typeof saveClean!=='function')return;
+ const originalRec=saveRec,originalClean=saveClean;
+ async function offerAction(kind,x){
+  if(!x||!cloudDb||!currentUserProfile||SITE_ID==='main')return;
+  const sourceId=kind==='Réception'?(x.receivedAt||''):(x.createdAt||'');
+  if(!sourceId)return;
+  if(!confirm('Non-conformité '+kind+' enregistrée. Créer une action corrective HACCP liée à ce contrôle ?'))return;
+  const reason=kind==='Réception'?[x.nonConformityReason,x.tempOverRecommendation?'Température de réception hors recommandation':'',x.observation].filter(Boolean).join(' · '):[x.status,x.note].filter(Boolean).join(' · ');
+  const zone=kind==='Réception'?'Réception':String(x.zone||'Nettoyage');
+  const uid=firebase.auth().currentUser?.uid;
+  if(!uid)return;
+  try{
+   let outcome='';
+   await cloudDb.runTransaction(async tx=>{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),snap=await tx.get(ref);
+    const rows=Array.isArray(snap.data()?.correctiveActionsRecords)?snap.data().correctiveActionsRecords:[];
+    const existing=rows.find(a=>a.source===kind&&a.sourceId===sourceId);
+    if(existing){outcome=existing.reference;return}
+    const n=1+rows.reduce((m,a)=>Math.max(m,Number(String(a.reference||'').replace('AC-',''))||0),0);
+    const reference='AC-'+String(n).padStart(4,'0'),now=new Date().toISOString();
+    const rec={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference,site:SITE_ID,createdAt:now,actorUid:uid,
+      severity:'majeure',zone,source:kind,sourceId,problem:(kind==='Réception'?'Réception non conforme : '+(x.product||'Produit'):'Nettoyage non conforme : '+zone)+' — '+(reason||'Anomalie à traiter'),
+      immediate:String(x.observation||x.note||'').slice(0,900),measure:'Définir les mesures de maîtrise adaptées et vérifier leur efficacité.',
+      owner:String(x.receivedBy||x.operator||'').slice(0,120),deadline:'',status:'Ouverte',
+      events:[{at:now,by:String(x.receivedBy||x.operator||''),action:'Création depuis '+kind,note:'Contrôle lié : '+sourceId}]};
+    tx.set(ref,{correctiveActionsRecords:[...rows,rec]},{merge:true});outcome=reference;
+   });
+   alert('Action corrective '+outcome+' liée au contrôle. Vous pouvez la prendre en charge dans Actions correctives HACCP.');
+  }catch(e){alert('La non-conformité est enregistrée, mais l’action corrective n’a pas été créée : '+e.message)}
+ }
+ saveRec=async function(){
+  const before=S.stock.length;
+  await originalRec.apply(this,arguments);
+  if(S.stock.length!==before+1)return;
+  const x=S.stock[0];
+  if(x&&(x.pack==='Non conforme'||x.tempOverRecommendation))await offerAction('Réception',x);
+ };
+ saveClean=function(){
+  const before=S.clean.length;
+  const result=originalClean.apply(this,arguments);
+  if(S.clean.length===before+1){const x=S.clean[0];if(x&&x.status!=='Conforme')void offerAction('Nettoyage',x)}
+  return result;
+ };
+})();
+</script>
 <style id="mt-test-desktop-equipment-layout-fix">
 /* PC test seulement. Un repère unique pour la barre latérale et la zone de travail. */
 @media screen and (min-width:851px){
