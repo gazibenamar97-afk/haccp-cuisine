@@ -4614,7 +4614,6 @@ window.addEventListener('message',async e=>{
    try{await createLinkedAction({severity:severity.value,immediate:text,owner:owner.value.trim(),deadline:deadline.value});status.textContent='Action corrective enregistrée dans Firebase.';submit.textContent='Ouvrir Actions correctives';submit.disabled=false;submit.onclick=()=>{overlay.remove();window.mtOpenCorrectivesTest()}}catch(e){status.textContent='Enregistrement impossible : '+e.message;submit.disabled=false}
   };
   async function createLinkedAction(form){
-  try{
    let outcome='';
    await cloudDb.runTransaction(async tx=>{
     const ref=cloudDb.collection('appState').doc(SITE_ID),snap=await tx.get(ref);
@@ -4631,7 +4630,6 @@ window.addEventListener('message',async e=>{
     tx.set(ref,{correctiveActionsRecords:[...rows,rec]},{merge:true});outcome=reference;
    });
    return outcome;
-  }
   }
  saveRec=async function(){
   const before=S.stock.length;
