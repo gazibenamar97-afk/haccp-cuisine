@@ -4193,7 +4193,7 @@ window.mtOpenAudits=function(){
  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='audits';
  document.body.classList.remove('on-home','mt-premium-active','on-login');
  const root=document.getElementById('app');if(!root)return;
- root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-advanced.html?v=175-suivi-rapport"></iframe></section>';
+ root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-zones.html?v=176-zones"></iframe></section>';
  window.scrollTo(0,0);
 };
 })();
@@ -4221,11 +4221,11 @@ window.mtOpenAudits=function(){
    }
    if(msg.type==='save'){
     const a=msg.payload||{};
-    if(a.site!==SITE_ID||!Array.isArray(a.entries)||a.entries.length!==10||a.entries.some(x=>!['ok','nc','na'].includes(x.result))||!a.auditor||!/^\d{4}-\d{2}-\d{2}$/.test(a.date))throw Error('Audit incomplet ou établissement incorrect.');
+    if(a.site!==SITE_ID||!Array.isArray(a.entries)||(a.entries.length!==10||a.entries.some(x=>!['ok','nc','na'].includes(x.result)))||typeof a.zone!=='string'||!a.zone.trim()||a.zone.length>100||!a.auditor||!/^\d{4}-\d{2}-\d{2}$/.test(a.date))throw Error('Audit incomplet ou établissement incorrect.');
     if(JSON.stringify(a).length>18000)throw Error('Les observations dépassent la taille autorisée.');
     const uid=firebase.auth().currentUser.uid;
     const savedAt=new Date().toISOString();
-    const record={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),savedAt,site:SITE_ID,actorUid:uid,actorName:currentUserProfile.name||currentUserProfile.email||'',date:a.date,auditor:a.auditor,entries:a.entries.map(x=>({category:String(x.category||'').slice(0,100),question:String(x.question||'').slice(0,300),result:x.result,note:String(x.note||'').slice(0,1500)})),progress:10,score:a.score,nonConformities:a.nonConformities,status:a.status};
+    const record={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),savedAt,site:SITE_ID,actorUid:uid,actorName:currentUserProfile.name||currentUserProfile.email||'',date:a.date,auditor:a.auditor,zone:a.zone,entries:a.entries.map(x=>({category:String(x.category||'').slice(0,100),question:String(x.question||'').slice(0,300),result:x.result,note:String(x.note||'').slice(0,1500)})),progress:10,score:a.score,nonConformities:a.nonConformities,status:a.status};
     await doc.update({auditsRecords:firebase.firestore.FieldValue.arrayUnion(record)});
     respond({id:record.id,savedAt});return;
    }
