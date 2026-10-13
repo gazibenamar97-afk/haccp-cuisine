@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v177-mobile-audits-20261013';
+const CACHE='mt-haccp-shell-v178-audits-history-window-20261013';
 const CORE=['./index.html','./audits-zones.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
