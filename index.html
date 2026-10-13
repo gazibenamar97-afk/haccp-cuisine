@@ -1635,7 +1635,7 @@ function mtPremiumHome(){
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],...(SITE_ID!=='main'?[['Audits HACCP','chart','mtOpenAudits()']]:[]),['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtHaccpGuide()" aria-label="Ouvrir le guide HACCP" title="Guide HACCP">'+mtSvg('book')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
@@ -4185,7 +4185,7 @@ setTimeout(decorate,0);
 })();
 </script>
 
-<style id="mt-audits-test-style">.mt-audits-view{padding:20px;max-width:1300px;margin:auto}.mt-audits-iframe{width:100%;height:1800px;border:0;background:#fff;border-radius:12px}@media(max-width:850px){.mt-audits-iframe{height:2400px}.mt-audits-view{padding:8px}}</style>
+<style id="mt-audits-test-style">.mt-audits-view{padding:20px;max-width:1300px;margin:auto}.mt-audits-iframe{width:100%;height:1800px;border:0;background:#fff;border-radius:12px}@media(max-width:850px){body:has(.mt-audits-view){overflow-x:hidden!important}.mt-audits-view{padding:9px!important;width:100%;max-width:100%;box-sizing:border-box}.mt-audits-view h1{font-size:22px;margin:8px 0}.mt-audits-view .note{font-size:12px}.mt-audits-iframe{width:100%;height:2800px;min-height:800px;display:block;border:0;border-radius:12px;overflow:hidden}.mt-audits-view .back{min-height:42px}}</style>
 <script id="mt-audits-test-script">
 (function(){
 window.mtOpenAudits=function(){
@@ -4193,12 +4193,24 @@ window.mtOpenAudits=function(){
  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='audits';
  document.body.classList.remove('on-home','mt-premium-active','on-login');
  const root=document.getElementById('app');if(!root)return;
- root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-zones.html?v=176-zones"></iframe></section>';
+ root.innerHTML='<section class="mt-audits-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Audits HACCP</h1><p class="note">Version de test. Données non enregistrées dans Firebase.</p><iframe class="mt-audits-iframe" title="Audits HACCP" src="audits-zones.html?v=177-mobile-zones"></iframe></section>';
  window.scrollTo(0,0);
 };
 })();
 </script>
 
+<script id="mt-audits-responsive-mobile">
+(function(){
+ window.addEventListener('message',function(event){
+  if(window.innerWidth>850||event.origin!==location.origin||!event.data||event.data.mtAuditResize!==true)return;
+  const frame=document.querySelector('.mt-audits-iframe');
+  if(!frame||event.source!==frame.contentWindow)return;
+  const h=Number(event.data.height);
+  if(!Number.isFinite(h)||h<350||h>15000)return;
+  frame.style.height=Math.ceil(h+12)+'px';
+ });
+})();
+</script>
 <script id="mt-audits-firestore-bridge">
 (function(){
  'use strict';
