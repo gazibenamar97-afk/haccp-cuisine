@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M&T HACCP — Actions correctives (test)</title>
-<style>:root{--green:#087657;--navy:#143d30;--border:#d5e5db;--bg:#f3f7f4;--red:#b52738;--amber:#ae7308}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font:15px Arial,sans-serif}header{background:linear-gradient(115deg,#06412f,#087657);color:#fff;padding:20px max(16px,calc((100% - 1150px)/2))}header h1{margin:0 0 7px;font-size:27px}header small{opacity:.9}main{max-width:1150px;padding:16px;margin:auto}h2{font-size:19px;margin:0 0 16px}.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:19px;margin:15px 0;box-shadow:0 3px 16px #1232}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{border:1px solid var(--border);background:#fff;border-radius:12px;padding:15px}.stat strong{display:block;font-size:28px;margin-top:7px}.muted{color:#657a6e;font-size:13px}label{display:block;margin:7px 0 5px;font-weight:600}input,select,textarea{width:100%;font:inherit;border:1px solid #bdcec3;border-radius:8px;padding:10px;color:var(--navy);background:#fff}textarea{min-height:75px}button{background:var(--green);color:#fff;border:1px solid var(--green);border-radius:9px;font:inherit;padding:11px 15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.secondary{background:#fff;color:var(--green)}.alert{background:#fff3ee;border:1px solid #f1c1b5;color:#8b2730;padding:12px;border-radius:9px;margin-top:10px}.notice{background:#ecf6ee;padding:11px;border-radius:9px;margin-top:10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.item{padding:14px 0;border-bottom:1px solid var(--border)}.item:last-child{border:0}.pill{border:1px solid var(--border);background:#f2f7f4;border-radius:40px;font-size:12px;padding:5px 9px}.red{color:var(--red)}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}@media(max-width:850px){header{padding:17px}header h1{font-size:22px}.grid,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:9px}.card{padding:13px}.wide{grid-column:1/-1}}@media(max-width:520px){.grid,.stats{grid-template-columns:1fr}.wide{grid-column:1}.row button{flex:1 1 100%}}</style></head>
+<style>:root{--green:#087657;--navy:#143d30;--border:#d5e5db;--bg:#f3f7f4;--red:#b52738;--amber:#ae7308}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font:15px Arial,sans-serif}header{background:linear-gradient(115deg,#06412f,#087657);color:#fff;padding:20px max(16px,calc((100% - 1150px)/2))}header h1{margin:0 0 7px;font-size:27px}header small{opacity:.9}main{max-width:1150px;padding:16px;margin:auto}h2{font-size:19px;margin:0 0 16px}.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:19px;margin:15px 0;box-shadow:0 3px 16px #1232}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{border:1px solid var(--border);background:#fff;border-radius:12px;padding:15px}.stat strong{display:block;font-size:28px;margin-top:7px}.muted{color:#657a6e;font-size:13px}label{display:block;margin:7px 0 5px;font-weight:600}input,select,textarea{width:100%;font:inherit;border:1px solid #bdcec3;border-radius:8px;padding:10px;color:var(--navy);background:#fff}textarea{min-height:75px}button{background:var(--green);color:#fff;border:1px solid var(--green);border-radius:9px;font:inherit;padding:11px 15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.secondary{background:#fff;color:var(--green)}.alert{background:#fff3ee;border:1px solid #f1c1b5;color:#8b2730;padding:12px;border-radius:9px;margin-top:10px}.notice{background:#ecf6ee;padding:11px;border-radius:9px;margin-top:10px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.item{padding:14px 0;border-bottom:1px solid var(--border)}.item:last-child{border:0}.pill{border:1px solid var(--border);background:#f2f7f4;border-radius:40px;font-size:12px;padding:5px 9px}.red{color:var(--red)}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}.action-sheet{border:2px solid #087657;box-shadow:0 7px 24px #1233;scroll-margin-top:15px}.sheet-info>div{border:1px solid var(--border);border-radius:9px;padding:10px;background:#f6faf7;overflow-wrap:anywhere}.sheet-info b{display:block;font-size:12px;color:#607467;margin-bottom:5px}.action-sheet[hidden]{display:none!important}@media(max-width:850px){header{padding:17px}header h1{font-size:22px}.grid,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:9px}.card{padding:13px}.wide{grid-column:1/-1}}@media(max-width:520px){.grid,.stats{grid-template-columns:1fr}.wide{grid-column:1}.row button{flex:1 1 100%}}</style></head>
 <body><header><h1>Actions correctives HACCP</h1><small>Version de test · Gestion hybride des non-conformités</small></header><main><div id="state" class="notice" role="status">Vérification de l’établissement…</div>
 <section class="stats" style="margin:16px 0"><div class="stat">Ouvertes<strong id="openCount">0</strong></div><div class="stat">Critiques<strong id="criticalCount">0</strong></div><div class="stat">En retard<strong id="lateCount">0</strong></div><div class="stat">Clôturées<strong id="closedCount">0</strong></div></section>
 <section class="card"><h2>Nouvelle action corrective</h2><div class="grid">
@@ -12,7 +12,21 @@
 <div><label>Responsable désigné</label><input id="owner" maxlength="120" placeholder="Nom du responsable"></div>
 <div><label>Échéance</label><input type="date" id="deadline"></div>
 </div><div id="riskInfo" class="notice">Mineure / majeure : création après confirmation.</div><div class="row" style="margin-top:14px"><button id="create">Créer l’action corrective</button><button id="clear" class="secondary">Effacer le formulaire</button></div></section>
-<section class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Registre des actions</h2><button id="reload" class="secondary">Actualiser</button></div><div class="grid" style="margin:12px 0"><div><label>Statut</label><select id="statusFilter"><option value="">Tous les statuts</option><option>Ouverte</option><option>En cours</option><option>À vérifier</option><option>À reprendre</option><option>Clôturée</option></select></div><div><label>Recherche</label><input id="search" placeholder="Lieu, responsable, problème"></div></div><div id="records" class="muted">Chargement des actions…</div></section></main>
+<section class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Registre des actions</h2><button id="reload" class="secondary">Actualiser</button></div><div class="grid" style="margin:12px 0"><div><label>Statut</label><select id="statusFilter"><option value="">Tous les statuts</option><option>Ouverte</option><option>En cours</option><option>À vérifier</option><option>À reprendre</option><option>Clôturée</option></select></div><div><label>Recherche</label><input id="search" placeholder="Lieu, responsable, problème"></div></div><div id="records" class="muted">Chargement des actions…</div></section>
+<section class="card action-sheet" id="actionSheet" hidden aria-labelledby="sheetTitle">
+ <div class="row" style="justify-content:space-between"><div><div class="muted" id="sheetReference"></div><h2 id="sheetTitle">Fiche de suivi</h2></div><button type="button" class="secondary" id="sheetBack">Retour au registre</button></div>
+ <div class="grid sheet-info" id="sheetInfo"></div>
+ <form id="sheetForm">
+ <div class="grid">
+ <div class="wide"><label for="sheetAction">Action réalisée / solution mise en œuvre *</label><textarea id="sheetAction" maxlength="500" required placeholder="Décrire précisément les mesures réalisées"></textarea></div>
+ <div class="wide"><label for="sheetObservation">Observations et éléments de preuve</label><textarea id="sheetObservation" maxlength="400" placeholder="Résultat du contrôle, référence du relevé ou de la preuve…"></textarea></div>
+ <div><label for="sheetActor">Intervenant / vérificateur *</label><input id="sheetActor" maxlength="100" required placeholder="Nom et fonction"></div>
+ <div><label for="sheetDate">Date de l’intervention *</label><input id="sheetDate" type="date" required></div>
+ <div class="wide" id="sheetVerificationWrap" hidden><label for="sheetVerification">Conclusion de vérification *</label><textarea id="sheetVerification" maxlength="300" placeholder="Décrire le contrôle d’efficacité et le résultat"></textarea></div>
+ </div><div id="sheetMessage" class="notice">Complétez la fiche avant de l’enregistrer dans Firebase.</div>
+ <div class="row" style="margin-top:14px"><button id="sheetSubmit" type="submit">Enregistrer dans Firebase</button><button id="sheetCancel" type="button" class="secondary">Annuler</button></div>
+ </form>
+</section></main>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -32,6 +46,68 @@ window.addEventListener('message',e=>{
  if(m.error)p.reject(Error(m.error));else p.resolve(m.result);
 });
 function notify(msg,error=false){$('state').className=error?'alert':'notice';$('state').textContent=msg}
+
+let activeSheet=null;
+function showActionSheet(rec,nextStatus){
+ if(nextStatus==='Clôturée'&&rec.status!=='À vérifier'){
+  notify('La clôture nécessite un passage par « Demander vérification ».',true);return;
+ }
+ if(nextStatus==='Clôturée'&&!context?.canClose){
+  notify('La clôture est réservée au responsable HACCP ou au responsable d’établissement.',true);return;
+ }
+ activeSheet={id:rec.id,status:nextStatus};
+ const names={'En cours':'Prendre en charge','À vérifier':'Demander vérification','À reprendre':'À reprendre','Clôturée':'Clôturer'};
+ $('sheetTitle').textContent='Fiche d’action corrective — '+(names[nextStatus]||nextStatus);
+ $('sheetReference').textContent=(rec.reference||'Action')+' · '+rec.severity.toUpperCase()+' · '+rec.status+' → '+nextStatus;
+ $('sheetInfo').replaceChildren();
+ for(const [label,value] of [['Établissement',context?.name||rec.site],['Lieu',rec.zone],
+ ['Source',rec.source],['Non-conformité',rec.problem],['Mesure immédiate',rec.immediate||'Non renseignée'],
+ ['Action envisagée',rec.measure||'Non renseignée'],['Responsable',rec.owner||'Non attribué'],
+ ['Échéance',rec.deadline||'Non définie']]){
+  const el=document.createElement('div'),strong=document.createElement('b'),body=document.createElement('span');
+  strong.textContent=label;body.textContent=value;el.append(strong,body);$('sheetInfo').append(el);
+ }
+ $('sheetForm').reset();
+ $('sheetDate').value=new Date().toLocaleDateString('en-CA');
+ $('sheetActor').value=context?.actor||'';
+ const verifying=nextStatus==='Clôturée'||nextStatus==='À reprendre';
+ $('sheetVerificationWrap').hidden=!verifying;
+ $('sheetVerification').required=verifying;
+ $('sheetAction').previousElementSibling.textContent=nextStatus==='Clôturée'?'Mesures correctives constatées *':
+ nextStatus==='À reprendre'?'Correction supplémentaire demandée *':
+ nextStatus==='À vérifier'?'Actions réalisées à vérifier *':'Mesures de prise en charge *';
+ $('sheetMessage').className='notice';
+ $('sheetMessage').textContent='Complétez la fiche. Les informations seront ajoutées à l’historique de l’action.';
+ $('actionSheet').hidden=false;
+ $('actionSheet').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeActionSheet(){
+ activeSheet=null;$('actionSheet').hidden=true;
+ $('records').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+$('sheetBack').onclick=closeActionSheet;
+$('sheetCancel').onclick=closeActionSheet;
+$('sheetForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(!activeSheet)return;
+ const action=$('sheetAction').value.trim(),observation=$('sheetObservation').value.trim(),
+ actor=$('sheetActor').value.trim(),date=$('sheetDate').value,verification=$('sheetVerification').value.trim();
+ if(!action||!actor||!date||($('sheetVerification').required&&!verification)){
+  $('sheetMessage').className='alert';$('sheetMessage').textContent='Renseignez tous les champs obligatoires.';return;
+ }
+ const note=['Date : '+date,'Intervenant : '+actor,'Mesures : '+action,
+ observation?'Observations / preuves : '+observation:'',
+ verification?'Vérification : '+verification:''].filter(Boolean).join('\n');
+ const submit=$('sheetSubmit');submit.disabled=true;
+ try{
+  await request('transition',{id:activeSheet.id,status:activeSheet.status,note});
+  notify('Fiche enregistrée dans Firebase : '+activeSheet.status+'.');
+  closeActionSheet();await load();
+ }catch(e){
+  $('sheetMessage').className='alert';$('sheetMessage').textContent='Enregistrement refusé : '+e.message;
+ }finally{submit.disabled=false}
+});
+
 function view(){
  const active=records.filter(r=>r.status!=='Clôturée');
  $('openCount').textContent=active.length;
@@ -52,14 +128,8 @@ function view(){
    for(const [label,next] of [['Prendre en charge','En cours'],['Demander vérification','À vérifier'],['À reprendre','À reprendre'],['Clôturer','Clôturée']]){
     if(next===r.status)continue;
     const b=document.createElement('button');b.textContent=label;b.className='secondary';
-    b.onclick=async()=>{
-      if(next==='Clôturée'&&r.status!=='À vérifier'){alert('La clôture exige d’abord une demande de vérification.');return}
-      const observation=prompt(next==='Clôturée'?'Résultat de la vérification et preuve de conformité :':'Observation / mesure réalisée :','');
-      if(observation===null)return;if(!observation.trim()){alert('Une observation est obligatoire.');return}
-      b.disabled=true;
-      try{await request('transition',{id:r.id,status:next,note:observation.trim()});notify('Action mise à jour dans Firebase.');await load()}
-      catch(e){notify('Échec de la modification : '+e.message,true)}finally{b.disabled=false}
-    };actions.append(b);
+    b.onclick=()=>showActionSheet(r,next);
+    actions.append(b);
    }
   }
   card.append(title,summary,info,actions);$('records').append(card);
