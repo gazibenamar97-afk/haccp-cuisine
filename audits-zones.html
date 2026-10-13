@@ -135,25 +135,50 @@ $('saveAudit').onclick=async()=>{
  }catch(e){safeText('saveStatus','Enregistrement refusé : '+e.message)}
  finally{button.disabled=false}
 };
+
 $('historyButton').onclick=async()=>{
- const h=$('auditHistory');h.hidden=false;h.replaceChildren();
- const msg=document.createElement('div');msg.textContent='Chargement de l’historique…';h.append(msg);
- try{const records=await bridge('list');h.replaceChildren();
- if(!records.length){h.textContent='Aucun audit enregistré pour cet établissement.';return}
- const title=document.createElement('h3');title.textContent='Historique de '+bridgeLabel;h.append(title);
- records.forEach(rec=>{
-  const div=document.createElement('div');div.style.cssText='border-bottom:1px solid #d8e6de;padding:12px 0';
-  const summary=document.createElement('div');
-  summary.textContent=(rec.date||'Sans date')+' · '+(rec.zone||'Audit général')+' · '+(rec.auditor||'Auditeur inconnu')+' · '+(rec.score??'—')+' % · '+(rec.nonConformities||0)+' non-conformité(s)';
-  const open=document.createElement('button');open.textContent='Consulter / Imprimer';
-  open.onclick=()=>{
-   if(!Array.isArray(rec.entries)||rec.entries.length!==items.length){alert('Format du rapport incompatible.');return}
-   openAuditReport(rec,false);
-  };
-  div.append(summary,open);h.append(div);
- });
- }catch(e){h.textContent='Historique indisponible : '+e.message}
+ // Open immediately from the user gesture so iPhone Safari and Chrome do not block it.
+ const historyWindow=window.open('','_blank');
+ if(!historyWindow){alert('Autorisez les fenêtres pop-up pour consulter l’historique des audits.');return}
+ const d=historyWindow.document;
+ d.open();
+ d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Historique des audits HACCP</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f7f5;color:#143c31;font:15px/1.5 Arial,sans-serif}.head{background:linear-gradient(110deg,#063f30,#087657);color:white;padding:22px 5%}.head h1{margin:0;font-size:26px}.head p{margin:4px 0}main{max-width:1120px;margin:20px auto;padding:0 16px}.panel{padding:18px;background:white;border-radius:12px;border:1px solid #d8e6de}.filter{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}input,select{border:1px solid #c5d7cc;padding:11px;border-radius:8px;font:inherit;flex:1;min-width:180px}.entry{padding:16px 0;border-top:1px solid #d8e6de;display:flex;align-items:center;justify-content:space-between;gap:15px}.entry strong{display:block}.entry small{color:#61736a}button{cursor:pointer;font:inherit;border:1px solid #087657;border-radius:9px;padding:10px 14px;background:#087657;color:white;white-space:nowrap}.empty{color:#687c72;padding:18px 0}@media(max-width:650px){.head{padding:18px}.head h1{font-size:22px}.entry{display:block}.entry button{width:100%;margin-top:10px}.filter{display:block}.filter input,.filter select{width:100%;margin:0 0 10px}}</style></head><body><header class="head"><h1>Historique des audits HACCP</h1><p id="siteName"></p></header><main><section class="panel"><div class="filter"><select id="zoneFilter" aria-label="Filtrer par lieu"><option value="">Tous les lieux</option></select><input id="searchFilter" type="search" placeholder="Rechercher date, auditeur ou lieu"></div><div id="count"></div><div id="records" class="empty">Chargement des audits enregistrés…</div></section></main></body></html>');
+ d.close();
+ d.getElementById('siteName').textContent=bridgeLabel||$('site').value;
+ const container=d.getElementById('records');
+ try{
+  const records=await bridge('list');
+  if(historyWindow.closed)return;
+  const zoneSelect=d.getElementById('zoneFilter'),search=d.getElementById('searchFilter');
+  const zones=[...new Set(records.map(x=>x.zone||'Audit général'))].sort((a,b)=>a.localeCompare(b,'fr'));
+  zones.forEach(zone=>{const opt=d.createElement('option');opt.value=zone;opt.textContent=zone;zoneSelect.append(opt)});
+  function display(){
+   container.replaceChildren();container.className='';
+   const query=search.value.trim().toLocaleLowerCase('fr');
+   const filtered=records.filter(rec=>(!zoneSelect.value||(rec.zone||'Audit général')===zoneSelect.value)&&
+    (!query||[rec.date,rec.zone||'Audit général',rec.auditor].join(' ').toLocaleLowerCase('fr').includes(query)));
+   d.getElementById('count').textContent=filtered.length+' audit'+(filtered.length>1?'s':'')+' trouvé'+(filtered.length>1?'s':'');
+   if(!filtered.length){const msg=d.createElement('p');msg.className='empty';msg.textContent='Aucun audit correspondant.';container.append(msg);return}
+   filtered.forEach(rec=>{
+    const row=d.createElement('article');row.className='entry';
+    const summary=d.createElement('div'),title=d.createElement('strong'),details=d.createElement('small');
+    title.textContent=(rec.date||'Date inconnue')+' · '+(rec.zone||'Audit général');
+    details.textContent=(rec.auditor||'Auditeur inconnu')+' · '+(rec.score??'—')+' % de conformité · '+(rec.nonConformities??0)+' non-conformité(s)';
+    summary.append(title,details);
+    const button=d.createElement('button');button.type='button';button.textContent='Consulter / Imprimer';
+    button.onclick=()=>{
+     if(!Array.isArray(rec.entries)||!rec.entries.length){historyWindow.alert('Cet audit ne contient pas de questionnaire consultable.');return}
+     openAuditReport(rec,false);
+    };
+    row.append(summary,button);container.append(row);
+   });
+  }
+  zoneSelect.addEventListener('change',display);
+  search.addEventListener('input',display);
+  display();
+ }catch(err){if(!historyWindow.closed){container.className='empty';container.textContent='Historique indisponible : '+(err.message||'Erreur de connexion Firebase')}}
 };
+
 verifyBridge();
 (function(){
  if(window.parent===window)return;
