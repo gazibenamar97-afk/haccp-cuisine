@@ -95,7 +95,7 @@ function showActionSheet(rec,nextStatus){
   const el=document.createElement('div'),strong=document.createElement('b'),body=document.createElement('span');
   strong.textContent=label;body.textContent=value;el.append(strong,body);$('sheetInfo').append(el);
  }
- $('sheetForm').reset();clearProof();$('sheetPhotoWrap').hidden=nextStatus!=='À vérifier';
+ $('sheetForm').reset();clearProof();$('sheetPhotoWrap').hidden=!['En cours','À vérifier'].includes(nextStatus);
  renderHybridChoices(rec,nextStatus);
  $('sheetDate').value=new Date().toLocaleDateString('en-CA');
  $('sheetActor').value=context?.actor||'';
@@ -133,7 +133,7 @@ $('sheetForm').addEventListener('submit',async event=>{
  const submit=$('sheetSubmit');submit.disabled=true;
  try{
   let photoPath='';
-  if(proofFile&&activeSheet.status==='À vérifier'){
+  if(proofFile&&['En cours','À vérifier'].includes(activeSheet.status)){
    $('sheetMessage').textContent='Envoi de la photo en cours…';
    const upload=await request('upload-proof',{id:activeSheet.id,data:await photoAsData(proofFile)});
    photoPath=upload.path;
