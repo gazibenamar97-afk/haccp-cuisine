@@ -3091,7 +3091,7 @@ if(receptionSelectedPhotos.length){
  try{x.photoPaths=await haccpUploadReceptionPhotos(receptionSelectedPhotos)}
  catch(err){alert('Reception non enregistree : '+err.message);if(btn){btn.disabled=false;btn.textContent='✓ Enregistrer la réception'}return}
 }
-S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();if(!blAbsent&&blNumber&&confirm('Réception enregistrée. Ajouter un autre produit au même bon de livraison ?')){mtBlContinue={number:blNumber,date:blDate,supplier:rf.value,receiver:x.receivedBy};reception();return}mtBlContinue=null;stock()}
+S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();if((x.pack==='Non conforme'||x.tempOverRecommendation)&&typeof window.mtOfferCorrectiveForTest==='function'){setTimeout(()=>window.mtOfferCorrectiveForTest('Réception',x),60)}if(!blAbsent&&blNumber&&confirm('Réception enregistrée. Ajouter un autre produit au même bon de livraison ?')){mtBlContinue={number:blNumber,date:blDate,supplier:rf.value,receiver:x.receivedBy};reception();return}mtBlContinue=null;stock()}
 function isEstablishmentManagerProfile(p){if(!p||p.site==='main')return false;const r=String(p.role||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return r==='responsable'||r==='responsable etablissement'||r==='manager'||r==='responsable_etablissement'}
 function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1>${currentUserProfile&&(currentUserProfile.site==='main'||isEstablishmentManagerProfile(currentUserProfile))?'<div class="panel"><h2>👥 Utilisateurs</h2><p class="note">'+(currentUserProfile.site==='main'?'Gérez les comptes de tous les établissements.':'Gérez uniquement les utilisateurs de votre établissement.')+'</p>'+B('Gérer les utilisateurs','usersManager()','primary')+'</div>':''}<div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div>`}
 
@@ -4631,13 +4631,7 @@ window.addEventListener('message',async e=>{
    });
    return outcome;
   }
- saveRec=async function(){
-  const before=S.stock.length;
-  await originalRec.apply(this,arguments);
-  if(S.stock.length!==before+1)return;
-  const x=S.stock[0];
-  if(x&&(x.pack==='Non conforme'||x.tempOverRecommendation))await offerAction('Réception',x);
- };
+ window.mtOfferCorrectiveForTest=offerAction;
  saveClean=function(){
   const before=S.clean.length;
   const result=originalClean.apply(this,arguments);
