@@ -4320,6 +4320,21 @@ window.addEventListener('message',async e=>{
    });
    reply({id:saved.id,reference:saved.reference});return;
   }
+  if(m.type==='create-cleaning'){
+   const a=m.payload||{},record=(S.clean||[]).find(x=>x.id===a.sourceId&&x.status!=='Conforme');
+   if(!record||record.zone!==a.zone||!['mineure','majeure','critique'].includes(a.severity))throw Error('Anomalie de nettoyage introuvable ou invalide.');
+   let result;
+   await cloudDb.runTransaction(async tx=>{
+    const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+    const old=records.find(x=>x.source==='Nettoyage'&&x.sourceId===record.id);
+    if(old){result={reference:old.reference,duplicate:true};return}
+    const number=1+records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+    const when=new Date().toISOString();
+    const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference:'AC-'+String(number).padStart(4,'0'),site:SITE_ID,createdAt:when,actorUid:uid,severity:a.severity,zone:record.zone,source:'Nettoyage',sourceId:record.id,problem:('Non-conformité nettoyage : '+record.zone+' — '+record.note).slice(0,900),immediate:String(a.immediate||'').slice(0,900),measure:String(a.measure||'').slice(0,900),owner:String(a.owner||record.operator).slice(0,120),deadline:String(a.deadline||'').slice(0,10),status:'Ouverte',events:[{at:when,by:actor,action:'Création depuis Nettoyage',note:'Contrôle de nettoyage lié : '+record.id}]};
+    tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});result={reference:action.reference,duplicate:false};
+   });
+   reply(result);return;
+  }
   if(m.type==='view-proof'){
    const a=m.payload||{};
    const snap=await ref.get(),row=(snap.data()?.correctiveActionsRecords||[]).find(x=>x.id===a.id&&x.site===SITE_ID);
