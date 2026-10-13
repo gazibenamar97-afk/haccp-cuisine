@@ -1577,7 +1577,57 @@ function mtReportGenerate(asPDF){
  const author=profile.displayName||profile.name||profile.username||profile.email||'Utilisateur connecté';
  const issued=new Date().toLocaleString('fr-FR');
  const style='.mt-report-toolbar{position:sticky;top:0;z-index:9999;display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;padding:10px 8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}.mt-report-toolbar button{border:1px solid #0d6045;border-radius:8px;padding:11px 15px;background:#0d6045;color:white;font:600 14px Arial;cursor:pointer}.mt-report-toolbar button:first-child{background:white;color:#0d6045}@media print{.mt-report-toolbar{display:none!important}}@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#19362b;margin:0}header{border-bottom:3px solid #0d6045;padding-bottom:13px;margin-bottom:18px}header b{color:#0d6045;font-size:17px}h1{font-size:21px;margin:8px 0}h2{font-size:14px;color:#0d6045;margin:22px 0 8px;break-after:avoid}p{line-height:1.5}.table-wrap{overflow:visible}table{border-collapse:collapse;width:100%;font-size:9px}thead{display:table-header-group}th{background:#e9f3ed;text-align:left}th,td{border:1px solid #cbd9d0;padding:5px 4px;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}.metrics{display:flex;flex-wrap:wrap;gap:8px}.metric{border:1px solid #cbd9d0;padding:9px;min-width:110px}.metric span{display:block;font-size:9px}.metric b{font-size:17px;color:#0d6045}.empty{color:#666;font-style:italic}footer{border-top:1px solid #cbd9d0;margin-top:20px;padding-top:8px;color:#666;font-size:9px}';
- const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+mtReportEsc(name)+'</title><style>'+style+'</style><script>function mtBack(){if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}if(!window.closed){window.location.href="https://gazibenamar97-afk.github.io/haccp-cuisine/"}}<\/script></head><body><div class="mt-report-toolbar"><button onclick="mtBack()">← Retour</button><button onclick="window.print()">Imprimer</button><button onclick="window.print()">Générer PDF</button></div><header><b>M&amp;THACCP</b><h1>'+mtReportEsc(name)+'</h1><p><strong>Établissement :</strong> '+mtReportEsc(site)+'<br><strong>Période :</strong> '+mtReportEsc(from)+' au '+mtReportEsc(to)+' (inclus)<br><strong>Généré par :</strong> '+mtReportEsc(author)+'<br><strong>Édité le :</strong> '+mtReportEsc(issued)+'</p></header>'+html+'<footer>Document issu des données disponibles dans M&THACCP. Une absence de contrôle ne prouve pas la conformité. • '+mtReportEsc(site)+'</footer></body></html>';
+ const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+mtReportEsc(name)+'</title><style>'+style+'</style><script>function mtBack(){if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}if(!window.closed){window.location.href="https://gazibenamar97-afk.github.io/haccp-cuisine/"}}<\/script></head><body><div class="mt-report-toolbar"><button onclick="mtBack()">← Retour</button><button onclick="window.print()">Imprimer</button><button onclick="window.print()">Générer PDF</button></div><header><b>M&amp;THACCP</b><h1>'+mtReportEsc(name)+'</h1><p><strong>Établissement :</strong> '+mtReportEsc(site)+'<br><strong>Période :</strong> '+mtReportEsc(from)+' au '+mtReportEsc(to)+' (inclus)<br><strong>Généré par :</strong> '+mtReportEsc(author)+'<br><strong>Édité le :</strong> '+mtReportEsc(issued)+'</p></header>'+html+'<footer>Document issu des données disponibles dans M&THACCP. Une absence de contrôle ne prouve pas la conformité. • '+mtReportEsc(site)+'</footer>
+<!-- Module Audits HACCP : integration de test isolée, sans modification des données existantes -->
+<style id="mt-audit-module-style">
+.mt-audit-frame{display:block;width:100%;min-height:1100px;border:1px solid #c7d2cc;border-radius:14px;background:#fff}
+.mt-audit-launch{margin:14px 0}
+.mt-audit-tile{border:1px solid #c7d2cc;border-radius:14px;background:#fff;color:#174b37;cursor:pointer;font-weight:700;padding:18px;min-height:95px;width:100%;text-align:left}
+.mt-audit-tile:hover{background:#e2ece7}
+@media(max-width:850px){.mt-audit-frame{min-height:1300px}.mt-audit-tile{min-height:84px}}
+@media print{.mt-audit-frame{min-height:1000px}}
+</style>
+<script id="mt-audit-module-script">
+(function(){
+'use strict';
+const demoUrl='https://htmlpreview.github.io/?https://raw.githubusercontent.com/mthaccp/haccp-cuisine/test-audits-haccp-20261013/audits-demo.html';
+function openAudits(){
+ if(typeof SITE_ID!=='undefined'&&SITE_ID==='main'){alert('Les audits se réalisent depuis un compte établissement.');return}
+ if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='audits';
+ document.body.classList.remove('on-home','mt-premium-active');
+ const app=document.getElementById('app');if(!app)return;
+ app.innerHTML='';
+ const wrap=document.createElement('section');wrap.className='mt-audit-view';
+ const back=document.createElement('button');back.className='btn back';back.textContent='← Accueil';back.onclick=function(){home()};
+ const h=document.createElement('h1');h.textContent='Audits HACCP';
+ const note=document.createElement('p');note.className='note';note.textContent='Version de test : formulaire indépendant. Les réponses ne sont pas encore enregistrées dans Firebase.';
+ const frame=document.createElement('iframe');frame.className='mt-audit-frame';frame.title='Questionnaire Audits HACCP';frame.src=demoUrl;frame.loading='eager';
+ wrap.append(back,h,note,frame);app.append(wrap);window.scrollTo(0,0);
+}
+window.mtOpenAudits=openAudits;
+function addMobileTile(){
+ if(typeof SITE_ID!=='undefined'&&SITE_ID==='main')return;
+ const home=document.querySelector('#app .mtp-grid, #app .mtp-tiles, #app .mtp-cards');
+ if(home&&!home.querySelector('.mt-audit-tile')){
+ const b=document.createElement('button');b.className='mt-audit-tile';b.textContent='☑ Audits HACCP';b.onclick=openAudits;home.append(b);
+ }
+}
+function addDesktopTile(){
+ if(typeof SITE_ID!=='undefined'&&SITE_ID==='main')return;
+ const grid=document.querySelector('#app .mtpc-work-grid');
+ if(grid&&!document.querySelector('#app .mt-audit-tile')){
+ const b=document.createElement('button');b.className='mt-audit-tile';b.textContent='☑ Audits HACCP';b.onclick=openAudits;grid.append(b);
+ }
+}
+const oldHome=window.home;
+if(typeof oldHome==='function')window.home=function(){const ret=oldHome.apply(this,arguments);if(window.innerWidth>850)addDesktopTile();else addMobileTile();return ret};
+const oldPremium=window.mtPremiumHome;
+if(typeof oldPremium==='function')window.mtPremiumHome=function(){const ret=oldPremium.apply(this,arguments);addMobileTile();return ret};
+const oldPc=window.mtPcNavigate;
+if(typeof oldPc==='function')window.mtPcNavigate=function(key){if(key==='audits')return openAudits();return oldPc.apply(this,arguments)};
+})();
+</script>
+</body></html>';
  const w=window.open('','_blank');if(!w){alert('Autorisez les fenêtres contextuelles pour imprimer ou enregistrer le PDF.');return}
  w.document.open();w.document.write(doc);w.document.close();w.focus();
  if(asPDF)w.document.title='MT_HACCP_'+type+'_'+from+'_'+to;
