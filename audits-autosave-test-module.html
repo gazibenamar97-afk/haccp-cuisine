@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M&T HACCP — Audits interactifs</title>
+<style>
+:root{--green:#087657;--dark:#153c31;--line:#d8e6de;--muted:#687c72;--bg:#f3f7f5;--red:#b3293b;--amber:#b77909}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px Arial,sans-serif;color:var(--dark)}header{background:linear-gradient(110deg,#063f30,#087657);color:#fff;padding:25px max(18px,calc((100% - 1120px)/2))}header h1{margin:0 0 6px;font-size:27px}header p{margin:0;color:#d6f1e6}main{max-width:1120px;margin:auto;padding:20px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 5px 18px #163b3010}.layout{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.stat strong{display:block;font-size:29px;margin-top:7px}.stat small,.muted{color:var(--muted)}label{display:block;font-weight:600;margin:10px 0 5px}input,textarea,select{width:100%;font:inherit;padding:11px;border:1px solid #c5d7cc;border-radius:9px;background:#fff}textarea{min-height:70px;resize:vertical}button{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#fff;color:var(--dark)}button.primary{background:var(--green);color:#fff;border-color:var(--green);font-weight:bold}button:hover{filter:brightness(.97)}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.section{margin:20px 0}.section h2{font-size:18px}.question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:10px 0}.question.bad{border-left:5px solid var(--red)}.question.good{border-left:5px solid var(--green)}.qtop{display:flex;justify-content:space-between;gap:10px;align-items:center}.qtop b{line-height:1.4}.choice{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.choice button{flex:1;min-width:90px}.choice .selected[data-val=ok]{background:#e2f5e9;border-color:var(--green);color:#075638;font-weight:bold}.choice .selected[data-val=nc]{background:#fff0f1;border-color:var(--red);color:var(--red);font-weight:bold}.choice .selected[data-val=na]{background:#edf0f2;border-color:#64748b;font-weight:bold}.notearea{margin-top:12px}.side{position:sticky;top:15px}.bar{height:10px;border-radius:10px;background:#e7efeb;overflow:hidden;margin:10px 0}.bar span{display:block;height:100%;background:var(--green);transition:width .3s}.circle{width:142px;height:142px;border-radius:50%;margin:16px auto;display:grid;place-items:center;background:conic-gradient(var(--green) 0%,#e5efe9 0%)}.circle>div{width:114px;height:114px;background:#fff;border-radius:50%;display:grid;place-items:center;text-align:center}.circle strong{font-size:31px}.cat{margin:12px 0;font-size:13px}.cat .bar{height:7px}.alert{background:#fff3f2;color:#8f2735;border:1px solid #f2ccd0;border-radius:10px;padding:11px;margin:8px 0;font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.report{white-space:pre-wrap;font:13px/1.6 Arial,sans-serif;margin-top:15px;background:#f7faf8;border-radius:10px;padding:15px}.pill{font-size:12px;color:var(--muted)}.notice{font-size:12px;color:var(--muted);margin-top:14px}@media(min-width:851px){.layout{display:flex;flex-direction:column;gap:22px}.layout>#questions{width:100%;min-width:0}.layout>.side{position:static;top:auto;grid-row:auto;width:100%;max-width:none;margin-top:0}.layout>.side .actions{display:flex;flex-wrap:wrap}}@media(max-width:850px){.layout{grid-template-columns:1fr}.side{position:static;grid-row:1}.stats{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr}header{padding:20px}main{padding:12px}}@media print{header,.actions,.choice,.notice,#auditHistory{display:none!important}body{background:#fff}.layout{display:block}.card,.question{box-shadow:none;break-inside:avoid}.side{position:static}.notearea textarea{border:0}main{max-width:none}}
+@media(max-width:850px){html,body{width:100%;max-width:100%;overflow-x:hidden}main{max-width:100%;padding:10px}.card{padding:14px;border-radius:12px}.formgrid{gap:8px}.layout{gap:12px}.stats{gap:7px;margin:12px 0}.stat{padding:10px}.stat strong{font-size:23px}.question{padding:12px}.qtop{align-items:flex-start}.qtop b{font-size:14px}.choice{gap:5px}.choice button{min-width:0;flex:1 1 28%;font-size:12px;padding:10px 3px}.side{position:static!important;grid-row:auto!important}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.actions button{font-size:12px;padding:11px 6px}.actions #saveAudit{grid-column:1/-1}.report{overflow-wrap:anywhere}header{padding:16px}header h1{font-size:22px}header p{font-size:12px}}
+</style></head><body><header><h1>✓ Audits HACCP</h1><p>Contrôles interactifs · Résultats en temps réel · Rapport d'audit</p></header>
+<main><div class="card formgrid"><div><label for="site">Établissement</label><input id="site" value="Établissement de démonstration"></div><div><label for="auditor">Auditeur</label><input id="auditor" placeholder="Nom de l'auditeur"></div><div><label for="date">Date de l'audit</label><input id="date" type="date"></div></div>
+<div class="card" style="margin-top:14px"><label for="auditZone">Lieu de l’audit</label><select id="auditZone" required><option value="">— Choisir le lieu à contrôler —</option></select><p class="muted" id="zoneHelp" style="font-size:13px;margin:8px 0 0">Chaque lieu possède son propre questionnaire HACCP.</p></div>
+<div class="stats"><div class="stat"><small>Progression</small><strong id="progress">0/10</strong></div><div class="stat"><small>Conformité</small><strong id="score">—</strong></div><div class="stat"><small>Non-conformités</small><strong id="nc">0</strong></div><div class="stat"><small>Statut</small><strong id="status" style="font-size:19px">À commencer</strong></div></div>
+<div class="layout"><div id="questions"></div><aside class="card side"><h2 style="margin-top:0">Suivi de l'audit</h2><div class="circle" id="circle"><div><span><strong id="ringScore">—</strong><br><small>conformité</small></span></div></div><div class="muted" id="completed">0 question renseignée</div><div class="bar"><span id="progressBar" style="width:0%"></span></div><h3>Par catégorie</h3><div id="categories"></div><h3>Points à corriger</h3><div id="alerts" class="muted">Aucune non-conformité signalée.</div><div class="actions"><button class="primary" id="saveAudit">Terminer l’audit</button><button id="historyButton">Historique des audits</button><button class="primary" id="generate">Ouvrir le rapport</button><button id="print">Imprimer / PDF</button><button id="reset">Réinitialiser</button></div><div id="saveStatus" class="notice" role="status">Connexion à l’établissement…</div><div id="auditHistory" class="report" hidden></div></aside></div></main>
+<script>
+'use strict';
+const GENERAL_ITEMS=[['Hygiène du personnel','Tenue professionnelle propre et adaptée'],['Hygiène du personnel','Lavage des mains et dispositifs disponibles'],['Températures et stockage','Températures des enceintes frigorifiques conformes'],['Températures et stockage','Séparation des produits crus et cuits'],['Nettoyage et désinfection','Plan de nettoyage respecté'],['Nettoyage et désinfection','Produits de nettoyage identifiés et stockés séparément'],['Traçabilité et DLC','Produits correctement étiquetés et datés'],['Traçabilité et DLC','DLC vérifiées et absence de produits périmés'],['Locaux et nuisibles','Locaux et surfaces en bon état'],['Locaux et nuisibles',"Absence d'indices de nuisibles"]];
+const ZONE_QUESTIONNAIRES={"Cuisine centrale":[["Hygiène du personnel","Tenue de travail propre, charlotte et protections adaptées"],["Hygiène du personnel","Lavage des mains effectif et lave-mains approvisionnés"],["Préparation et contamination croisée","Séparation stricte des préparations crues et cuites"],["Préparation et contamination croisée","Planches, ustensiles et surfaces dédiés ou désinfectés entre usages"],["Maîtrise des températures","Température des préparations chaudes contrôlée"],["Maîtrise des températures","Refroidissement et maintien au froid réalisés dans les délais prévus"],["Nettoyage et désinfection","Plan de nettoyage des postes et équipements appliqué"],["Nettoyage et désinfection","Produits d'entretien identifiés et stockés à l'écart des denrées"],["Traçabilité et sécurité","Ingrédients et préparations identifiés avec dates et lots"],["Traçabilité et sécurité","Absence d'anomalies visibles de nuisibles et de dégradation des locaux"]],"Économat":[["Conditions des locaux","Économat propre, sec et ventilé"],["Conditions des locaux","Absence d'humidité, infiltration et traces de nuisibles"],["Rangement et séparation","Produits alimentaires stockés hors du sol"],["Rangement et séparation","Produits chimiques séparés des denrées alimentaires"],["Rotation des stocks","Rotation FIFO/FEFO respectée"],["Rotation des stocks","Dates de péremption contrôlées et produits périmés retirés"],["Traçabilité","Produits étiquetés et lots traçables"],["Traçabilité","Emballages intacts et produits conformes à leur réception"],["Hygiène et sécurité","Rayonnages propres et en bon état"],["Hygiène et sécurité","Température et humidité contrôlées selon les produits"]],"Plonge":[["Organisation des flux","Circuit du matériel sale et propre séparé"],["Organisation des flux","Absence de stockage de vaisselle propre en zone sale"],["Lavage et désinfection","Dosage du détergent et du produit de rinçage conforme"],["Lavage et désinfection","Lave-vaisselle entretenu et paramètres de lavage contrôlés"],["Hygiène du matériel","Vaisselle propre sans résidus ni traces"],["Hygiène du matériel","Ustensiles séchés et rangés de façon hygiénique"],["Hygiène des locaux","Éviers et surfaces de plonge nettoyés régulièrement"],["Hygiène des locaux","Siphons et évacuations propres sans stagnation d'eau"],["Sécurité du personnel","Produits chimiques identifiés et rangés en sécurité"],["Sécurité du personnel","Personnel équipé de protections adaptées"]],"Locaux communs":[["Propreté générale","Sols, murs et surfaces communes propres"],["Propreté générale","Fréquences et feuilles de nettoyage respectées"],["État des installations","Éclairage et ventilation opérationnels"],["État des installations","Absence de dégradations et de zones humides"],["Déchets","Poubelles fermées et vidées régulièrement"],["Déchets","Absence de déchets entreposés dans les passages"],["Hygiène et nuisibles","Aucun indice de nuisibles dans les circulations"],["Hygiène et nuisibles","Points d'eau et sanitaires communs propres et approvisionnés"],["Sécurité des circulations","Issues et passages dégagés"],["Sécurité des circulations","Produits et matériels dangereux stockés hors des zones communes"]],"Chambres froides":[["Températures","Température mesurée et conforme au seuil défini pour l'équipement"],["Températures","Relevés réguliers et mesures correctives documentés"],["Organisation du stockage","Denrées stockées hors du sol et sans surcharge"],["Organisation du stockage","Produits crus et prêts à consommer séparés"],["DLC et identification","Dates limites et dates d'ouverture vérifiées"],["DLC et identification","Produits conditionnés et étiquetés avec identification des lots"],["Entretien","Étagères, sols et parois propres"],["Entretien","Joints, portes et évaporateurs en bon état"],["Sécurité alimentaire","Absence de produits avariés ou d'emballages endommagés"],["Sécurité alimentaire","Rotation des stocks FIFO/FEFO respectée"]],"Réception des marchandises":[["Fournisseurs et documents","Fournisseur identifié et bon de livraison présent"],["Fournisseurs et documents","Produits livrés correspondant à la commande"],["Contrôle des températures","Températures des produits frais et surgelés vérifiées"],["Contrôle des températures","Chaîne du froid préservée pendant la réception"],["Qualité à réception","Conditionnements intacts et propres"],["Qualité à réception","Aspect, odeur et état des denrées conformes"],["Traçabilité","Dates limites et lots relevés et conformes"],["Traçabilité","Non-conformités et refus de livraison consignés"],["Hygiène des flux","Zone de réception propre et dégagée"],["Hygiène des flux","Transfert rapide vers les zones de stockage adaptées"]],"Pâtisserie":[["Hygiène du personnel","Tenue et lavage des mains adaptés à la pâtisserie"],["Hygiène du personnel","Manipulation hygiénique des produits prêts à consommer"],["Ingrédients et allergènes","Allergènes identifiés et contaminations croisées maîtrisées"],["Ingrédients et allergènes","Œufs, crème et lait conservés aux températures adaptées"],["Fabrication","Postes et ustensiles désinfectés entre préparations"],["Fabrication","Cuisson, refroidissement et conservation surveillés"],["Stockage et DLC","Pâtisseries finies identifiées et datées"],["Stockage et DLC","Vitrines et réfrigérateurs à température conforme"],["Nettoyage et nuisibles","Plans de nettoyage des surfaces et matériels appliqués"],["Nettoyage et nuisibles","Absence de traces de nuisibles et déchets évacués"]],"Salle de restauration":[["Propreté des espaces","Tables, chaises et surfaces de service propres"],["Propreté des espaces","Sols et points de contact désinfectés selon le plan"],["Hygiène du personnel","Personnel de service avec tenue et mains propres"],["Hygiène du personnel","Pratiques de service évitant les contaminations"],["Service des aliments","Maintien des aliments aux températures adaptées"],["Service des aliments","Protection des plats exposés et buffets"],["Matériel et vaisselle","Vaisselle, couverts et verrerie propres"],["Matériel et vaisselle","Matériel de service en bon état et correctement stocké"],["Déchets et nuisibles","Poubelles fermées et débarrassage régulier"],["Déchets et nuisibles","Absence d'indices de nuisibles et accès propres"]],"Vestiaires et sanitaires":[["Hygiène des sanitaires","Toilettes et lavabos propres et désinfectés"],["Hygiène des sanitaires","Savon, essuie-mains et papier disponibles"],["Vestiaires","Vêtements de ville séparés des tenues de travail"],["Vestiaires","Effets personnels rangés dans des espaces prévus"],["Équipements","Robinetterie et chasses d'eau fonctionnelles"],["Équipements","Ventilation suffisante, absence d'odeurs persistantes"],["Nettoyage","Programme de nettoyage affiché et suivi"],["Nettoyage","Produits et matériels de nettoyage correctement stockés"],["Sécurité sanitaire","Absence de nuisibles ou d'humidité excessive"],["Sécurité sanitaire","Poubelles sanitaires adaptées et vidées régulièrement"]],"Local déchets":[["Tri et contenants","Déchets triés dans des bacs adaptés et identifiés"],["Tri et contenants","Contenants fermés, étanches et nettoyables"],["Fréquence d'évacuation","Évacuation des déchets réalisée à fréquence adaptée"],["Fréquence d'évacuation","Absence d'accumulation de sacs au sol"],["Nettoyage","Sols, murs et bacs propres et désinfectés"],["Nettoyage","Écoulements et siphons propres, sans stagnation"],["Nuisibles","Absence de traces de rongeurs ou d'insectes"],["Nuisibles","Local fermé et protégé contre les intrusions"],["Séparation et sécurité","Zone de déchets séparée des préparations alimentaires"],["Séparation et sécurité","Personnel protégé et procédures de manipulation respectées"]]};
+let items=[];
+let answers=[];let draftCache={},draftReady=false,draftTimer=null,draftQueue=Promise.resolve(),draftChangeToken=0,finalizeInProgress=false,hasLocalEdits=false;let bridgeSite='',bridgeLabel='',bridgeReady=false,requestSerial=0;const pending=new Map();const $=id=>document.getElementById(id);$('date').value=new Date().toLocaleDateString('en-CA');const qs=$('questions');
+function renderQuestions(){qs.replaceChildren();let section='';
+items.forEach(([cat,q],i)=>{if(cat!==section){section=cat;const h=document.createElement('h2');h.textContent=cat;h.className='section';qs.append(h)}const box=document.createElement('div');box.className='question';box.id='question'+i;const top=document.createElement('div');top.className='qtop';const name=document.createElement('b');name.textContent=(i+1)+'. '+q;const state=document.createElement('span');state.className='pill';state.id='state'+i;state.textContent='À vérifier';top.append(name,state);const choices=document.createElement('div');choices.className='choice';[['ok','✓ Conforme'],['nc','✕ Non conforme'],['na','— N/A']].forEach(([v,label])=>{const b=document.createElement('button');b.type='button';b.dataset.val=v;b.textContent=label;b.addEventListener('click',()=>{answers[i].value=v;update();draftEdited()});choices.append(b)});const lab=document.createElement('label');lab.className='notearea';lab.textContent='Observation / action corrective';const ta=document.createElement('textarea');ta.placeholder='Ajouter une observation…';ta.addEventListener('input',()=>{answers[i].note=ta.value;draftEdited();});lab.append(ta);box.append(top,choices,lab);qs.append(box)});}
+
+
+
+function currentDraftSnapshot(){
+ return {zone:currentZone,date:$('date').value,auditor:$('auditor').value,entries:items.map(([cat,q],i)=>({
+  category:cat,question:q,result:answers[i].value||'',note:answers[i].note||''
+ }))};
+}
+function draftEdited(){
+ if(!currentZone||finalizeInProgress)return;
+ hasLocalEdits=true;
+ draftCache[currentZone]=currentDraftSnapshot();
+ safeText('saveStatus','Brouillon modifié · Synchronisation Firebase en attente…');
+ clearTimeout(draftTimer);
+ draftTimer=setTimeout(()=>{draftTimer=null;persistDraft(currentZone)},650);
+}
+function persistDraft(zone){
+ if(!draftReady||!bridgeReady)return Promise.resolve();
+ const draft=draftCache[zone];
+ if(!draft)return Promise.resolve();
+ const token=++draftChangeToken;
+ draftQueue=draftQueue.catch(()=>{}).then(()=>bridge('draftPut',{zone,draft}));
+ return draftQueue.then(()=>{
+  if(token===draftChangeToken && currentZone===zone)
+   safeText('saveStatus','Brouillon automatiquement enregistré dans Firebase · '+new Date().toLocaleTimeString('fr-FR'));
+ }).catch(error=>{
+  if(currentZone===zone)safeText('saveStatus','Sauvegarde du brouillon non confirmée : '+error.message+' · Réessayez après reconnexion.');
+ });
+}
+function renderZone(zone){
+ currentZone=zone;
+ items=(zone==='Audit général'?GENERAL_ITEMS:ZONE_QUESTIONNAIRES[zone]||[]).map(x=>x.slice());
+ answers=items.map(()=>({value:'',note:''}));
+ const draft=draftCache[zone];
+ if(draft && Array.isArray(draft.entries) && draft.entries.length===items.length){
+  draft.entries.forEach((entry,i)=>{answers[i].value=['ok','nc','na'].includes(entry.result)?entry.result:'';
+   answers[i].note=String(entry.note||'')});
+  if(draft.date)$('date').value=draft.date;
+  if(draft.auditor)$('auditor').value=draft.auditor;
+ }
+ $('auditHistory').hidden=true;$('auditHistory').replaceChildren();
+ renderQuestions();
+ answers.forEach((answer,i)=>{$('question'+i).querySelector('textarea').value=answer.note});
+ $('auditZone').value=zone;
+ update();
+ const restored=answers.some(a=>a.value||a.note.trim());
+ if(bridgeReady)safeText('saveStatus',restored?'Brouillon repris pour '+zone+'. Les modifications seront enregistrées automatiquement.':
+ 'Lieu sélectionné : '+zone+' · Sauvegarde automatique active.');
+}
+function chooseZone(zone){
+ clearTimeout(draftTimer);
+ if(currentZone && hasLocalEdits && draftCache[currentZone])persistDraft(currentZone);
+ hasLocalEdits=false;
+ renderZone(zone);
+}
+let currentZone='';
+const selector=$('auditZone');
+['Audit général',...Object.keys(ZONE_QUESTIONNAIRES)].forEach(name=>{
+ const option=document.createElement('option');option.value=name;option.textContent=name;selector.append(option)
+});
+selector.addEventListener('change',()=>chooseZone(selector.value));
+chooseZone('Audit général');
+$('auditor').addEventListener('input',draftEdited);
+$('date').addEventListener('change',draftEdited);
+
+function update(){let done=0,ok=0,nc=0;const by={};items.forEach(([cat,q],i)=>{const a=answers[i];by[cat]??={ok:0,nc:0,done:0};if(a.value){done++;by[cat].done++}if(a.value==='ok'){ok++;by[cat].ok++}if(a.value==='nc'){nc++;by[cat].nc++}const box=$('question'+i);box.classList.toggle('bad',a.value==='nc');box.classList.toggle('good',a.value==='ok');$('state'+i).textContent=a.value==='ok'?'Conforme':a.value==='nc'?'Non conforme':a.value==='na'?'Non applicable':'À vérifier';box.querySelectorAll('.choice button').forEach(b=>b.classList.toggle('selected',b.dataset.val===a.value))});const score=ok+nc?Math.round(ok/(ok+nc)*100):null;$('progress').textContent=done+'/'+items.length;$('score').textContent=score===null?'—':score+'%';$('ringScore').textContent=$('score').textContent;$('nc').textContent=nc;$('status').textContent=done===0?'À commencer':done<items.length?'En cours':nc?'À corriger':'Terminé';$('completed').textContent=done+' question'+(done>1?'s':'')+' renseignée'+(done>1?'s':'');$('progressBar').style.width=100*done/items.length+'%';$('circle').style.background='conic-gradient('+(nc?'#b77909':'#087657')+' '+(score??0)+'%,#e5efe9 0%)';$('categories').replaceChildren();Object.entries(by).forEach(([cat,v])=>{const el=document.createElement('div');el.className='cat';const title=document.createElement('div');const count=items.filter(x=>x[0]===cat).length;title.textContent=cat+' · '+v.done+'/'+count;const bar=document.createElement('div');bar.className='bar';const fill=document.createElement('span');fill.style.width=(v.ok+v.nc?100*v.ok/(v.ok+v.nc):0)+'%';fill.style.background=v.nc?'#b77909':'#087657';bar.append(fill);el.append(title,bar);$('categories').append(el)});$('alerts').replaceChildren();if(!nc){$('alerts').textContent='Aucune non-conformité signalée.'}else items.forEach(([cat,q],i)=>{if(answers[i].value!=='nc')return;const d=document.createElement('div');d.className='alert';d.textContent=q+(answers[i].note?' — '+answers[i].note:' — Action corrective à définir');$('alerts').append(d)});return{done,ok,nc,score}}
+
+function auditReportData(rec){
+ if(rec)return {zone:rec.zone||'Audit général',site:bridgeLabel||$('site').value,date:rec.date||'',auditor:rec.auditor||'',savedAt:rec.savedAt||'',id:rec.id||'',entries:rec.entries||[],score:rec.score,nonConformities:rec.nonConformities,status:rec.status||''};
+ const r=update();
+ return {zone:currentZone,site:bridgeLabel||$('site').value,date:$('date').value,auditor:$('auditor').value||'Non renseigné',savedAt:'',id:'',entries:items.map(([category,question],i)=>({category,question,result:answers[i].value,note:answers[i].note})),score:r.score,nonConformities:r.nc,status:r.done+'/'+items.length+' vérifications'};
+}
+function openAuditReport(rec,autoPrint,requestedWindow){
+ const data=auditReportData(rec);
+ const tab=requestedWindow||window.open('','_blank');
+ if(!tab){alert('Autorisez les fenêtres pop-up pour ouvrir la fiche de rapport.');return}
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;':'&#39;'}[c]));
+ const labels={ok:'Conforme',nc:'Non conforme',na:'Non applicable'};
+ const rows=data.entries.map((e,i)=>{
+   const state=labels[e.result]||'Non renseigné';
+   const color=e.result==='nc'?'#b3293b':e.result==='ok'?'#087657':'#6b7280';
+   return '<tr><td>'+(i+1)+'</td><td>'+esc(e.category)+'</td><td>'+esc(e.question)+'</td><td style="color:'+color+';font-weight:700">'+esc(state)+'</td><td>'+esc(e.note||'Aucune')+'</td></tr>';
+ }).join('');
+
+ const total=data.entries.length;
+ const completed=data.entries.filter(e=>['ok','nc','na'].includes(e.result)).length;
+ const evaluated=data.entries.filter(e=>e.result==='ok'||e.result==='nc');
+ const trueScore=evaluated.length?Math.round(evaluated.filter(e=>e.result==='ok').length/evaluated.length*100):null;
+ const progressPct=total?Math.round(100*completed/total):0;
+ const categoriesOrder=[...new Set(data.entries.map(e=>e.category||'Autre'))];
+ const progressCategories=categoriesOrder.map(cat=>{
+  const entries=data.entries.filter(e=>(e.category||'Autre')===cat);
+  const done=entries.filter(e=>['ok','nc','na'].includes(e.result)).length;
+  const eligible=entries.filter(e=>e.result==='ok'||e.result==='nc');
+  const pct=eligible.length?100*eligible.filter(e=>e.result==='ok').length/eligible.length:0;
+  const bad=entries.some(e=>e.result==='nc');
+  return '<div class="audit-category"><div class="audit-category-label">'+esc(cat)+' · '+done+'/'+entries.length+'</div>'+
+    '<div class="audit-track"><span style="width:'+pct+'%;background:'+(bad?'#b77909':'#087657')+'"></span></div></div>';
+ }).join('');
+ const scoreCircle=trueScore===null?'—':trueScore+'%';
+ const ringColor=data.entries.some(e=>e.result==='nc')?'#b77909':'#087657';
+ const monitoring='<section class="audit-monitoring"><h2>Suivi de l’audit</h2>'+
+  '<div class="audit-ring" style="background:conic-gradient('+ringColor+' '+(trueScore??0)+'%,#e3ede7 0%)">'+
+  '<div class="audit-ring-middle"><strong>'+esc(scoreCircle)+'</strong><small>conformité</small></div></div>'+
+  '<div class="audit-count">'+completed+' question'+(completed>1?'s':'')+' renseignée'+(completed>1?'s':'')+' sur '+total+'</div>'+
+  '<div class="audit-track audit-progress"><span style="width:'+progressPct+'%;background:#087657"></span></div>'+
+  '<h3>Par catégorie</h3><div class="audit-category-list">'+progressCategories+'</div></section>';
+
+ const score=data.score===null||data.score===undefined?'Non calculable':data.score+' %';
+ const documentHTML='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+ '<title>Rapport audit HACCP - '+esc(data.site)+' - '+esc(data.date)+'</title>'+
+ '<style>*{box-sizing:border-box}body{margin:0;background:#f0f5f2;color:#143c31;font:14px/1.5 Arial,sans-serif}.sheet{max-width:1050px;margin:30px auto;background:white;padding:40px;box-shadow:0 8px 26px #1233;border-radius:12px}.head{border-bottom:4px solid #087657;padding-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{margin:0;font-size:27px}h2{font-size:17px;margin-top:27px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:23px 0}.meta div{border:1px solid #d8e6de;padding:10px;border-radius:8px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.kpis div{background:#edf7f1;padding:15px;text-align:center;border-radius:9px}.kpis b{display:block;font-size:23px}table{border-collapse:collapse;width:100%;margin-top:12px}th,td{border:1px solid #cddcd2;padding:9px;vertical-align:top;text-align:left;overflow-wrap:anywhere}th{background:#e4efe8}tr{break-inside:avoid}.toolbar{display:flex;gap:12px;justify-content:center;margin:25px}.toolbar button{padding:12px 20px;border:0;border-radius:8px;background:#087657;color:white;font-weight:700;cursor:pointer}.audit-monitoring{border:1px solid #d8e6de;border-radius:12px;padding:20px 24px;margin:23px 0 26px;background:#fff;break-inside:avoid;page-break-inside:avoid}.audit-monitoring h2{margin:0 0 12px;font-size:21px}.audit-ring{width:154px;height:154px;display:grid;place-items:center;border-radius:50%;margin:14px auto}.audit-ring-middle{width:122px;height:122px;display:flex;justify-content:center;align-items:center;flex-direction:column;background:#fff;border-radius:50%}.audit-ring-middle strong{font-size:31px}.audit-ring-middle small{font-size:13px}.audit-count{color:#687c72;margin:10px 0 6px}.audit-track{height:9px;background:#e3ede7;border-radius:12px;overflow:hidden;margin:6px 0 12px}.audit-track span{height:100%;display:block;border-radius:12px}.audit-progress{height:11px}.audit-monitoring h3{font-size:16px;margin:22px 0 14px}.audit-category-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:25px;row-gap:8px}.audit-category{break-inside:avoid}.audit-category-label{font-size:13px;margin:4px 0 5px}.audit-monitoring,.audit-ring,.audit-track,.audit-track span{-webkit-print-color-adjust:exact;print-color-adjust:exact}footer{margin-top:25px;padding-top:10px;border-top:1px solid #ddd;color:#66776c;font-size:12px}@media(max-width:700px){.sheet{padding:16px;margin:0}.meta,.kpis,.audit-category-list{grid-template-columns:1fr}table{font-size:11px}th,td{padding:5px}}@media print{@page{size:A4;margin:12mm}body{background:white}.sheet{box-shadow:none;margin:0;max-width:none;padding:0}.toolbar{display:none}h1{font-size:22px}.audit-details-title{break-before:page;page-break-before:always;break-after:avoid;page-break-after:avoid;margin:0 0 12px;padding-top:1px}thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}}</style></head><body>'+
+ '<div class="toolbar"><button onclick="window.print()">Imprimer / Enregistrer en PDF</button><button onclick="window.close()">Fermer la fiche</button></div>'+
+ '<article class="sheet"><div class="head"><div><h1>Rapport d’audit HACCP</h1><div>M&T HACCP · Fiche indépendante</div></div><strong>'+esc(data.site)+'</strong></div>'+
+ '<div class="meta"><div><b>Établissement :</b> '+esc(data.site)+'</div><div><b>Lieu de l’audit :</b> '+esc(data.zone||'Audit général')+'</div><div><b>Date de l’audit :</b> '+esc(data.date)+'</div><div><b>Auditeur :</b> '+esc(data.auditor)+'</div><div><b>Référence :</b> '+esc(data.id||'Rapport non enregistré')+'</div></div>'+
+ '<div class="kpis"><div>Conformité<b>'+esc(score)+'</b></div><div>Non-conformités<b>'+esc(data.nonConformities??0)+'</b></div><div>Statut<b style="font-size:16px">'+esc(data.status)+'</b></div></div>'+
+ monitoring+
+ '<h2 class="audit-details-title">Détail des contrôles</h2><table><thead><tr><th>N°</th><th>Catégorie</th><th>Point contrôlé</th><th>Résultat</th><th>Observation / action corrective</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+ '<footer>Fiche générée depuis M&T HACCP'+(data.savedAt?' · Enregistrée le '+esc(new Date(data.savedAt).toLocaleString('fr-FR')):' · Audit en cours non enregistré')+'</footer></article></body></html>';
+ tab.document.open();tab.document.write(documentHTML);tab.document.close();tab.focus();
+ if(autoPrint)tab.addEventListener('load',()=>tab.print(),{once:true});
+}
+$('generate').onclick=()=>openAuditReport(null,false);
+$('print').onclick=()=>openAuditReport(null,true);
+$('reset').onclick=async()=>{
+ if(!confirm('Effacer le brouillon de '+currentZone+' ? Cette action supprimera ses réponses non terminées.'))return;
+ clearTimeout(draftTimer);
+ await draftQueue.catch(()=>{});
+ delete draftCache[currentZone];hasLocalEdits=false;
+ answers.forEach(a=>{a.value='';a.note=''});
+ qs.querySelectorAll('textarea').forEach(x=>x.value='');
+ update();
+ try{await bridge('draftRemove',{zone:currentZone});safeText('saveStatus','Brouillon supprimé de Firebase.')}
+ catch(e){safeText('saveStatus','Effacement non confirmé dans Firebase : '+e.message)}
+};update();
+
+function bridge(type,payload={}){
+ if(window.parent===window){return Promise.reject(Error('Ouvrez ce module depuis M&T HACCP.'))}
+ const id='audit-'+(++requestSerial)+'-'+Date.now();
+ return new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Aucune réponse de l’application.'))},15000);
+  pending.set(id,{resolve,reject,timeout});
+  window.parent.postMessage({mtAudit:true,id,type,payload},location.origin);
+ });
+}
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==window.parent)return;
+ const d=event.data||{};if(!d.mtAuditResponse)return;
+ const p=pending.get(d.id);if(!p)return;
+ clearTimeout(p.timeout);pending.delete(d.id);
+ if(d.error)p.reject(Error(d.error));else p.resolve(d.result);
+});
+function safeText(id,t){$(id).textContent=t}
+async function verifyBridge(){
+ try{
+  const ctx=await bridge('context');
+  bridgeReady=true;bridgeSite=ctx.site;bridgeLabel=ctx.name||ctx.site;
+  $('site').value=bridgeLabel;$('site').readOnly=true;
+  if(ctx.auditor&&!hasLocalEdits)$('auditor').value=ctx.auditor;
+  const drafts=await bridge('draftGet');
+  draftReady=true;
+  const local=draftCache;
+  draftCache={...(drafts||{}),...local};
+  const newest=Object.values(draftCache).filter(d=>d&&d.updatedAt&&d.zone)
+   .sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))[0];
+  if(!hasLocalEdits){
+   renderZone(newest&&(['Audit général',...Object.keys(ZONE_QUESTIONNAIRES)].includes(newest.zone))?newest.zone:currentZone);
+  }else{
+   safeText('saveStatus','Brouillon local en cours · Synchronisation automatique activée.');
+   if(draftCache[currentZone])persistDraft(currentZone);
+  }
+ }catch(e){
+  safeText('saveStatus','Sauvegarde automatique indisponible : '+e.message+'. Vérifiez la connexion avant de quitter.');
+ }
+}
+function payloadAudit(){
+ const r=update();
+ if(r.done!==items.length)throw Error('Répondez aux '+items.length+' questions avant d’enregistrer.');
+ if(!$('auditor').value.trim())throw Error('Renseignez le nom de l’auditeur.');
+ if(!$('date').value)throw Error('Renseignez la date de l’audit.');
+ if(!currentZone)throw Error('Sélectionnez un lieu pour l’audit.');
+ return {date:$('date').value,auditor:$('auditor').value.trim(),site:bridgeSite,zone:currentZone,
+  entries:items.map(([cat,q],i)=>({category:cat,question:q,result:answers[i].value,note:answers[i].note})),
+  progress:r.done,score:r.score,nonConformities:r.nc,status:r.nc?'À corriger':'Terminé'};
+}
+$('saveAudit').onclick=async()=>{
+ if(finalizeInProgress)return;
+ if(!bridgeReady||!draftReady){safeText('saveStatus','Firebase non connecté : impossible de terminer cet audit.');return}
+ let data;
+ try{data=payloadAudit()}catch(e){safeText('saveStatus',e.message);return}
+ if(!confirm('Terminer et enregistrer définitivement l’audit de '+currentZone+' ?'))return;
+ finalizeInProgress=true;
+ const button=$('saveAudit');button.disabled=true;
+ clearTimeout(draftTimer);
+ try{
+  await draftQueue.catch(()=>{});
+  const result=await bridge('save',data);
+  delete draftCache[data.zone];hasLocalEdits=false;
+  let clean=true;
+  try{await bridge('draftRemove',{zone:data.zone})}catch(e){clean=false}
+  safeText('saveStatus','Audit terminé et enregistré dans Firebase le '+new Date(result.savedAt).toLocaleString('fr-FR')+
+    ' · Référence : '+result.id+(clean?'':' · Attention : brouillon non effacé.'));
+ }catch(e){
+  safeText('saveStatus','Audit non terminé : '+e.message+'. Votre brouillon reste disponible.');
+ }finally{finalizeInProgress=false;button.disabled=false}
+};
+
+$('historyButton').onclick=async()=>{
+ // Open immediately from the user gesture so iPhone Safari and Chrome do not block it.
+ const historyWindow=window.open('','_blank');
+ if(!historyWindow){alert('Autorisez les fenêtres pop-up pour consulter l’historique des audits.');return}
+ const d=historyWindow.document;
+ d.open();
+ d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Historique des audits HACCP</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f7f5;color:#143c31;font:15px/1.5 Arial,sans-serif}.head{background:linear-gradient(110deg,#063f30,#087657);color:white;padding:22px 5%}.head h1{margin:0;font-size:26px}.head p{margin:4px 0}.history-back{background:white;color:#075c45;border-color:white;margin-bottom:13px;display:inline-flex;align-items:center;gap:7px}.history-back:hover{background:#e6f5ed}main{max-width:1120px;margin:20px auto;padding:0 16px}.panel{padding:18px;background:white;border-radius:12px;border:1px solid #d8e6de}.filter{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}input,select{border:1px solid #c5d7cc;padding:11px;border-radius:8px;font:inherit;flex:1;min-width:180px}.entry{padding:16px 0;border-top:1px solid #d8e6de;display:flex;align-items:center;justify-content:space-between;gap:15px}.entry strong{display:block}.entry small{color:#61736a}button{cursor:pointer;font:inherit;border:1px solid #087657;border-radius:9px;padding:10px 14px;background:#087657;color:white;white-space:nowrap}.empty{color:#687c72;padding:18px 0}@media(max-width:650px){.head{padding:18px}.head h1{font-size:22px}.entry{display:block}.entry button{width:100%;margin-top:10px}.filter{display:block}.filter input,.filter select{width:100%;margin:0 0 10px}}</style></head><body><header class="head"><button type="button" class="history-back" id="historyBack">Retour</button><h1>Historique des audits HACCP</h1><p id="siteName"></p></header><main><section class="panel"><div class="filter"><select id="zoneFilter" aria-label="Filtrer par lieu"><option value="">Tous les lieux</option></select><input id="searchFilter" type="search" placeholder="Rechercher date, auditeur ou lieu"></div><div id="count"></div><div id="records" class="empty">Chargement des audits enregistrés…</div></section></main></body></html>');
+ d.close();
+ d.getElementById('siteName').textContent=bridgeLabel||$('site').value;
+ d.getElementById('historyBack').addEventListener('click',()=>{
+  // Audits HACCP remains open in the originating application tab.
+  // Close only this history window; do not navigate or reload the application.
+  try{window.parent.focus()}catch(_){}
+  try{historyWindow.close()}catch(_){}
+  if(!historyWindow.closed){
+   const msg=d.createElement('p');
+   msg.textContent='Revenez à l’onglet M&T HACCP où votre audit est toujours ouvert.';
+   msg.style.cssText='padding:10px 5%;background:#fff9e8;color:#60480a;margin:0';
+   d.querySelector('main').prepend(msg);
+  }
+ });
+ const container=d.getElementById('records');
+ try{
+  const records=await bridge('list');
+  if(historyWindow.closed)return;
+  const zoneSelect=d.getElementById('zoneFilter'),search=d.getElementById('searchFilter');
+  const zones=[...new Set(records.map(x=>x.zone||'Audit général'))].sort((a,b)=>a.localeCompare(b,'fr'));
+  zones.forEach(zone=>{const opt=d.createElement('option');opt.value=zone;opt.textContent=zone;zoneSelect.append(opt)});
+  function display(){
+   container.replaceChildren();container.className='';
+   const query=search.value.trim().toLocaleLowerCase('fr');
+   const filtered=records.filter(rec=>(!zoneSelect.value||(rec.zone||'Audit général')===zoneSelect.value)&&
+    (!query||[rec.date,rec.zone||'Audit général',rec.auditor].join(' ').toLocaleLowerCase('fr').includes(query)));
+   d.getElementById('count').textContent=filtered.length+' audit'+(filtered.length>1?'s':'')+' trouvé'+(filtered.length>1?'s':'');
+   if(!filtered.length){const msg=d.createElement('p');msg.className='empty';msg.textContent='Aucun audit correspondant.';container.append(msg);return}
+   filtered.forEach(rec=>{
+    const row=d.createElement('article');row.className='entry';
+    const summary=d.createElement('div'),title=d.createElement('strong'),details=d.createElement('small');
+    title.textContent=(rec.date||'Date inconnue')+' · '+(rec.zone||'Audit général');
+    details.textContent=(rec.auditor||'Auditeur inconnu')+' · '+(rec.score??'—')+' % de conformité · '+(rec.nonConformities??0)+' non-conformité(s)';
+    summary.append(title,details);
+    const button=d.createElement('button');button.type='button';button.textContent='Consulter / Imprimer';
+    button.onclick=()=>{
+     if(!Array.isArray(rec.entries)||!rec.entries.length){historyWindow.alert('Cet audit ne contient pas de questionnaire consultable.');return}
+     // Open using the actual history window where the tap/click happens.
+     // If a second popup is blocked (notably on iOS), reuse the independent
+     // history window rather than silently failing.
+     let reportWindow=null;
+     try{reportWindow=historyWindow.open('','_blank')}catch(_){}
+     if(!reportWindow)reportWindow=historyWindow;
+     try{openAuditReport(rec,false,reportWindow)}
+     catch(err){historyWindow.alert('Impossible d’ouvrir le rapport : '+(err.message||err))}
+    };
+    row.append(summary,button);container.append(row);
+   });
+  }
+  zoneSelect.addEventListener('change',display);
+  search.addEventListener('input',display);
+  display();
+ }catch(err){if(!historyWindow.closed){container.className='empty';container.textContent='Historique indisponible : '+(err.message||'Erreur de connexion Firebase')}}
+};
+
+verifyBridge();
+(function(){
+ if(window.parent===window)return;
+ let lastHeight=0,scheduled=false;
+ function announceHeight(){
+  scheduled=false;
+  const h=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body.scrollHeight));
+  if(Math.abs(h-lastHeight)<2)return;
+  lastHeight=h;
+  window.parent.postMessage({mtAuditResize:true,height:h},location.origin);
+ }
+ function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(announceHeight)}
+ window.addEventListener('load',schedule);
+ window.addEventListener('resize',schedule);
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(schedule).observe(document.body);
+ new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});
+ schedule();
+})();
+
+</script></body></html>
