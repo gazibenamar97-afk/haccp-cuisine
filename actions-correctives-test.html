@@ -4316,6 +4316,17 @@ window.addEventListener('message',async e=>{
    });
    reply({id:saved.id,reference:saved.reference});return;
   }
+  if(m.type==='view-proof'){
+   const a=m.payload||{};
+   const snap=await ref.get(),row=(snap.data()?.correctiveActionsRecords||[]).find(x=>x.id===a.id&&x.site===SITE_ID);
+   if(!row||!(row.events||[]).some(ev=>ev.photoPath===a.path))throw Error('Preuve non autorisée.');
+   const auth=await haccpPhotoAuth();
+   if(!auth.tenantReady)throw Error('Autorisation de lecture photo indisponible.');
+   const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/authenticated/haccp-photos/'+a.path,{headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+auth.token}});
+   if(!res.ok)throw Error('Lecture de preuve refusée ('+res.status+').');
+   const blob=await res.blob();const data=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(rd.result);rd.onerror=()=>reject(Error('Photo illisible'));rd.readAsDataURL(blob)});
+   reply({data});return;
+  }
   if(m.type==='upload-proof'){
    const a=m.payload||{};
    if(!a.id||typeof a.data!=='string'||a.data.length>12000000||!a.data.startsWith('data:image/'))throw Error('Photo non valide.');
