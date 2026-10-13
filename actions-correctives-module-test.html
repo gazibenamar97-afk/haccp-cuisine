@@ -20,7 +20,7 @@
  <div class="grid">
  <div class="wide hybrid-box" id="sheetHybridWrap" hidden><strong>Mesures prédéfinies de prise en charge</strong><p class="muted">Cochez les mesures adaptées, puis indiquez Réalisée ou À faire.</p><div id="sheetHybridChoices"></div></div>
  <div class="wide"><label for="sheetAction" id="sheetActionLabel">Action réalisée / solution mise en œuvre *</label><textarea id="sheetAction" maxlength="500" required placeholder="Décrire précisément les mesures réalisées"></textarea></div>
- <div class="wide"><label for="sheetObservation">Observations et éléments de preuve</label><textarea id="sheetObservation" maxlength="400" placeholder="Résultat du contrôle, référence du relevé ou de la preuve…"></textarea></div>
+ <div class="wide"><label for="sheetObservation">Observations et éléments de preuve</label><textarea id="sheetObservation" maxlength="400" placeholder="Résultat du contrôle, référence du relevé ou de la preuve…"></textarea><div id="sheetPhotoWrap" hidden><div class="row" style="margin-top:8px"><button class="secondary" type="button" id="sheetCameraBtn">📷 Prendre une photo</button><button class="secondary" type="button" id="sheetGalleryBtn">🖼️ Télécharger une photo</button></div><input hidden id="sheetCamera" type="file" accept="image/*" capture="environment"><input hidden id="sheetGallery" type="file" accept="image/*"><div id="sheetPhotoPreview"></div></div></div>
  <div><label for="sheetActor">Intervenant / vérificateur *</label><input id="sheetActor" maxlength="100" required placeholder="Nom et fonction"></div>
  <div><label for="sheetDate">Date de l’intervention *</label><input id="sheetDate" type="date" required></div>
  <div class="wide" id="sheetVerificationWrap" hidden><label for="sheetVerification">Conclusion de vérification *</label><textarea id="sheetVerification" maxlength="300" placeholder="Décrire le contrôle d’efficacité et le résultat"></textarea></div>
@@ -48,7 +48,15 @@ window.addEventListener('message',e=>{
 });
 function notify(msg,error=false){$('state').className=error?'alert':'notice';$('state').textContent=msg}
 
-let activeSheet=null;
+let activeSheet=null;let proofFile=null,proofPreviewUrl=null;
+function clearProof(){proofFile=null;if(proofPreviewUrl)URL.revokeObjectURL(proofPreviewUrl);proofPreviewUrl=null;$('sheetPhotoPreview').replaceChildren();$('sheetCamera').value='';$('sheetGallery').value=''}
+function pickProof(file){clearProof();if(!file)return;if(!file.type.startsWith('image/')){notify('Fichier image non reconnu.',true);return}proofFile=file;proofPreviewUrl=URL.createObjectURL(file);const img=document.createElement('img');img.src=proofPreviewUrl;img.alt='Aperçu de la photo';img.style='display:block;max-width:240px;max-height:180px;object-fit:contain;margin-top:8px;border-radius:9px';const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Supprimer la photo';remove.onclick=clearProof;$('sheetPhotoPreview').append(img,remove)}
+$('sheetCameraBtn').onclick=()=>$('sheetCamera').click();
+$('sheetGalleryBtn').onclick=()=>$('sheetGallery').click();
+$('sheetCamera').onchange=e=>pickProof(e.target.files[0]);
+$('sheetGallery').onchange=e=>pickProof(e.target.files[0]);
+function photoAsData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Photo illisible'));reader.readAsDataURL(file)})}
+
 const hybridOptions=['Contrôler le fonctionnement et le réglage de l’équipement','Vérifier la fermeture des portes et les joints','Contrôler la température des denrées concernées','Mettre en quarantaine les denrées concernées','Transférer les denrées vers un équipement conforme','Informer le responsable HACCP','Contacter le service maintenance','Évaluer le devenir des denrées selon les procédures HACCP','Effectuer un nouveau relevé après intervention'];
 function renderHybridChoices(rec,status){
  const wrap=$('sheetHybridWrap'),host=$('sheetHybridChoices');host.replaceChildren();
@@ -87,7 +95,7 @@ function showActionSheet(rec,nextStatus){
   const el=document.createElement('div'),strong=document.createElement('b'),body=document.createElement('span');
   strong.textContent=label;body.textContent=value;el.append(strong,body);$('sheetInfo').append(el);
  }
- $('sheetForm').reset();
+ $('sheetForm').reset();clearProof();$('sheetPhotoWrap').hidden=nextStatus!=='À vérifier';
  renderHybridChoices(rec,nextStatus);
  $('sheetDate').value=new Date().toLocaleDateString('en-CA');
  $('sheetActor').value=context?.actor||'';
@@ -104,7 +112,7 @@ function showActionSheet(rec,nextStatus){
  $('actionSheet').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeActionSheet(){
- activeSheet=null;$('actionSheet').hidden=true;
+ activeSheet=null;clearProof();$('actionSheet').hidden=true;
  $('records').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 $('sheetBack').onclick=closeActionSheet;
@@ -114,7 +122,7 @@ $('sheetForm').addEventListener('submit',async event=>{
  if(!activeSheet)return;
  const action=$('sheetAction').value.trim(),measures=selectedHybridMeasures(),observation=$('sheetObservation').value.trim(),
  actor=$('sheetActor').value.trim(),date=$('sheetDate').value,verification=$('sheetVerification').value.trim();
- if((!action&&!measures.length)||!actor||!date||($('sheetVerification').required&&!verification)){
+ if((!action&&!measures.length)||!actor||!date||($('sheetVerification').required&&!verification)|| (activeSheet.status==='À vérifier'&&!observation&&!proofFile)){
   $('sheetMessage').className='alert';$('sheetMessage').textContent='Renseignez tous les champs obligatoires.';return;
  }
  const hybridLines=measures.map(m=>(m.status==='realisee'?'[Réalisée] ':'[À faire] ')+m.label);
@@ -124,7 +132,13 @@ $('sheetForm').addEventListener('submit',async event=>{
  if(note.length>1500){$('sheetMessage').className='alert';$('sheetMessage').textContent='Le compte rendu dépasse 1500 caractères. Réduisez les observations.';return}
  const submit=$('sheetSubmit');submit.disabled=true;
  try{
-  await request('transition',{id:activeSheet.id,status:activeSheet.status,note});
+  let photoPath='';
+  if(proofFile&&activeSheet.status==='À vérifier'){
+   $('sheetMessage').textContent='Envoi de la photo en cours…';
+   const upload=await request('upload-proof',{id:activeSheet.id,data:await photoAsData(proofFile)});
+   photoPath=upload.path;
+  }
+  await request('transition',{id:activeSheet.id,status:activeSheet.status,note,photoPath});
   notify('Fiche enregistrée dans Firebase : '+activeSheet.status+'.');
   closeActionSheet();await load();
  }catch(e){
