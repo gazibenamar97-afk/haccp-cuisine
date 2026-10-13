@@ -1,5 +1,5 @@
-const CACHE='mt-haccp-shell-v171-audits-repair-20261013';
-const CORE=['./index.html','./audits-demo.html','./manifest.webmanifest','./icon.svg'];
+const CACHE='mt-haccp-shell-v172-stable-rollback-20261013';
+const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
  self.skipWaiting();
