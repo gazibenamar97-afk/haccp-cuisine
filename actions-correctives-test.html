@@ -4339,11 +4339,14 @@ window.addEventListener('message',async e=>{
 <style id="mt-temp-action-link-style">
 #mtTempCorrectiveSheet{position:fixed;inset:0;background:#10241f99;z-index:999998;overflow:auto;padding:18px}
 #mtTempCorrectiveSheet[hidden]{display:none!important}
-#mtTempCorrectiveSheet .mt-temp-ac-card{background:#fff;color:#143d30;border-radius:16px;margin:3vh auto;max-width:780px;padding:24px;box-shadow:0 16px 45px #0004;font:15px/1.5 Arial,sans-serif}
+#mtTempCorrectiveSheet .mt-temp-ac-card{position:relative;background:#fff;color:#143d30;border-radius:16px;margin:3vh auto;max-width:780px;padding:24px;box-shadow:0 16px 45px #0004;font:15px/1.5 Arial,sans-serif}
 #mtTempCorrectiveSheet label{display:block;margin-top:12px;font-weight:600}
 #mtTempCorrectiveSheet input,#mtTempCorrectiveSheet select,#mtTempCorrectiveSheet textarea{box-sizing:border-box;width:100%;padding:11px;border:1px solid #afc5b8;border-radius:9px;font:inherit}
 #mtTempCorrectiveSheet button{border-radius:9px;padding:12px;margin:8px 6px 0 0;cursor:pointer;background:#087657;color:white;border:0;font:inherit}
 #mtTempCorrectiveSheet .secondary{background:#edf5ef;color:#075d44}
+#mtTempCorrectiveSheet .mt-temp-ac-close{position:absolute;top:12px;right:12px;margin:0;width:38px;height:38px;padding:0;border-radius:50%;background:#edf5ef;color:#143d30;font-size:27px;line-height:1;font-weight:600;display:flex;align-items:center;justify-content:center}
+#mtTempCorrectiveSheet .mt-temp-ac-close:hover{background:#dceae0}
+#mtTempCorrectiveSheet .mt-temp-ac-card>h2{padding-right:45px}
 @media(max-width:850px){#mtTempCorrectiveSheet{padding:6px}#mtTempCorrectiveSheet .mt-temp-ac-card{padding:15px}}
 </style>
 <script id="mt-temp-correctives-test-link">
@@ -4358,6 +4361,7 @@ window.addEventListener('message',async e=>{
   const panel=document.createElement('div');
   panel.id='mtTempCorrectiveSheet';
   const card=document.createElement('section');card.className='mt-temp-ac-card';
+  const close=document.createElement('button');close.type='button';close.className='mt-temp-ac-close';close.textContent='×';close.title='Fermer la fiche';close.setAttribute('aria-label','Fermer la fiche d’action corrective');close.onclick=()=>clearPanel();card.append(close);
   const title=document.createElement('h2');title.textContent='Température non conforme — Action corrective';
   const info=document.createElement('p');
   info.textContent='Équipement : '+record.equipment+' · Relevé : '+record.value+' °C · Limites : '+equipment.min+' à '+equipment.max+' °C · Opérateur : '+record.operator;
