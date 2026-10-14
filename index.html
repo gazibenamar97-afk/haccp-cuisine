@@ -4939,9 +4939,15 @@ function vPlan(){
   const table=traps.length?'<div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Code</th><th>Type</th><th>Plan</th><th>Local</th><th>Relevé tous les</th><th>Dernier relevé</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="note">Aucun piège enregistré.</p>';
   let form='<p class="note">Seuls les responsables peuvent modifier le plan des pièges.</p>';
   if(mg){
-    form=pl?'<div class="panel"><h2>Ajouter un piège ou dispositif</h2><div class="row"><div><label>Plan (lieu)</label><select id="pst-t-plan" onchange="mtPest.planChanged()">'+p.plans.map(x=>'<option value="'+x.id+'"'+(x.id===pl.id?' selected':'')+'>'+e(x.name)+'</option>').join('')+'</select></div><div><label>Local</label><select id="pst-t-loc" onchange="mtPest.locChanged()">'+localOpts(pl.id)+'</select><input id="pst-t-loc2" placeholder="Nom du local" style="display:none;margin-top:8px"></div></div><div class="row"><div><label>Type</label><select id="pst-t-type" onchange="mtPest.typeChanged()">'+optList(TRAP_TYPES,TRAP_TYPES[0])+'</select></div><div><label>Code</label><input id="pst-t-code" value="'+e(guessCode(TRAP_TYPES[0]))+'"></div><div><label>Relevé tous les (jours)</label><input id="pst-t-freq" type="number" min="1" max="365" value="7"></div></div><button class="btn primary" onclick="mtPest.addTrap()">Ajouter le piège</button><p class="note">Ensuite, utilisez « Placer » dans le registre, ou dessinez-le directement sur le plan.</p></div>':'<div class="panel"><p class="note">Créez d’abord un plan pour pouvoir ajouter des pièges.</p></div>';
+    form='';
   }
-  return '<div class="panel"><h2>Plans des locaux</h2><div class="mt-pest-chips">'+chips+'</div>'+plan+'</div><div class="panel"><div class="mt-pest-headrow"><h2>Registre des pièges</h2><button class="btn" onclick="mtPest.printRegister()">Imprimer le registre</button></div>'+table+'</div>'+form;
+  return '<div class="panel"><div class="mt-pest-headrow"><h2>Plans des locaux</h2>'+(mg?'<button class="btn primary" onclick="mtPest.addTrapStart()">+ Ajouter un piège</button>':'')+'</div><div class="mt-pest-chips">'+chips+'</div>'+plan+'</div><div class="panel"><div class="mt-pest-headrow"><h2>Registre des pièges</h2><button class="btn" onclick="mtPest.printRegister()">Imprimer le registre</button></div>'+table+'</div>'+form;
+}
+function addTrapStart(){
+  if(!canManage()){alert('Action réservée aux responsables.');return}
+  if(!P().plans.length){newPlan();if(!P().plans.length)return}
+  const pl=curP();
+  drOpen((pl.data&&pl.data.some(x=>x.t==='room'))||pl.image?'trap':'room');
 }
 function selPlan(id){curPlan=id;placing='';render()}
 function newPlan(){
@@ -5226,11 +5232,12 @@ function drSvg(els,sel,forExport){
   });
   return o+'</svg>';
 }
-function drOpen(){
+function drOpen(tool){
+  if(typeof tool!=='string')tool='';
   if(!canManage()){alert('Action réservée aux responsables.');return}
   const p=P(),pl0=curP();
   if(!pl0){alert('Créez d’abord un plan.');return}
-  dr={planId:pl0.id,els:JSON.parse(JSON.stringify(pl0.data||[])).filter(x=>x.t!=='trap'),tool:'room',sel:-1,cur:null,hist:[],ttype:TRAP_TYPES[0],had:[]};
+  dr={planId:pl0.id,els:JSON.parse(JSON.stringify(pl0.data||[])).filter(x=>x.t!=='trap'),tool:tool||'room',sel:-1,cur:null,hist:[],ttype:TRAP_TYPES[0],had:[]};
   p.traps.forEach(t=>{if(t.active!==false&&t.planId===pl0.id&&typeof t.x==='number'){dr.els.push({t:'trap',x:Math.round(t.x/100*VW/GRID)*GRID,y:Math.round(t.y/100*VH/GRID)*GRID,code:t.code,type:t.type,trapId:t.id});dr.had.push(t.id)}});
   const ov=document.createElement('div');ov.id='pst-draw';ov.className='mt-pest-draw';
   ov.innerHTML='<div class="mt-pest-draw-box"><div class="mt-pest-draw-bar"><b>Dessiner : '+e(pl0.name)+'</b><span id="pst-dr-tools"></span></div><div id="pst-dr-hint" class="note"></div><div class="mt-pest-draw-canvas" id="pst-dr-canvas"></div><div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.drSave()">Enregistrer le plan</button><button class="btn" onclick="mtPest.drClose()">Annuler</button></div></div>';
@@ -5242,7 +5249,7 @@ function drOpen(){
 function drClose(){const o=$('pst-draw');if(o)o.remove();dr=null}
 function drTools(){
   const T=[['room','Pièce'],['wall','Mur'],['door','Porte'],['text','Texte'],['trap','Piège'],['erase','Gomme']];
-  const hints={room:'Glissez pour dessiner une pièce rectangulaire, puis donnez-lui un nom.',wall:'Glissez pour tracer un mur.',door:'Touchez pour placer une porte.',trap:'Choisissez le type de piège, puis touchez le plan : le piège est ajouté au registre.',text:'Touchez pour ajouter un texte.',erase:'Touchez un élément pour le supprimer.'};
+  const hints={room:'Glissez pour dessiner une pièce rectangulaire, puis donnez-lui un nom.',wall:'Glissez pour tracer un mur.',door:'Touchez pour placer une porte.',trap:'Choisissez le type de piège, puis touchez le plan à l’endroit voulu (autant de fois que nécessaire), puis enregistrez : les pièges sont ajoutés au registre.',text:'Touchez pour ajouter un texte.',erase:'Touchez un élément pour le supprimer.'};
   $('pst-dr-tools').innerHTML=T.map(t=>'<button type="button" class="mt-pest-chip'+(dr.tool===t[0]?' active':'')+'" onclick="mtPest.drTool(\''+t[0]+'\')">'+t[1]+'</button>').join('')+(dr.tool==='trap'?'<select id="pst-dr-ttype" onchange="mtPest.drType(this.value)">'+optList(TRAP_TYPES,dr.ttype)+'</select>':'')+'<button type="button" class="mt-pest-chip" onclick="mtPest.drUndo()">Annuler le dernier</button>';
   $('pst-dr-hint').textContent=hints[dr.tool];
 }
@@ -5312,7 +5319,7 @@ function drSave(){
   im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
 }
 
-window.mtPest={open:open,draw:drOpen,selPlan:selPlan,newPlan:newPlan,renamePlan:renamePlan,planChanged:planChanged,locChanged:locChanged,drType:drType,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
+window.mtPest={open:open,draw:drOpen,addTrapStart:addTrapStart,selPlan:selPlan,newPlan:newPlan,renamePlan:renamePlan,planChanged:planChanged,locChanged:locChanged,drType:drType,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
 window.mtPestOpen=open;
 })();
 
