@@ -6199,7 +6199,177 @@ window.mtTrain={go:go,openStaff:openStaff,newStaff:function(){newStaff()},saveSt
   newCat:newCat,openCat:openCat,saveCat:saveCat,removeCat:removeCat,reqChange:reqChange,addAllStd:addAllStd,
   printRegister:printRegister,printMatrix:printMatrix,printStaff:printStaff,printSess:printSess,
   filter:function(k){fSt=k;render()},fsess:function(k){fSess=k;render()},search:function(s){q=s;render();const i=$('tr-q');if(i){i.focus();i.setSelectionRange(s.length,s.length)}}};
+window.mtTrainAlerts=function(){const mg=canManage(),list=mg?activeStaff():myStaff().filter(x=>x.active!==false),g=gaps(list);return {late:g.filter(x=>x.r.k==='late').length,none:g.filter(x=>x.r.k==='none').length,soon:g.filter(x=>x.r.k==='soon').length}};
 window.mtTrainOpen=open;
+})();
+
+</script>
+<script id="mt-notify-module">
+/* Notifications : centre d'alertes (cloche), bandeau à l'ouverture et notifications du téléphone tant que l'application est ouverte.
+   Aucune donnée envoyée à un serveur : les alertes sont calculées sur les données déjà chargées. Réglages enregistrés sur l'appareil. */
+(function(){
+'use strict';
+const CATS=[['dlc','Produits : DLC dépassée ou proche'],['temp','Températures non conformes et relevé du jour'],['train','Formations et habilitations'],['docs','Documents à réviser'],['pest','Visite du prestataire nuisibles']];
+const KEY='mtNotifPrefs',SEEN='mtNotifSeen',SENT='mtNotifSent';
+let panel=null,bell=null,toast=null,timer=null,lastSig='';
+function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(_){return d}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}
+function e(x){return typeof esc==='function'?esc(x):String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function days(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)}
+function prof(){return (typeof currentUserProfile!=='undefined'&&currentUserProfile)||null}
+function canManage(){const p=prof();return !!p&&['admin','responsable','haccp'].includes(p.role)}
+function prefs(){const p=ls(KEY,{});CATS.forEach(c=>{if(typeof p[c[0]]!=='boolean')p[c[0]]=true});return p}
+function ready(){return typeof S!=='undefined'&&S&&prof()&&typeof SITE_ID!=='undefined'&&SITE_ID!=='main'&&!document.body.classList.contains('on-login')}
+
+function compute(){
+  const out=[],t=today(),P=prefs(),now=new Date();now.setHours(0,0,0,0);
+  if(P.dlc){
+    let exp=0,td=0,soon=0;
+    (Array.isArray(S.stock)?S.stock:[]).forEach(x=>{if(!x||!x.dlc)return;const n=Math.ceil((new Date(x.dlc+'T00:00:00')-now)/86400000);if(n<0)exp++;else if(n===0)td++;else if(n<=3)soon++});
+    if(exp)out.push({id:'dlc-exp-'+exp,cat:'dlc',lvl:'bad',title:exp+' produit(s) avec DLC dépassée',detail:'À retirer ou à traiter immédiatement.',go:'stock()'});
+    if(td)out.push({id:'dlc-td-'+td,cat:'dlc',lvl:'bad',title:td+' produit(s) à consommer aujourd’hui',detail:'DLC atteinte aujourd’hui.',go:'stock()'});
+    if(soon)out.push({id:'dlc-soon-'+soon,cat:'dlc',lvl:'warn',title:soon+' produit(s) avec DLC dans 3 jours ou moins',detail:'Prévoir leur utilisation.',go:'stock()'});
+  }
+  if(P.temp){
+    const temps=Array.isArray(S.temps)?S.temps:[];
+    const recent=temps.filter(x=>x&&x.ok===false&&x.createdAt&&(Date.now()-new Date(x.createdAt).getTime())<24*3600*1000);
+    if(recent.length)out.push({id:'temp-nc-'+recent.length+'-'+(recent[0].id||''),cat:'temp',lvl:'bad',title:recent.length+' température(s) non conforme(s) ces dernières 24 h',detail:recent.slice(0,2).map(x=>x.equipment+' : '+x.value+' °C').join(' · '),go:'temperatures()'});
+    const eq=(Array.isArray(S.equipment)?S.equipment:[]).filter(x=>x&&!x.outOfService);
+    const doneToday=temps.some(x=>x&&x.createdAt&&String(x.createdAt).slice(0,10)===t);
+    if(eq.length&&!doneToday&&now.getTime()<=Date.now()&&new Date().getHours()>=11)out.push({id:'temp-today-'+t,cat:'temp',lvl:'warn',title:'Aucun relevé de température aujourd’hui',detail:'Pensez à relever vos équipements.',go:'temperatures()'});
+  }
+  if(P.train&&typeof window.mtTrainAlerts==='function'){
+    try{const a=window.mtTrainAlerts();
+      if(a.late+a.none)out.push({id:'train-bad-'+a.late+'-'+a.none,cat:'train',lvl:'bad',title:(a.late+a.none)+' formation(s) ou habilitation(s) expirée(s) ou manquante(s)',detail:'Ouvrez Formation du personnel pour planifier une session.',go:'mtTrainOpen()'});
+      if(a.soon)out.push({id:'train-soon-'+a.soon,cat:'train',lvl:'warn',title:a.soon+' échéance(s) de formation dans 30 jours',detail:'À renouveler prochainement.',go:'mtTrainOpen()'});
+    }catch(_){}
+  }
+  if(P.docs&&canManage()){
+    const items=(S.docs&&Array.isArray(S.docs.items))?S.docs.items.filter(d=>d.status==='En vigueur'&&d.nextReview):[];
+    const late=items.filter(d=>days(t,d.nextReview)<0).length,soon=items.filter(d=>{const n=days(t,d.nextReview);return n>=0&&n<=30}).length;
+    if(late)out.push({id:'docs-late-'+late,cat:'docs',lvl:'bad',title:late+' document(s) à réviser en retard',detail:'Ouvrez Gestion documentaire.',go:'mtDocsOpen()'});
+    if(soon)out.push({id:'docs-soon-'+soon,cat:'docs',lvl:'warn',title:soon+' document(s) à réviser sous 30 jours',detail:'Révision à prévoir.',go:'mtDocsOpen()'});
+  }
+  if(P.pest&&canManage()&&S.pest&&S.pest.provider&&S.pest.provider.nextVisit){
+    const n=days(t,S.pest.provider.nextVisit);
+    if(n<0)out.push({id:'pest-late-'+S.pest.provider.nextVisit,cat:'pest',lvl:'bad',title:'Visite du prestataire nuisibles en retard',detail:'Prévue le '+new Date(S.pest.provider.nextVisit+'T12:00:00').toLocaleDateString('fr-FR')+'.',go:'mtPestOpen()'});
+    else if(n<=7)out.push({id:'pest-soon-'+S.pest.provider.nextVisit,cat:'pest',lvl:'warn',title:n===0?'Visite du prestataire nuisibles aujourd’hui':'Visite du prestataire nuisibles dans '+n+' jour(s)',detail:'Préparez le registre et l’accès aux locaux.',go:'mtPestOpen()'});
+  }
+  out.sort((a,b)=>(a.lvl===b.lvl?0:a.lvl==='bad'?-1:1));
+  return out;
+}
+function seenMap(){const m=ls(SEEN,{});return m.day===today()?m:{day:today(),ids:{}}}
+function unseen(list){const m=seenMap();return list.filter(a=>!(m.ids||{})[a.id])}
+
+function css(){
+  if(document.getElementById('mt-notify-css'))return;
+  const s=document.createElement('style');s.id='mt-notify-css';
+  s.textContent='.mtn-bell{position:fixed;z-index:99978;width:50px;height:50px;border-radius:50%;border:0;background:#0f6b45;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;right:22px;bottom:22px;zoom:1}'
+  +'@media(max-width:850px){.mtn-bell{right:auto;left:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px))}}'
+  +'.mtn-bell svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}'
+  +'.mtn-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#d32f2f;color:#fff;font:700 12px/20px system-ui,Arial,sans-serif;text-align:center;border:2px solid #fff;box-sizing:border-box}'
+  +'.mtn-badge.warn{background:#e08a00}.mtn-badge[hidden]{display:none}'
+  +'.mtn-overlay{position:fixed;inset:0;z-index:99990;background:rgba(10,30,22,.5);display:flex;align-items:flex-end;justify-content:center;zoom:1}'
+  +'.mtn-sheet{background:#fff;width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));font-family:system-ui,Segoe UI,Arial,sans-serif;color:#17251f;box-sizing:border-box}'
+  +'@media(min-width:851px){.mtn-overlay{align-items:center}.mtn-sheet{border-radius:16px}}'
+  +'.mtn-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.mtn-head h2{margin:0;font-size:19px;color:#0d4a36}'
+  +'.mtn-x{border:0;background:#eef3f0;border-radius:50%;width:34px;height:34px;font-size:20px;cursor:pointer}'
+  +'.mtn-item{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:0;border-left:5px solid #e08a00;background:#fff7e6;border-radius:10px;padding:11px 12px;margin:8px 0;font:inherit;color:inherit;cursor:pointer}'
+  +'.mtn-item.bad{border-color:#c62828;background:#fdecec}.mtn-item b{display:block;font-size:15px}.mtn-item span{font-size:13px;color:#4a5c53}.mtn-item.seen{opacity:.6}'
+  +'.mtn-ok{padding:14px;background:#e8f6ee;border-left:5px solid #1b8a4b;border-radius:10px;margin:8px 0;font-weight:600}'
+  +'.mtn-set{border-top:1px solid #dfe8e2;margin-top:14px;padding-top:10px}.mtn-set h3{font-size:15px;margin:0 0 6px}'
+  +'.mtn-set label{display:flex;gap:10px;align-items:center;padding:7px 0;font-size:14px}.mtn-set input{width:20px;height:20px}'
+  +'.mtn-btn{border:0;border-radius:10px;padding:10px 14px;background:#0f6b45;color:#fff;font:600 14px system-ui,Arial,sans-serif;cursor:pointer;margin:4px 6px 4px 0}.mtn-btn.alt{background:#eef3f0;color:#17594a}'
+  +'.mtn-note{font-size:12.5px;color:#5a6b62;margin:6px 0}'
+  +'.mtn-toast{position:fixed;z-index:99995;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));max-width:520px;margin:0 auto;background:#143d30;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 8px 26px rgba(0,0,0,.35);display:flex;gap:10px;align-items:center;font:14px system-ui,Arial,sans-serif;zoom:1}'
+  +'.mtn-toast b{display:block;font-size:15px}.mtn-toast button{border:0;border-radius:9px;padding:8px 12px;font:600 13px system-ui,Arial,sans-serif;cursor:pointer;background:#fff;color:#0d4a36}.mtn-toast .x{background:transparent;color:#fff;font-size:20px;padding:2px 8px}';
+  document.head.appendChild(s);
+}
+function ensureBell(){
+  css();
+  if(!bell){
+    bell=document.createElement('button');bell.type='button';bell.className='mtn-bell';bell.setAttribute('aria-label','Notifications');
+    bell.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0"/></svg><span class="mtn-badge" hidden></span>';
+    bell.onclick=openPanel;document.documentElement.appendChild(bell);
+  }
+}
+function updateBell(list){
+  if(!bell)return;
+  const u=unseen(list),b=bell.querySelector('.mtn-badge');
+  b.hidden=!u.length;b.textContent=u.length;b.className='mtn-badge'+(u.some(a=>a.lvl==='bad')?'':' warn');
+}
+function hideBell(){if(bell){bell.style.display='none'}if(toast){toast.remove();toast=null}}
+function showBell(){if(bell)bell.style.display=''}
+
+function permState(){return ('Notification' in window)?Notification.permission:'unsupported'}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
+function standalone(){return window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}
+function sysNotify(a){
+  if(permState()!=='granted')return;
+  const opts={body:a.detail||'',icon:'icon.svg',badge:'icon.svg',tag:'mt-'+a.cat,renotify:false,data:{go:a.go}};
+  try{
+    if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(r=>{if(r&&r.showNotification)r.showNotification(a.title,opts);else new Notification(a.title,opts)}).catch(()=>{try{new Notification(a.title,opts)}catch(_){}});
+    }else new Notification(a.title,opts);
+  }catch(_){}
+}
+function showToast(list){
+  if(toast){toast.remove();toast=null}
+  const bad=list.filter(a=>a.lvl==='bad').length;
+  toast=document.createElement('div');toast.className='mtn-toast';
+  toast.innerHTML='<div style="flex:1"><b>'+list.length+' alerte(s) à traiter</b>'+e(list[0].title)+(list.length>1?' …':'')+'</div><button type="button" class="v">Voir</button><button type="button" class="x" aria-label="Fermer">×</button>';
+  toast.querySelector('.v').onclick=function(){toast.remove();toast=null;openPanel()};
+  toast.querySelector('.x').onclick=function(){toast.remove();toast=null};
+  document.documentElement.appendChild(toast);
+  setTimeout(function(){if(toast){toast.remove();toast=null}},9000);
+}
+function check(){
+  if(!ready()){hideBell();return}
+  ensureBell();showBell();
+  const list=compute(),u=unseen(list);
+  updateBell(list);
+  const sent=ls(SENT,{});const day=today();const ids=sent.day===day?sent.ids||[]:[];
+  const fresh=u.filter(a=>ids.indexOf(a.id)<0);
+  if(fresh.length){
+    showToast(u);
+    fresh.forEach(sysNotify);
+    ss(SENT,{day:day,ids:ids.concat(fresh.map(a=>a.id))});
+  }
+  const sig=list.map(a=>a.id).join('|');
+  if(panel&&sig!==lastSig){lastSig=sig;renderPanel()}
+}
+function closePanel(){if(panel){panel.remove();panel=null}}
+function openPanel(){
+  if(panel)return;
+  if(toast){toast.remove();toast=null}
+  panel=document.createElement('div');panel.className='mtn-overlay';
+  panel.onclick=function(ev){if(ev.target===panel)closePanel()};
+  document.documentElement.appendChild(panel);renderPanel();
+}
+function renderPanel(){
+  if(!panel)return;
+  const list=compute(),seen=seenMap(),P=prefs();
+  const items=list.map((a,i)=>'<button type="button" class="mtn-item '+a.lvl+((seen.ids||{})[a.id]?' seen':'')+'" data-i="'+i+'"><div><b>'+e(a.title)+'</b><span>'+e(a.detail||'')+'</span></div></button>').join('')||'<div class="mtn-ok">Aucune alerte. Tout est à jour.</div>';
+  const ps=permState();
+  let sys='';
+  if(ps==='unsupported')sys='<p class="mtn-note">'+(isIOS()&&!standalone()?'Sur iPhone, ajoutez d’abord l’application à l’écran d’accueil (Partager puis « Sur l’écran d’accueil »), ouvrez-la depuis l’icône, puis activez les notifications ici.':'Les notifications du téléphone ne sont pas disponibles sur ce navigateur. Les alertes restent visibles ici.')+'</p>';
+  else if(ps==='granted')sys='<p class="mtn-note">Notifications du téléphone activées (tant que l’application est ouverte).</p><button type="button" class="mtn-btn alt" id="mtn-test">Envoyer un test</button>';
+  else if(ps==='denied')sys='<p class="mtn-note">Notifications bloquées dans les réglages du téléphone ou du navigateur. Autorisez-les pour ce site puis revenez ici.</p>';
+  else sys='<button type="button" class="mtn-btn" id="mtn-perm">Activer les notifications du téléphone</button><p class="mtn-note">'+(isIOS()&&!standalone()?'Sur iPhone, cela ne fonctionne que si l’application est ajoutée à l’écran d’accueil (iOS 16.4 ou plus).':'Une fenêtre du téléphone va vous demander l’autorisation.')+'</p>';
+  const checks=CATS.map(c=>'<label><input type="checkbox" data-c="'+c[0]+'"'+(P[c[0]]?' checked':'')+'> '+e(c[1])+'</label>').join('');
+  panel.innerHTML='<div class="mtn-sheet" role="dialog" aria-label="Notifications"><div class="mtn-head"><h2>Notifications</h2><button type="button" class="mtn-x" aria-label="Fermer">×</button></div>'+items+(list.length?'<button type="button" class="mtn-btn alt" id="mtn-seen">Marquer tout comme vu</button>':'')
+   +'<div class="mtn-set"><h3>Téléphone</h3>'+sys+'<h3 style="margin-top:12px">Alertes souhaitées</h3>'+checks+'<p class="mtn-note">Ces réglages sont enregistrés sur cet appareil. Les alertes apparaissent quand l’application est ouverte.</p></div></div>';
+  panel.querySelector('.mtn-x').onclick=closePanel;
+  panel.querySelectorAll('.mtn-item').forEach(function(b){b.onclick=function(){const a=list[+b.dataset.i];if(!a)return;const m=seenMap();m.ids=m.ids||{};m.ids[a.id]=1;ss(SEEN,m);closePanel();try{(new Function(a.go))()}catch(_){}check()}});
+  const sn=panel.querySelector('#mtn-seen');if(sn)sn.onclick=function(){const m=seenMap();m.ids=m.ids||{};list.forEach(a=>{m.ids[a.id]=1});ss(SEEN,m);renderPanel();updateBell(list)};
+  const pm=panel.querySelector('#mtn-perm');if(pm)pm.onclick=function(){try{const r=Notification.requestPermission(function(){renderPanel();check()});if(r&&r.then)r.then(function(){renderPanel();check()})}catch(_){renderPanel()}};
+  const ts=panel.querySelector('#mtn-test');if(ts)ts.onclick=function(){sysNotify({cat:'test',title:'Notifications activées',detail:'Vous recevrez ici les alertes de M&T HACCP.',go:''})};
+  panel.querySelectorAll('input[data-c]').forEach(function(c){c.onchange=function(){const p=prefs();p[c.dataset.c]=c.checked;ss(KEY,p);renderPanel();check()}});
+}
+window.mtNotify={open:openPanel,check:check,compute:compute};
+function start(){check();if(!timer)timer=setInterval(check,5000);document.addEventListener('visibilitychange',function(){if(!document.hidden)check()});window.addEventListener('focus',check)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 
 </script>

@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v188-formation-personnel-20261014';
+const CACHE='mt-haccp-shell-v189-notifications-20261014';
 const CORE=['./index.html','./audits-advanced.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
@@ -34,5 +34,13 @@ self.addEventListener('fetch',event=>{
    if(response.ok){const cache=await caches.open(CACHE);await cache.put(req,response.clone())}
    return response;
   }catch(error){return (await caches.match(req))||Response.error()}
+ })());
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ event.waitUntil((async()=>{
+  const all=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  for(const c of all){if('focus' in c){await c.focus();return}}
+  if(self.clients.openWindow)await self.clients.openWindow('./');
  })());
 });
