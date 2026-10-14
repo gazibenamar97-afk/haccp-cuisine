@@ -204,4 +204,9 @@ $('create').onclick=async()=>{
 };
 $('reload').onclick=()=>load().catch(e=>notify('Actualisation impossible : '+e.message,true));
 request('context').then(c=>{context=c;notify('Connecté à '+c.name+' · Données de cet établissement uniquement.');return load()}).catch(e=>notify('Impossible de charger les actions : '+e.message,true));
-</script></body></html>
+</script><script>
+/* Hauteur automatique : le parent ajuste l'iframe, plus de double défilement */
+(function(){var last=0;function send(){var h=Math.ceil(document.documentElement.getBoundingClientRect().height);if(Math.abs(h-last)<2)return;last=h;try{window.parent.postMessage({mtCorrectivesHeight:h},location.origin)}catch(_){}}
+if(window.ResizeObserver)new ResizeObserver(send).observe(document.body);window.addEventListener('load',send);setInterval(send,1000);send();})();
+</script>
+</body></html>
