@@ -4434,6 +4434,10 @@ window.addEventListener('message',async e=>{
    check.onchange=()=>{status.disabled=!check.checked};text.onclick=()=>{check.checked=!check.checked;check.onchange()};
    row.append(check,text,status);presetBox.append(row);presetRows.push({label,check,status});
   });
+  const selectAllTemp=document.createElement('button');selectAllTemp.type='button';selectAllTemp.className='secondary';selectAllTemp.style='display:block;margin:8px 0 10px auto;padding:7px 12px;font-size:13px';
+  const syncAllTemp=()=>{selectAllTemp.textContent=presetRows.every(r=>r.check.checked)?'Tout désélectionner':'Sélectionner tous'};
+  selectAllTemp.onclick=()=>{const checked=!presetRows.every(r=>r.check.checked);presetRows.forEach(r=>{r.check.checked=checked;r.status.disabled=!checked});syncAllTemp()};
+  presetRows.forEach(r=>r.check.addEventListener('change',syncAllTemp));syncAllTemp();hint.insertAdjacentElement('afterend',selectAllTemp);
   const immediateLabel=document.createElement('label');immediateLabel.textContent='Observations libres / produits concernés';
   const immediate=document.createElement('textarea');immediate.rows=3;immediate.maxLength=900;immediate.value=record.note||'';
   const personLabel=document.createElement('label');personLabel.textContent='Responsable désigné';
