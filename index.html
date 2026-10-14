@@ -2577,6 +2577,41 @@ function mtSubState(sub){
 }
 function mtSubLabel(state){return ({actif:'Actif',en_attente:'En attente',suspendu:'Suspendu',expire:'Expiré',non_attribue:'Non attribué'})[state]||'Non attribué'}
 function mtSubMoney(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:2})+' DT'}
+/* Échéance inclusive : dernier jour d'un mois ou de douze mois calendaires.
+   L'ajout de mois est plafonné au dernier jour du mois cible (ex. 31 janvier). */
+function mtSubCalculatedEnd(start,period){
+ const m=String(start||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ if(!m||!['mensuel','annuel'].includes(period))return '';
+ const y=Number(m[1]),mo=Number(m[2]),day=Number(m[3]);
+ const valid=new Date(Date.UTC(y,mo-1,day));
+ if(valid.getUTCFullYear()!==y||valid.getUTCMonth()!==mo-1||valid.getUTCDate()!==day)return '';
+ const months=period==='annuel'?12:1;
+ const nextMonth=new Date(Date.UTC(y,mo-1+months,1));
+ const maxDay=new Date(Date.UTC(nextMonth.getUTCFullYear(),nextMonth.getUTCMonth()+1,0)).getUTCDate();
+ const nextStart=new Date(Date.UTC(nextMonth.getUTCFullYear(),nextMonth.getUTCMonth(),Math.min(day,maxDay)));
+ nextStart.setUTCDate(nextStart.getUTCDate()-1);
+ return nextStart.toISOString().slice(0,10);
+}
+function mtSubscriptionRecompute(){
+ const period=document.getElementById('mtSubBillingPeriod')?.value||'mensuel';
+ const start=document.getElementById('mtSubStart')?.value||'';
+ const end=mtSubCalculatedEnd(start,period);
+ const endInput=document.getElementById('mtSubEnd');if(endInput)endInput.value=end;
+ const price=Number(document.getElementById('mtSubPrice')?.value||0);
+ const total=document.getElementById('mtSubTotal');
+ if(total)total.textContent=Number.isFinite(price)&&price>=0
+  ?(period==='annuel'?'Montant annuel (12 mensualités) : ':'Montant mensuel : ')+mtSubMoney(Math.round(price*(period==='annuel'?12:1)*100)/100)
+  :'Indiquez un tarif mensuel valide.';
+}
+function mtSubscriptionSetPeriod(period){
+ if(!['mensuel','annuel'].includes(period))return;
+ const control=document.getElementById('mtSubBillingPeriod');if(!control)return;
+ control.value=period;
+ const month=document.getElementById('mtSubPeriodMonth'),year=document.getElementById('mtSubPeriodYear');
+ if(month){month.classList.toggle('primary',period==='mensuel');month.setAttribute('aria-pressed',String(period==='mensuel'))}
+ if(year){year.classList.toggle('primary',period==='annuel');year.setAttribute('aria-pressed',String(period==='annuel'))}
+ mtSubscriptionRecompute();
+}
 async function mtSubscriptionsOpen(preselect=''){
  if(!mtSubAdmin()){home();return}
  CURRENT_VIEW='subscriptions';document.body.classList.remove('on-home','mt-premium-active','on-login');
@@ -2596,13 +2631,13 @@ async function mtSubscriptionsOpen(preselect=''){
   const monthly=items.reduce((sum,x)=>mtSubState(x.subscription)==='actif'?sum+Number(x.subscription?.monthlyPriceTnd||0):sum,0);
   const rows=items.map(x=>{
    const sub=x.subscription||{},state=mtSubState(sub),limit=sub.maxUsers||x.maxUsers||null;
-   return '<tr data-sub-status="'+state+'"><td><b>'+esc(x.name||x.id)+'</b><br><small>'+esc(x.id)+'</small></td><td>'+esc(MT_SUB_PLANS[sub.plan]?.label||'—')+'</td><td>'+esc(mtSubLabel(state))+'</td><td>'+((counts[x.id]===undefined)?(countError?'—':0):counts[x.id])+' / '+(limit||'—')+'</td><td>'+esc(sub.endDate||'—')+'</td><td>'+mtSubMoney(sub.monthlyPriceTnd)+'</td><td><button class="btn" style="width:auto;padding:8px 12px" onclick="mtSubscriptionSelect(\''+encodeURIComponent(x.id)+'\')">Gérer</button></td></tr>';
+   return '<tr data-sub-status="'+state+'"><td><b>'+esc(x.name||x.id)+'</b><br><small>'+esc(x.id)+'</small></td><td>'+esc(MT_SUB_PLANS[sub.plan]?.label||'—')+'</td><td>'+esc(mtSubLabel(state))+'</td><td>'+((counts[x.id]===undefined)?(countError?'—':0):counts[x.id])+' / '+(limit||'—')+'</td><td>'+esc(sub.endDate||'—')+'</td><td>'+esc(sub.plan?(sub.billingPeriod==='annuel'?'Annuel (12 mois)':'Mensuel (1 mois)'):'—')+'</td><td>'+mtSubMoney(sub.billedPriceTnd??(Number(sub.monthlyPriceTnd||0)*(sub.billingPeriod==='annuel'?12:1)))+'</td><td><button class="btn" style="width:auto;padding:8px 12px" onclick="mtSubscriptionSelect(\''+encodeURIComponent(x.id)+'\')">Gérer</button></td></tr>';
   }).join('');
   const box=document.getElementById('mtSubDashboard');if(!box)return;
-  box.innerHTML='<div class="cards" style="margin-bottom:14px"><div class="metric"><span>Abonnements actifs</span><b>'+active+'</b></div><div class="metric"><span>En attente</span><b>'+waiting+'</b></div><div class="metric"><span>Expirés</span><b>'+expired+'</b></div></div><p class="note"><b>Montant mensuel théorique des abonnements actifs : '+mtSubMoney(monthly)+'</b> — suivi commercial, non connecté à une passerelle de paiement.</p>'+
+  box.innerHTML='<div class="cards" style="margin-bottom:14px"><div class="metric"><span>Abonnements actifs</span><b>'+active+'</b></div><div class="metric"><span>En attente</span><b>'+waiting+'</b></div><div class="metric"><span>Expirés</span><b>'+expired+'</b></div></div><p class="note"><b>Équivalent mensuel théorique des abonnements actifs : '+mtSubMoney(monthly)+'</b> — suivi commercial, non connecté à une passerelle de paiement.</p>'+
    (countError?'<p style="color:#a12622">'+esc(countError)+'</p>':'')+
    '<label for="mtSubFilter">Afficher les abonnements</label><select id="mtSubFilter" onchange="mtSubscriptionsFilter(this.value)"><option value="tous">Tous les établissements</option><option value="actif">Actifs</option><option value="en_attente">En attente</option><option value="suspendu">Suspendus</option><option value="expire">Expirés</option><option value="non_attribue">Sans forfait</option></select>'+
-   '<div style="overflow-x:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse"><thead><tr><th>Établissement</th><th>Forfait</th><th>Statut</th><th>Utilisateurs</th><th>Échéance</th><th>Mensualité</th><th>Gestion</th></tr></thead><tbody id="mtSubRows">'+(rows||'<tr><td colspan="7">Aucun établissement.</td></tr>')+'</tbody></table></div>';
+   '<div style="overflow-x:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse"><thead><tr><th>Établissement</th><th>Forfait</th><th>Statut</th><th>Utilisateurs</th><th>Échéance</th><th>Durée</th><th>Montant forfait</th><th>Gestion</th></tr></thead><tbody id="mtSubRows">'+(rows||'<tr><td colspan="8">Aucun établissement.</td></tr>')+'</tbody></table></div>';
   const pick=preselect||items[0]?.id||'';if(pick)mtSubscriptionSelect(encodeURIComponent(pick));else document.getElementById('mtSubEditor').textContent='Ajoutez d’abord un établissement depuis la gestion des établissements.';
  }catch(e){console.error('Subscriptions load',e);const box=document.getElementById('mtSubDashboard');if(box)box.textContent='Chargement impossible : '+(e.message||e)}
 }
@@ -2615,6 +2650,7 @@ function mtSubscriptionPlanChanged(){
  const limit=document.getElementById('mtSubLimit'),price=document.getElementById('mtSubPrice');
  if(limit){limit.value=p.users;limit.readOnly=plan!=='groupe'}
  if(price)price.value=p.price;
+ mtSubscriptionRecompute();
 }
 function mtSubscriptionSelect(encoded){
  if(!mtSubAdmin())return;
@@ -2624,17 +2660,21 @@ function mtSubscriptionSelect(encoded){
  const options=Object.keys(MT_SUB_PLANS).map(k=>'<option value="'+k+'"'+selected(plan,k)+'>'+esc(MT_SUB_PLANS[k].label)+'</option>').join('');
  const siteOptions=mtSubData.items.slice().sort((a,b)=>String(a.name||a.id).localeCompare(String(b.name||b.id),'fr',{sensitivity:'base'}))
   .map(site=>'<option value="'+esc(site.id)+'"'+selected(id,site.id)+'>'+esc(site.name||site.id)+'</option>').join('');
- const start=sub.startDate||mtSubToday();const expire=sub.endDate||'';
+ const start=mtSubState(sub)==='expire'?mtSubToday():(sub.startDate||mtSubToday());const period=sub.billingPeriod==='annuel'?'annuel':'mensuel';
  box.innerHTML='<h2>Activer ou modifier un forfait</h2>'+ 
  '<label for="mtSubSite">Choisir un établissement</label><select id="mtSubSite" onchange="mtSubscriptionSelect(encodeURIComponent(this.value))">'+siteOptions+'</select>'+ 
  '<p class="note">Établissement sélectionné : <b>'+esc(x.name||x.id)+'</b> · Statut actuel : <b>'+esc(mtSubLabel(mtSubState(sub)))+'</b> · '+count+' compte(s) actif(s). Les comptes existants et les données HACCP sont conservés.</p>'+
- '<label>Forfait</label><select id="mtSubPlan" onchange="mtSubscriptionPlanChanged()">'+options+'</select>'+
- '<div class="row"><div><label>Nombre maximal d’utilisateurs actifs</label><input type="number" min="1" max="10000" id="mtSubLimit" value="'+esc(sub.maxUsers||info.users)+'"'+(plan!=='groupe'?' readonly':'')+'></div><div><label>Tarif mensuel (DT)</label><input type="number" min="0" step="0.01" id="mtSubPrice" value="'+esc(sub.monthlyPriceTnd??info.price)+'"></div></div>'+
- '<div class="row"><div><label>Date de début</label><input type="date" id="mtSubStart" value="'+esc(start)+'"></div><div><label>Date d’échéance (facultative)</label><input type="date" id="mtSubEnd" value="'+esc(expire)+'"></div></div>'+
+ '<label>Forfait</label><select id="mtSubPlan" onchange="mtSubscriptionPlanChanged()">'+options+'</select>'+ 
+ '<label style="margin-top:15px">Durée du forfait</label><input type="hidden" id="mtSubBillingPeriod" value="'+period+'">'+ 
+ '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px"><button type="button" id="mtSubPeriodMonth" class="btn" style="flex:1 1 155px;text-align:center" onclick="mtSubscriptionSetPeriod(\'mensuel\')">Mensuel — 1 mois</button><button type="button" id="mtSubPeriodYear" class="btn" style="flex:1 1 155px;text-align:center" onclick="mtSubscriptionSetPeriod(\'annuel\')">Annuel — 12 mois</button></div>'+
+ '<div class="row"><div><label>Nombre maximal d’utilisateurs actifs</label><input type="number" min="1" max="10000" id="mtSubLimit" value="'+esc(sub.maxUsers||info.users)+'"'+(plan!=='groupe'?' readonly':'')+'></div><div><label>Tarif mensuel de référence (DT)</label><input type="number" min="0" step="0.01" id="mtSubPrice" oninput="mtSubscriptionRecompute()" value="'+esc(sub.monthlyPriceTnd??info.price)+'"></div></div>'+
+ '<div class="row"><div><label>Date de début</label><input type="date" id="mtSubStart" onchange="mtSubscriptionRecompute()" value="'+esc(start)+'"></div><div><label>Date d’échéance — automatique</label><input type="date" id="mtSubEnd" readonly aria-readonly="true" title="Calculée automatiquement selon la date de début et la durée du forfait"></div></div>'+ 
+ '<div id="mtSubTotal" class="result" style="font-size:16px;text-align:left;margin:10px 0" aria-live="polite"></div><p class="note">L’échéance correspond au dernier jour inclus dans le forfait. Le tarif annuel est calculé sur 12 mensualités, sans remise automatique.</p>'+
  '<label>Notes internes (administrateur)</label><textarea id="mtSubNotes" rows="2" placeholder="Référence de contrat, commentaire…">'+esc(sub.notes||'')+'</textarea>'+
  '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px"><button class="btn primary" onclick="mtSubscriptionSave(\'actif\',this)">Activer / renouveler</button><button class="btn" onclick="mtSubscriptionSave(\'en_attente\',this)">Mettre en attente</button><button class="btn" style="color:#a12622;border-color:#dca6a6" onclick="mtSubscriptionSave(\'suspendu\',this)">Suspendre</button></div>'+
  '<p class="note">Une suspension bloque les nouvelles créations et réactivations de comptes dans l’application. Les comptes existants restent accessibles. Les prix sont enregistrés à titre de suivi administratif ; aucun paiement n’est prélevé automatiquement.</p>'+
  '<div id="mtSubStatus" role="status" class="note" style="margin-top:12px"></div>';
+ mtSubscriptionSetPeriod(period);
 }
 async function mtSubscriptionSave(status,button){
  if(!mtSubAdmin())return;
@@ -2643,11 +2683,14 @@ async function mtSubscriptionSave(status,button){
  const spec=MT_SUB_PLANS[plan],rawMax=Number(document.getElementById('mtSubLimit')?.value);
  const maxUsers=plan==='groupe'?rawMax:spec?.users;
  const monthlyPriceTnd=Number(document.getElementById('mtSubPrice')?.value);
- const startDate=document.getElementById('mtSubStart')?.value||'',endDate=document.getElementById('mtSubEnd')?.value||'';
+ const billingPeriod=document.getElementById('mtSubBillingPeriod')?.value||'mensuel';
+ const startDate=document.getElementById('mtSubStart')?.value||'';
+ const endDate=mtSubCalculatedEnd(startDate,billingPeriod);
+ const billedPriceTnd=Math.round(monthlyPriceTnd*(billingPeriod==='annuel'?12:1)*100)/100;
  const notes=(document.getElementById('mtSubNotes')?.value||'').trim().slice(0,1000);
  const st=document.getElementById('mtSubStatus');
  const say=(message,bad=false)=>{if(st){st.textContent=message;st.style.color=bad?'#a12622':'#20543e'}};
- if(!spec||!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>10000||!Number.isFinite(monthlyPriceTnd)||monthlyPriceTnd<0||!startDate||!/^\d{4}-\d{2}-\d{2}$/.test(startDate)||endDate&&!/^\d{4}-\d{2}-\d{2}$/.test(endDate)||endDate&&endDate<startDate){say('Vérifiez le forfait, les dates, le nombre de comptes et le montant.',true);return}
+ if(!spec||!['mensuel','annuel'].includes(billingPeriod)||!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>10000||!Number.isFinite(monthlyPriceTnd)||monthlyPriceTnd<0||!endDate){say('Vérifiez le forfait, les dates, le nombre de comptes et le montant.',true);return}
  if(status==='actif'&&endDate&&endDate<mtSubToday()){say('La date d’échéance est dépassée : choisissez une date future pour activer.',true);return}
  if(maxUsers<(mtSubData.counts[id]||0)&&!confirm('Cet établissement a déjà '+mtSubData.counts[id]+' utilisateurs actifs. La nouvelle limite est '+maxUsers+' ; aucune session ne sera supprimée, mais les nouvelles créations seront bloquées. Continuer ?'))return;
  const action=status==='actif'?'activer ou renouveler':status==='suspendu'?'suspendre':'mettre en attente';
@@ -2657,22 +2700,22 @@ async function mtSubscriptionSave(status,button){
   const actor=firebase.auth().currentUser;
   if(!actor||actor.uid!==currentUserProfile.uid)throw Error('Session administrateur invalide.');
   const reg=cloudDb.collection('appState').doc('establishments'),state=cloudDb.collection('appState').doc(id);
-  const newSub={plan,status,maxUsers,monthlyPriceTnd,startDate,endDate,notes,updatedAt:new Date().toISOString(),updatedBy:actor.uid};
+  const newSub={plan,status,maxUsers,monthlyPriceTnd,billingPeriod,billedPriceTnd,startDate,endDate,notes,updatedAt:new Date().toISOString(),updatedBy:actor.uid};
   await cloudDb.runTransaction(async tx=>{
    const snap=await tx.get(reg),data=snap.data()||{},items=Array.isArray(data.items)?data.items.slice():[];
    const idx=items.findIndex(x=>x&&x.id===id);if(idx<0)throw Error('Établissement introuvable dans le registre serveur.');
    const old=items[idx].subscription||{};
-   newSub.history=[...(Array.isArray(old.history)?old.history:[]),{action:status,plan,maxUsers,monthlyPriceTnd,at:newSub.updatedAt,by:actor.uid}].slice(-50);
+   newSub.history=[...(Array.isArray(old.history)?old.history:[]),{action:status,plan,maxUsers,monthlyPriceTnd,billingPeriod,billedPriceTnd,startDate,endDate,at:newSub.updatedAt,by:actor.uid}].slice(-50);
    items[idx]={...items[idx],maxUsers,subscription:newSub};
    tx.set(reg,{items,updatedAt:newSub.updatedAt,updatedBy:actor.uid},{merge:true});
    tx.set(state,{maxUsers,subscriptionStatus:status,subscriptionExpiresAt:endDate,subscriptionPlan:plan},{merge:true});
   });
   const verify=await Promise.all([reg.get({source:'server'}),state.get({source:'server'})]);
   const saved=(verify[0].data()?.items||[]).find(x=>x.id===id);
-  if(saved?.subscription?.updatedAt!==newSub.updatedAt||verify[1].data()?.maxUsers!==maxUsers||verify[1].data()?.subscriptionStatus!==status)throw Error('Enregistrement non confirmé par Firebase.');
+  if(saved?.subscription?.updatedAt!==newSub.updatedAt||saved?.subscription?.endDate!==endDate||saved?.subscription?.billingPeriod!==billingPeriod||verify[1].data()?.maxUsers!==maxUsers||verify[1].data()?.subscriptionStatus!==status)throw Error('Enregistrement non confirmé par Firebase.');
   try{localStorage.setItem('mtEstablishmentsCache',JSON.stringify(verify[0].data().items||[]))}catch(_){}
   await mtSubscriptionsOpen(id);
-  const msg=document.getElementById('mtSubStatus');if(msg){msg.textContent='Forfait '+spec.label+' : '+mtSubLabel(status)+'. Limite '+maxUsers+' utilisateurs. Enregistrement confirmé.';msg.style.color='#20543e'}
+  const msg=document.getElementById('mtSubStatus');if(msg){msg.textContent='Forfait '+spec.label+' ('+(billingPeriod==='annuel'?'annuel':'mensuel')+') : '+mtSubLabel(status)+'. Échéance '+endDate+' · '+mtSubMoney(billedPriceTnd)+' · limite '+maxUsers+' utilisateurs. Enregistrement confirmé.';msg.style.color='#20543e'}
  }catch(e){console.error('Subscriptions update',e);say('Enregistrement impossible : '+(e.message||e),true);if(button)button.disabled=false}
 }
 function openEstablishmentSupervision(){
