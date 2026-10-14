@@ -4393,7 +4393,41 @@ window.addEventListener('message',async e=>{
   if(!cloudDb||!firebase.auth().currentUser||!currentUserProfile||currentUserProfile.site!==SITE_ID||SITE_ID==='main'||currentUserProfile.active===false)throw Error('Compte établissement non autorisé.');
   const uid=firebase.auth().currentUser.uid,actor=currentUserProfile.name||currentUserProfile.email||uid,ref=cloudDb.collection('appState').doc(SITE_ID);
   if(m.type==='context'){reply({site:SITE_ID,name:siteDisplayName||SITE_ID,uid,actor:actor,canClose:['responsable','haccp'].includes(currentUserProfile.role)});return}
-  if(m.type==='list'){const snap=await ref.get({source:'server'});reply(snap.data()?.correctiveActionsRecords||[]);return}
+  if(m.type==='list'){
+   // Reconcile pest follow-up sheets into the central corrective-action register.
+   // Each pest sheet has a stable sourceId so repeat visits never create duplicates.
+   let listed=[];
+   await cloudDb.runTransaction(async tx=>{
+    const snap=await tx.get(ref),data=snap.data()||{};
+    const records=Array.isArray(data.correctiveActionsRecords)?data.correctiveActionsRecords.slice():[];
+    const followups=Array.isArray(data.pest?.followups)?data.pest.followups:[];
+    const linked=new Set(records.filter(x=>x.source==='Lutte contre les nuisibles').map(x=>String(x.sourceId||'')));
+    let number=records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+    let additions=0;
+    for(const f of followups){
+     if(!f||!f.id||!String(f.description||f.title||'').trim()||linked.has(String(f.id)))continue;
+     const severity=String(f.severity||'Mineure').toLowerCase();
+     const status=['Ouverte','En cours','Clôturée'].includes(f.status)?f.status:'Ouverte';
+     const createdAt=f.createdAt||new Date().toISOString(),reference='AC-'+String(++number).padStart(4,'0');
+     records.push({
+      id:'pest-'+String(f.id),reference,site:SITE_ID,source:'Lutte contre les nuisibles',
+      sourceId:String(f.id),sourceReference:String(f.reference||''),createdAt,
+      severity:['mineure','majeure','critique'].includes(severity)?severity:'mineure',
+      zone:String(f.zone||'Zone non précisée').slice(0,100),
+      problem:String(f.description||f.title).slice(0,900),
+      immediate:String(f.immediate||'').slice(0,900),
+      measure:String(f.corrective||'').slice(0,900),
+      owner:String(f.owner||'').slice(0,120),deadline:String(f.due||'').slice(0,10),
+      status,actorUid:String(f.actorUid||uid),
+      events:[{at:createdAt,by:String(f.createdBy||f.operator||actor),action:'Import de la fiche nuisibles',note:'Fiche liée : '+String(f.reference||f.id)}]
+     });
+     linked.add(String(f.id));additions++;
+    }
+    if(additions)tx.set(ref,{correctiveActionsRecords:records},{merge:true});
+    listed=records;
+   });
+   reply(listed);return;
+  }
   if(m.type==='create'){
    const a=m.payload||{};
    if(!['mineure','majeure','critique'].includes(a.severity)||!a.problem||a.problem.length>900||!a.zone||!a.source||(a.severity==='critique'&&!a.immediate)||JSON.stringify(a).length>5000)throw Error('Informations manquantes ou invalides.');
