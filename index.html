@@ -2642,7 +2642,7 @@ async function mtSubscriptionSave(status,button){
  const notes=(document.getElementById('mtSubNotes')?.value||'').trim().slice(0,1000);
  const st=document.getElementById('mtSubStatus');
  const say=(message,bad=false)=>{if(st){st.textContent=message;st.style.color=bad?'#a12622':'#20543e'}};
- if(!spec||!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>10000||!Number.isFinite(monthlyPriceTnd)||monthlyPriceTnd<0||!startDate||!/^\\d{4}-\\d{2}-\\d{2}$/.test(startDate)||endDate&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(endDate)||endDate&&endDate<startDate){say('Vérifiez le forfait, les dates, le nombre de comptes et le montant.',true);return}
+ if(!spec||!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>10000||!Number.isFinite(monthlyPriceTnd)||monthlyPriceTnd<0||!startDate||!/^\d{4}-\d{2}-\d{2}$/.test(startDate)||endDate&&!/^\d{4}-\d{2}-\d{2}$/.test(endDate)||endDate&&endDate<startDate){say('Vérifiez le forfait, les dates, le nombre de comptes et le montant.',true);return}
  if(status==='actif'&&endDate&&endDate<mtSubToday()){say('La date d’échéance est dépassée : choisissez une date future pour activer.',true);return}
  if(maxUsers<(mtSubData.counts[id]||0)&&!confirm('Cet établissement a déjà '+mtSubData.counts[id]+' utilisateurs actifs. La nouvelle limite est '+maxUsers+' ; aucune session ne sera supprimée, mais les nouvelles créations seront bloquées. Continuer ?'))return;
  const action=status==='actif'?'activer ou renouveler':status==='suspendu'?'suspendre':'mettre en attente';
