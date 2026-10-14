@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v192-reset-complete-20261014';
+const CACHE='mt-haccp-shell-v193-reset-update-20261014';
 const CORE=['./index.html','./audits-advanced.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));

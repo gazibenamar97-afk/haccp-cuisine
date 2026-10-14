@@ -3587,9 +3587,11 @@ async function resetEstablishmentData(){
   const ref=cloudDb.collection('appState').doc(site);
   const empty=mtEmptyOperationalFields();
   const marker=new Date().toISOString();
-  await ref.set({...empty,_cloudUpdatedAt:marker,_resetAt:marker,_resetBy:currentUserProfile.uid||''},{merge:true});
+  const payload={...empty,_cloudUpdatedAt:marker,_resetAt:marker,_resetBy:currentUserProfile.uid||''};
+  // update() remplace chaque champ en entier (pas de fusion) : les registres sont vraiment vidés.
+  try{await ref.update(payload)}catch(e0){if(e0&&e0.code==='not-found')await ref.set(payload);else throw e0}
   const check=await ref.get({source:'server'}),server=check.data()||{};
-  if(!check.exists||Object.keys(empty).some(k=>JSON.stringify(server[k])!==JSON.stringify(empty[k])))throw Error('Vérification serveur échouée : certains registres ne sont pas vides');
+  const bad=Object.keys(empty).filter(k=>JSON.stringify(server[k])!==JSON.stringify(empty[k]));if(!check.exists||bad.length)throw Error('Vérification serveur échouée, registres non vides : '+bad.join(', '));
   if(site===SITE_ID){Object.assign(S,empty);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));sessionStorage.removeItem('haccpDashboardUnlocked')}
   if(status){status.textContent='Remise à zéro vérifiée sur Firebase pour « '+est.name+' ». Tous les registres d’exploitation ont été vidés. Comptes et réglages conservés.';status.style.color='#20543e'}
  }catch(e){console.error('resetEstablishmentData',e);if(status){status.textContent='Échec / vérification incomplète : '+(e.code||e.message||e);status.style.color='#9e4545'}}
