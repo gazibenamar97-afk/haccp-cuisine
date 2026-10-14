@@ -1209,6 +1209,28 @@ body.on-login main{padding-top:12px!important}
  html body:has(#mtPcShell):not(.on-login)>main{margin:0!important;width:100%!important;overflow:visible!important}
 }
 </style>
+
+<style id="mt-desktop-scale-final">
+/* Adaptation automatique PC/tablette (>= 851 px) : un seul réglage, valable pour l'accueil et tous les modules.
+   Facteur = largeur de la fenêtre / 1280 (plafonné), calculé par le script mt-desktop-responsive-scale-script.
+   Un navigateur à 100 pour cent sur un écran 1920 px donne donc le rendu d'un zoom de 150 pour cent. */
+@media screen and (min-width:851px){
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2){zoom:var(--mt-scale,1)!important;overflow-x:hidden!important}
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) > main{margin-left:250px!important;width:calc(100% - 250px)!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) .mt-pc-sidebar{width:250px!important;height:calc(100dvh / var(--mt-scale,1))!important;max-height:calc(100dvh / var(--mt-scale,1))!important;top:0!important;bottom:auto!important}
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) #app{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ /* Rangée du bas (3 tuiles) : compacte pour tenir proprement sur trois colonnes */
+ html body.on-home:has(#mtPcShell):not(.mt-n1):not(.mt-n2) .mtpc-management-grid>.mtpc-photo-card>.mtp-photo{flex:0 0 32%!important;width:32%!important}
+ html body.on-home:has(#mtPcShell):not(.mt-n1):not(.mt-n2) .mtpc-management-grid .mtpc-tile-footer{gap:8px!important;padding-left:10px!important;padding-right:10px!important}
+ html body.on-home:has(#mtPcShell):not(.mt-n1):not(.mt-n2) .mtpc-management-grid .mtpc-tile-footer:before{flex:0 0 38px!important;width:38px!important;height:38px!important;font-size:18px!important;background-size:20px!important}
+ html body.on-home:has(#mtPcShell):not(.mt-n1):not(.mt-n2) .mtpc-management-grid .mtpc-tile-footer>strong{font-size:15px!important;line-height:1.2!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+ html body.on-home:has(#mtPcShell):not(.mt-n1):not(.mt-n2) .mtpc-management-grid .mtpc-tile-footer>.mtpc-go{flex:0 0 30px!important;width:30px!important;min-width:30px!important;height:30px!important}
+}
+@media print{
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2){zoom:1!important}
+ html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) > main{margin-left:0!important;width:100%!important}
+}
+</style>
 </head><body class="on-home">
 <main><div id="app"></div></main>
 <script>
