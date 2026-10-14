@@ -5275,7 +5275,7 @@ function saveFiche(){
     if(status==='Clôturée'&&old!=='Clôturée'){rec.closedAt=today();rec.closedBy=by;trace('Fiche nuisibles clôturée '+rec.reference,'Clôturée',by,note)}
     if(status!=='Clôturée'){delete rec.closedAt;delete rec.closedBy}
   }
-  const linkedRecord=P().followups.find(x=>x.id===(isNew?rec.id:editFiche));
+  const linkedRecord=isNew?P().followups[P().followups.length-1]:P().followups.find(x=>x.id===editFiche);
   persist();closeForm();
   if(linkedRecord)linkPestCorrective({...linkedRecord});
 }
