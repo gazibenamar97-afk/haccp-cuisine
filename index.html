@@ -1577,7 +1577,382 @@ function mtReportGenerate(asPDF){
  const author=profile.displayName||profile.name||profile.username||profile.email||'Utilisateur connecté';
  const issued=new Date().toLocaleString('fr-FR');
  const style='.mt-report-toolbar{position:sticky;top:0;z-index:9999;display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;padding:10px 8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}.mt-report-toolbar button{border:1px solid #0d6045;border-radius:8px;padding:11px 15px;background:#0d6045;color:white;font:600 14px Arial;cursor:pointer}.mt-report-toolbar button:first-child{background:white;color:#0d6045}@media print{.mt-report-toolbar{display:none!important}}@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#19362b;margin:0}header{border-bottom:3px solid #0d6045;padding-bottom:13px;margin-bottom:18px}header b{color:#0d6045;font-size:17px}h1{font-size:21px;margin:8px 0}h2{font-size:14px;color:#0d6045;margin:22px 0 8px;break-after:avoid}p{line-height:1.5}.table-wrap{overflow:visible}table{border-collapse:collapse;width:100%;font-size:9px}thead{display:table-header-group}th{background:#e9f3ed;text-align:left}th,td{border:1px solid #cbd9d0;padding:5px 4px;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}.metrics{display:flex;flex-wrap:wrap;gap:8px}.metric{border:1px solid #cbd9d0;padding:9px;min-width:110px}.metric span{display:block;font-size:9px}.metric b{font-size:17px;color:#0d6045}.empty{color:#666;font-style:italic}footer{border-top:1px solid #cbd9d0;margin-top:20px;padding-top:8px;color:#666;font-size:9px}';
- const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+mtReportEsc(name)+'</title><style>'+style+'</style><script>function mtBack(){if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}if(!window.closed){window.location.href="https://gazibenamar97-afk.github.io/haccp-cuisine/"}}<\/script></head><body><div class="mt-report-toolbar"><button onclick="mtBack()">← Retour</button><button onclick="window.print()">Imprimer</button><button onclick="window.print()">Générer PDF</button></div><header><b>M&amp;THACCP</b><h1>'+mtReportEsc(name)+'</h1><p><strong>Établissement :</strong> '+mtReportEsc(site)+'<br><strong>Période :</strong> '+mtReportEsc(from)+' au '+mtReportEsc(to)+' (inclus)<br><strong>Généré par :</strong> '+mtReportEsc(author)+'<br><strong>Édité le :</strong> '+mtReportEsc(issued)+'</p></header>'+html+'<footer>Document issu des données disponibles dans M&THACCP. Une absence de contrôle ne prouve pas la conformité. • '+mtReportEsc(site)+'</footer></body></html>';
+ const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+mtReportEsc(name)+'</title><style>'+style+'</style><script>function mtBack(){if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}if(!window.closed){window.location.href="https://gazibenamar97-afk.github.io/haccp-cuisine/"}}<\/script></head><body><div class="mt-report-toolbar"><button onclick="mtBack()">← Retour</button><button onclick="window.print()">Imprimer</button><button onclick="window.print()">Générer PDF</button></div><header><b>M&amp;THACCP</b><h1>'+mtReportEsc(name)+'</h1><p><strong>Établissement :</strong> '+mtReportEsc(site)+'<br><strong>Période :</strong> '+mtReportEsc(from)+' au '+mtReportEsc(to)+' (inclus)<br><strong>Généré par :</strong> '+mtReportEsc(author)+'<br><strong>Édité le :</strong> '+mtReportEsc(issued)+'</p></header>'+html+'<footer>Document issu des données disponibles dans M&THACCP. Une absence de contrôle ne prouve pas la conformité. • '+mtReportEsc(site)+'</footer><style>.mt-ac-view{padding:16px;max-width:1230px;margin:auto}.mt-ac-frame{width:100%;border:0;min-height:2200px;border-radius:12px}@media(max-width:850px){.mt-ac-view{padding:8px}.mt-ac-frame{min-height:2900px}}</style>
+<script id="mt-correctives-test-bridge">
+(function(){
+window.mtOpenCorrectivesTest=function(){
+ if(typeof SITE_ID==='undefined'||SITE_ID==='main'){alert('Compte établissement requis.');return}
+ if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='correctives-test';
+ document.body.classList.remove('on-home','mt-premium-active','on-login');
+ const root=document.getElementById('app');if(!root)return;
+ root.innerHTML='<section class="mt-ac-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Actions correctives HACCP — Test</h1><iframe class="mt-ac-frame" title="Actions correctives" src="actions-correctives-module-test.html?v=7-select-all"></iframe></section>';
+ const frame=root.querySelector('.mt-ac-frame');
+ const resetScroll=()=>{window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;if(frame){try{frame.contentWindow.scrollTo(0,0)}catch(_){}}};
+ if(frame)frame.addEventListener('load',()=>{resetScroll();requestAnimationFrame(resetScroll)},{once:true});
+ resetScroll();requestAnimationFrame(resetScroll);
+};
+window.addEventListener('message',async e=>{
+ if(e.origin!==location.origin||!e.data||e.data.mtCorrectives!==true)return;
+ const frame=document.querySelector('.mt-ac-frame');if(!frame||e.source!==frame.contentWindow)return;
+ const m=e.data,reply=(result,error)=>e.source.postMessage({mtCorrectivesResponse:true,id:m.id,result,error},e.origin);
+ try{
+  if(!cloudDb||!firebase.auth().currentUser||!currentUserProfile||currentUserProfile.site!==SITE_ID||SITE_ID==='main'||currentUserProfile.active===false)throw Error('Compte établissement non autorisé.');
+  const uid=firebase.auth().currentUser.uid,actor=currentUserProfile.name||currentUserProfile.email||uid,ref=cloudDb.collection('appState').doc(SITE_ID);
+  if(m.type==='context'){reply({site:SITE_ID,name:siteDisplayName||SITE_ID,uid,actor:actor,canClose:['responsable','haccp'].includes(currentUserProfile.role)});return}
+  if(m.type==='list'){const snap=await ref.get({source:'server'});reply(snap.data()?.correctiveActionsRecords||[]);return}
+  if(m.type==='create'){
+   const a=m.payload||{};
+   if(!['mineure','majeure','critique'].includes(a.severity)||!a.problem||a.problem.length>900||!a.zone||!a.source||(a.severity==='critique'&&!a.immediate)||JSON.stringify(a).length>5000)throw Error('Informations manquantes ou invalides.');
+   let saved;
+   await cloudDb.runTransaction(async tx=>{
+    const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+    const dupe=records.find(x=>x.status!=='Clôturée'&&x.zone===a.zone&&x.source===a.source&&x.problem.trim().toLowerCase()===a.problem.trim().toLowerCase());
+    if(dupe)throw Error('Action déjà ouverte : '+dupe.reference);
+    const number=1+records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+    const when=new Date().toISOString();
+    saved={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference:'AC-'+String(number).padStart(4,'0'),site:SITE_ID,createdAt:when,actorUid:uid,
+     severity:a.severity,zone:a.zone,source:a.source,problem:String(a.problem).slice(0,900),immediate:String(a.immediate||'').slice(0,900),
+     measure:String(a.measure||'').slice(0,900),owner:String(a.owner||'').slice(0,120),deadline:String(a.deadline||'').slice(0,10),status:'Ouverte',
+     events:[{at:when,by:actor,action:'Création',note:a.severity==='critique'?'Alerte critique créée immédiatement':'Déclaration confirmée'}]};
+    tx.set(ref,{correctiveActionsRecords:[...records,saved]},{merge:true});
+   });
+   reply({id:saved.id,reference:saved.reference});return;
+  }
+  if(m.type==='create-cleaning'){
+   const a=m.payload||{},record=(S.clean||[]).find(x=>x.id===a.sourceId&&x.status!=='Conforme');
+   if(!record||record.zone!==a.zone||!['mineure','majeure','critique'].includes(a.severity))throw Error('Anomalie de nettoyage introuvable ou invalide.');
+   let result;
+   await cloudDb.runTransaction(async tx=>{
+    const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+    const old=records.find(x=>x.source==='Nettoyage'&&x.sourceId===record.id);
+    if(old){result={reference:old.reference,duplicate:true};return}
+    const number=1+records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+    const when=new Date().toISOString();
+    const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference:'AC-'+String(number).padStart(4,'0'),site:SITE_ID,createdAt:when,actorUid:uid,severity:a.severity,zone:record.zone,source:'Nettoyage',sourceId:record.id,problem:('Non-conformité nettoyage : '+record.zone+' — '+record.note).slice(0,900),immediate:String(a.immediate||'').slice(0,900),measure:String(a.measure||'').slice(0,900),owner:String(a.owner||record.operator).slice(0,120),deadline:String(a.deadline||'').slice(0,10),status:'Ouverte',events:[{at:when,by:actor,action:'Création depuis Nettoyage',note:'Contrôle de nettoyage lié : '+record.id}]};
+    tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});result={reference:action.reference,duplicate:false};
+   });
+   reply(result);return;
+  }
+  if(m.type==='view-proof'){
+   const a=m.payload||{};
+   const snap=await ref.get(),row=(snap.data()?.correctiveActionsRecords||[]).find(x=>x.id===a.id&&x.site===SITE_ID);
+   if(!row||!(row.events||[]).some(ev=>ev.photoPath===a.path))throw Error('Preuve non autorisée.');
+   const auth=await haccpPhotoAuth();
+   if(!auth.tenantReady)throw Error('Autorisation de lecture photo indisponible.');
+   const res=await fetch(HACCP_PHOTO_ENDPOINT+'/storage/v1/object/authenticated/haccp-photos/'+a.path,{headers:{apikey:HACCP_PHOTO_PUBLIC_KEY,Authorization:'Bearer '+auth.token}});
+   if(!res.ok)throw Error('Lecture de preuve refusée ('+res.status+').');
+   const blob=await res.blob();const data=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(rd.result);rd.onerror=()=>reject(Error('Photo illisible'));rd.readAsDataURL(blob)});
+   reply({data});return;
+  }
+  if(m.type==='upload-proof'){
+   const a=m.payload||{};
+   if(!a.id||typeof a.data!=='string'||a.data.length>12000000||!a.data.startsWith('data:image/'))throw Error('Photo non valide.');
+   const snap=await ref.get();
+   if(!(snap.data()?.correctiveActionsRecords||[]).some(x=>x.id===a.id&&x.site===SITE_ID&&x.status!=='Clôturée'))throw Error('Action corrective introuvable.');
+   const blob=await(await fetch(a.data)).blob();
+   const file=new File([blob],'preuve-haccp.jpg',{type:blob.type});
+   const paths=await haccpUploadReceptionPhotos([file]);
+   reply({path:paths[0]});return;
+  }
+  if(m.type==='transition'){
+   const a=m.payload||{};
+   if(!a.id||!['En cours','À vérifier','À reprendre','Clôturée'].includes(a.status)||!String(a.note||'').trim()||a.note.length>1500|| (a.photoPath&&(!String(a.photoPath).startsWith(firebase.auth().currentUser.uid+'/')&&!String(a.photoPath).startsWith(SITE_ID+'/'))))throw Error('Action, photo ou observation invalide.');
+   await cloudDb.runTransaction(async tx=>{
+    const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+    const pos=records.findIndex(x=>x.id===a.id&&x.site===SITE_ID);if(pos<0)throw Error('Action introuvable.');
+    const before=records[pos];if(before.status==='Clôturée')throw Error('Action déjà clôturée.');
+    if(a.status==='Clôturée'&&before.status!=='À vérifier')throw Error('Vérification obligatoire avant clôture.');
+    if(a.status==='Clôturée'&&!['responsable','haccp'].includes(currentUserProfile.role))throw Error('Clôture réservée au responsable.');
+    const at=new Date().toISOString();
+    records[pos]={...before,status:a.status,updatedAt:at,events:[...(before.events||[]),{at,by:actor,action:a.status,note:a.note.trim(),photoPath:a.photoPath||''}]};
+    tx.set(ref,{correctiveActionsRecords:records},{merge:true});
+   });reply({updated:true});return;
+  }
+  throw Error('Action inconnue.');
+ }catch(err){reply(null,err.message||'Erreur Firebase')}
+});
+})();
+</script>
+
+<style id="mt-temp-action-link-style">
+#mtTempCorrectiveSheet{position:fixed;inset:0;background:#10241f99;z-index:999998;overflow:auto;padding:18px}
+#mtTempCorrectiveSheet[hidden]{display:none!important}
+#mtTempCorrectiveSheet .mt-temp-ac-card{position:relative;background:#fff;color:#143d30;border-radius:16px;margin:3vh auto;max-width:780px;padding:24px;box-shadow:0 16px 45px #0004;font:15px/1.5 Arial,sans-serif}
+#mtTempCorrectiveSheet label{display:block;margin-top:12px;font-weight:600}
+#mtTempCorrectiveSheet input,#mtTempCorrectiveSheet select,#mtTempCorrectiveSheet textarea{box-sizing:border-box;width:100%;padding:11px;border:1px solid #afc5b8;border-radius:9px;font:inherit}
+#mtTempCorrectiveSheet button{border-radius:9px;padding:12px;margin:8px 6px 0 0;cursor:pointer;background:#087657;color:white;border:0;font:inherit}
+#mtTempCorrectiveSheet .secondary{background:#edf5ef;color:#075d44}
+#mtTempCorrectiveSheet .mt-ac-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;border:1px solid #d5e5db;border-radius:9px;margin:7px 0}
+#mtTempCorrectiveSheet .mt-ac-row input[type=checkbox]{width:20px;height:20px;margin:0;flex:none}
+#mtTempCorrectiveSheet .mt-ac-row label{flex:1 1 230px;margin:0;font-weight:normal}
+#mtTempCorrectiveSheet .mt-ac-row select{width:auto;min-width:140px}
+#mtTempCorrectiveSheet .mt-ac-presets{background:#f7faf8;padding:10px;border-radius:10px;margin-top:15px}
+#mtTempCorrectiveSheet .mt-temp-ac-close{position:absolute;top:12px;right:12px;margin:0;width:38px;height:38px;padding:0;border-radius:50%;background:#edf5ef;color:#143d30;font-size:27px;line-height:1;font-weight:600;display:flex;align-items:center;justify-content:center}
+#mtTempCorrectiveSheet .mt-temp-ac-close:hover{background:#dceae0}
+#mtTempCorrectiveSheet .mt-temp-ac-card>h2{padding-right:45px}
+@media(max-width:850px){#mtTempCorrectiveSheet{padding:6px}#mtTempCorrectiveSheet .mt-temp-ac-card{padding:15px}}
+</style>
+<script id="mt-temp-correctives-test-link">
+(function(){
+ 'use strict';
+ if(typeof saveTemp!=='function')return;
+ const originalSaveTemperature=saveTemp;
+ let lastTempId='';
+ function clearPanel(){const panel=document.getElementById('mtTempCorrectiveSheet');if(panel)panel.remove()}
+ function displaySheet(record,equipment){
+  clearPanel();
+  const panel=document.createElement('div');
+  panel.id='mtTempCorrectiveSheet';
+  const card=document.createElement('section');card.className='mt-temp-ac-card';
+  const close=document.createElement('button');close.type='button';close.className='mt-temp-ac-close';close.textContent='×';close.title='Fermer la fiche';close.setAttribute('aria-label','Fermer la fiche d’action corrective');close.onclick=()=>clearPanel();card.append(close);
+  const title=document.createElement('h2');title.textContent='Température non conforme — Action corrective';
+  const info=document.createElement('p');
+  info.textContent='Équipement : '+record.equipment+' · Relevé : '+record.value+' °C · Limites : '+equipment.min+' à '+equipment.max+' °C · Opérateur : '+record.operator;
+  const warning=document.createElement('p');
+  warning.textContent='Le relevé non conforme est déjà conservé dans Températures et Traçabilité. Évaluez le risque avant de créer l’action corrective. Une température hors limites n’est pas automatiquement critique.';
+  const severityLabel=document.createElement('label');severityLabel.textContent='Gravité évaluée';
+  const severity=document.createElement('select');
+  for(const [v,label] of [['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — prise en charge urgente']]){
+   const o=document.createElement('option');o.value=v;o.textContent=label;severity.append(o);
+  }
+  severity.value='majeure';
+  const locationLabel=document.createElement('label');locationLabel.textContent='Lieu / zone de l’équipement';
+  const zone=document.createElement('input');zone.value=equipment.zone||equipment.location||'Chambres froides';
+  const presetBox=document.createElement('div');presetBox.className='mt-ac-presets';
+  const presetTitle=document.createElement('strong');presetTitle.textContent='Mesures prédéfinies de prise en charge';presetBox.append(presetTitle);
+  const hint=document.createElement('p');hint.className='note';hint.textContent='Sélectionnez les mesures pertinentes. Pour chacune, précisez si elle est réalisée ou reste à faire.';presetBox.append(hint);
+  const options=['Vérifier le fonctionnement et le réglage de l’équipement','Contrôler la fermeture des portes et les joints','Contrôler la température des denrées','Mettre en quarantaine les denrées concernées','Transférer les denrées vers un équipement conforme','Informer le responsable HACCP','Contacter le service maintenance','Évaluer le devenir des denrées selon les procédures HACCP','Faire un nouveau relevé après intervention'];
+  const presetRows=[];
+  options.forEach(label=>{
+   const row=document.createElement('div');row.className='mt-ac-row';
+   const check=document.createElement('input');check.type='checkbox';check.setAttribute('aria-label','Choisir '+label);
+   const text=document.createElement('label');text.textContent=label;
+   const status=document.createElement('select');status.disabled=true;
+   for(const [val,caption] of [['a_faire','À faire'],['realisee','Réalisée']]){const o=document.createElement('option');o.value=val;o.textContent=caption;status.append(o)}
+   check.onchange=()=>{status.disabled=!check.checked};text.onclick=()=>{check.checked=!check.checked;check.onchange()};
+   row.append(check,text,status);presetBox.append(row);presetRows.push({label,check,status});
+  });
+  const selectAllTemp=document.createElement('button');selectAllTemp.type='button';selectAllTemp.className='secondary';selectAllTemp.style='display:block;margin:8px 0 10px auto;padding:7px 12px;font-size:13px';
+  const syncAllTemp=()=>{selectAllTemp.textContent=presetRows.every(r=>r.check.checked)?'Tout désélectionner':'Sélectionner tous'};
+  selectAllTemp.onclick=()=>{const checked=!presetRows.every(r=>r.check.checked);presetRows.forEach(r=>{r.check.checked=checked;r.status.disabled=!checked});syncAllTemp()};
+  presetRows.forEach(r=>r.check.addEventListener('change',syncAllTemp));syncAllTemp();hint.insertAdjacentElement('afterend',selectAllTemp);
+  const immediateLabel=document.createElement('label');immediateLabel.textContent='Observations libres / produits concernés';
+  const immediate=document.createElement('textarea');immediate.rows=3;immediate.maxLength=900;immediate.value=record.note||'';
+  const personLabel=document.createElement('label');personLabel.textContent='Responsable désigné';
+  const owner=document.createElement('input');owner.maxLength=120;owner.value=record.operator||'';
+  const dateLabel=document.createElement('label');dateLabel.textContent='Échéance';
+  const deadline=document.createElement('input');deadline.type='date';
+  const message=document.createElement('p');message.setAttribute('role','status');
+  const create=document.createElement('button');create.textContent='Créer l’action liée au relevé';
+  const later=document.createElement('button');later.className='secondary';later.textContent='Ne pas créer maintenant';
+  later.onclick=()=>clearPanel();
+  create.onclick=async()=>{
+   if(!cloudDb||!currentUserProfile||!firebase.auth().currentUser||currentUserProfile.site!==SITE_ID||SITE_ID==='main'){
+    message.textContent='Compte établissement non autorisé.';return;
+   }
+   const measures=presetRows.filter(x=>x.check.checked).map(x=>({label:x.label,status:x.status.value}));
+   if(!measures.length&&!immediate.value.trim()){message.textContent='Choisissez une mesure ou renseignez une observation.';return}
+   if(severity.value==='critique'&&!immediate.value.trim()&&!measures.some(x=>x.status==='realisee')){
+    message.textContent='En cas de gravité critique, décrivez la mesure immédiate.';return;
+   }
+   if(severity.value!=='critique'&&!confirm('Confirmer la création de l’action corrective pour ce relevé ?'))return;
+   create.disabled=true;
+   try{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),uid=firebase.auth().currentUser.uid;
+    const sourceId=record.id;let result;
+    await cloudDb.runTransaction(async tx=>{
+     const snap=await tx.get(ref),records=Array.isArray(snap.data()?.correctiveActionsRecords)?snap.data().correctiveActionsRecords:[];
+     const match=records.find(x=>x.status!=='Clôturée'&&x.source==='Températures'&&(x.sourceId===sourceId||
+      (x.equipment===record.equipment&&x.zone===zone.value.trim())));
+     if(match){result={reference:match.reference,duplicate:true};return}
+     const number=1+records.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+     const when=new Date().toISOString(),reference='AC-'+String(number).padStart(4,'0');
+     const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+      reference,site:SITE_ID,createdAt:when,actorUid:uid,
+      severity:severity.value,zone:zone.value.trim().slice(0,100)||'Chambres froides',
+      equipment:record.equipment,source:'Températures',sourceId,
+      problem:'Température non conforme : '+record.equipment+' à '+record.value+' °C (limites '+equipment.min+' à '+equipment.max+' °C)',
+      immediate:[...measures.map(x=>(x.status==='realisee'?'[Réalisée] ':'[À faire] ')+x.label),immediate.value.trim()].filter(Boolean).join('\n').slice(0,900),
+      predefinedMeasures:measures,observationLibre:immediate.value.trim().slice(0,900),
+      measure:'Vérifier l’équipement, maîtriser le risque sur les denrées et réaliser un nouveau relevé.',
+      owner:owner.value.trim().slice(0,120),deadline:deadline.value,status:'Ouverte',
+      events:[{at:when,by:record.operator,action:'Création depuis Températures',
+       note:'Relevé '+sourceId+' · '+(severity.value==='critique'?'Prise en charge urgente':'Anomalie confirmée')}]
+     };
+     tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});
+     result={reference,duplicate:false};
+    });
+    message.textContent=result.duplicate?'Action ouverte déjà existante : '+result.reference:'Action '+result.reference+' enregistrée dans Firebase.';
+    create.textContent='Ouvrir Actions correctives';
+    create.disabled=false;
+    create.onclick=()=>{clearPanel();window.mtOpenCorrectivesTest()};
+   }catch(err){message.textContent='Enregistrement non confirmé : '+err.message;create.disabled=false}
+  };
+  card.append(title,info,warning,severityLabel,severity,locationLabel,zone,presetBox,immediateLabel,immediate,personLabel,owner,dateLabel,deadline,message,create,later);
+  panel.append(card);document.body.append(panel);
+ }
+ saveTemp=function(){
+  const selected=document.getElementById('te');
+  const idx=selected&&selected.value!==''?Number(selected.value):-1;
+  const e=idx>=0&&typeof S!=='undefined'?S.equipment[idx]:null;
+  const before=S.temps.length;
+  originalSaveTemperature();
+  const latest=S.temps[0];
+  if(e&&S.temps.length===before+1&&latest&&!latest.ok&&latest.id!==lastTempId){
+   lastTempId=latest.id;displaySheet(latest,e);
+  }
+ };
+})();
+</script>
+
+<style id="mt-cleaning-corrective-style">
+#mtCleanAcOverlay{position:fixed;inset:0;background:#10241f99;z-index:999999;overflow:auto;padding:14px}
+#mtCleanAcOverlay .mt-clean-ac-card{background:white;color:#143d30;max-width:700px;margin:4vh auto;padding:20px;border-radius:15px;box-shadow:0 12px 40px #0004;position:relative}
+#mtCleanAcOverlay label{display:block;margin:12px 0 5px;font-weight:600}
+#mtCleanAcOverlay input,#mtCleanAcOverlay textarea,#mtCleanAcOverlay select{width:100%;padding:11px;border:1px solid #bdcec3;border-radius:9px;font:inherit}
+#mtCleanAcOverlay button{border:0;border-radius:8px;padding:11px 14px;background:#087657;color:white;cursor:pointer;margin:12px 8px 0 0}
+#mtCleanAcOverlay .mt-close{position:absolute;top:8px;right:8px;background:#edf5ef;color:#143d30;margin:0;font-size:23px}
+#mtCleanAcOverlay .mt-clean-check{display:flex;gap:10px;align-items:center;margin:9px 0;padding:8px;border:1px solid #d5e5db;border-radius:9px}
+#mtCleanAcOverlay .mt-clean-check input{width:18px;height:18px;flex:none}
+#mtCleanAcOverlay .mt-clean-check span{flex:1}
+#mtCleanAcOverlay .mt-select-all{display:block;margin:3px 0 12px auto;padding:7px 12px;background:#edf5ef;color:#086348;border:1px solid #b5d2c3;font-size:13px;font-weight:600}
+#mtCleanAcOverlay .mt-clean-ac-card{margin:12px auto 24px}
+#mtCleanAcOverlay{overscroll-behavior:contain}
+</style>
+<script id="mt-cleaning-corrective-test-link">
+(function(){
+ if(typeof saveClean!=='function')return;
+ const original=saveClean;
+ const options=['Isoler la zone concernée','Réaliser un nouveau nettoyage','Réaliser une nouvelle désinfection','Vérifier la concentration et le temps de contact du produit','Contrôler le matériel et les équipements de nettoyage','Informer le responsable HACCP','Former ou rappeler la procédure à l’équipe','Effectuer un contrôle visuel ou microbiologique après intervention'];
+ function close(){document.getElementById('mtCleanAcOverlay')?.remove()}
+ function show(rec){
+  close();const overlay=document.createElement('div');overlay.id='mtCleanAcOverlay';
+  const card=document.createElement('div');card.className='mt-clean-ac-card';
+  const heading=document.createElement('h2');heading.textContent='Nettoyage non conforme — Action corrective';
+  const x=document.createElement('button');x.className='mt-close';x.type='button';x.textContent='×';x.setAttribute('aria-label','Fermer la fiche');x.onclick=close;card.append(x,heading);
+  const info=document.createElement('p');info.textContent=rec.zone+' · '+rec.date+' · '+rec.operator+' · '+rec.note;card.append(info);
+  const add=(label,element)=>{const l=document.createElement('label');l.textContent=label;card.append(l,element);return element};
+  const gravity=add('Gravité évaluée',document.createElement('select'));
+  [['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — urgence']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;gravity.append(o)});gravity.value='majeure';
+  const h=document.createElement('h3');h.textContent='Mesures de prise en charge (facultatives)';card.append(h);
+  const checks=options.map(label=>{const row=document.createElement('label');row.className='mt-clean-check';const input=document.createElement('input');input.type='checkbox';const t=document.createElement('span');t.textContent=label;row.append(input,t);card.append(row);return {label,input}});
+  const selectAll=document.createElement('button');selectAll.type='button';selectAll.className='mt-select-all';selectAll.textContent='Sélectionner tous';
+  const updateSelect=()=>{selectAll.textContent=checks.every(c=>c.input.checked)?'Tout désélectionner':'Sélectionner tous'};
+  selectAll.onclick=()=>{const checked=!checks.every(c=>c.input.checked);checks.forEach(c=>c.input.checked=checked);updateSelect()};
+  checks.forEach(c=>c.input.addEventListener('change',updateSelect));
+  h.insertAdjacentElement('afterend',selectAll);
+  const note=add('Mesures immédiates / observations complémentaires',document.createElement('textarea'));note.value=rec.note||'';note.rows=3;
+  const owner=add('Responsable désigné',document.createElement('input'));owner.value=rec.operator||'';
+  const deadline=add('Échéance',document.createElement('input'));deadline.type='date';
+  const message=document.createElement('p');message.setAttribute('role','status');card.append(message);
+  const create=document.createElement('button');create.textContent='Créer l’action corrective';
+  const skip=document.createElement('button');skip.textContent='Fermer sans créer';skip.style.background='#edf5ef';skip.style.color='#143d30';skip.onclick=close;
+  create.onclick=async()=>{
+   if(!cloudDb||!firebase.auth().currentUser||!currentUserProfile){message.textContent='Connexion Firebase requise.';return}
+   const chosen=checks.filter(c=>c.input.checked).map(c=>'[À faire] '+c.label);
+   const immediate=[note.value.trim(),...chosen].filter(Boolean).join('\n').slice(0,900);
+   if(gravity.value==='critique'&&!immediate){message.textContent='Décrivez les mesures urgentes.';return}
+   create.disabled=true;
+   try{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),uid=firebase.auth().currentUser.uid;let outcome;
+    await cloudDb.runTransaction(async tx=>{
+     const snap=await tx.get(ref),records=snap.data()?.correctiveActionsRecords||[];
+     const existing=records.find(a=>a.source==='Nettoyage'&&a.sourceId===rec.id);
+     if(existing){outcome={reference:existing.reference,duplicate:true};return}
+     const number=1+records.reduce((n,a)=>Math.max(n,parseInt(String(a.reference||'').replace('AC-',''))||0),0);
+     const when=new Date().toISOString(),reference='AC-'+String(number).padStart(4,'0');
+     const action={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference,site:SITE_ID,createdAt:when,actorUid:uid,severity:gravity.value,zone:rec.zone,source:'Nettoyage',sourceId:rec.id,problem:('Nettoyage non conforme : '+rec.zone+' — '+rec.note).slice(0,900),immediate,measure:'Mettre en œuvre les mesures de nettoyage et contrôler leur efficacité.',owner:owner.value.trim().slice(0,120),deadline:deadline.value,status:'Ouverte',events:[{at:when,by:rec.operator,action:'Création depuis Nettoyage',note:'Contrôle lié '+rec.id}]};
+     tx.set(ref,{correctiveActionsRecords:[...records,action]},{merge:true});outcome={reference,duplicate:false};
+    });
+    message.textContent=(outcome.duplicate?'Action existante : ':'Action créée : ')+outcome.reference;
+    create.textContent='Ouvrir Actions correctives';create.disabled=false;create.onclick=()=>{close();window.mtOpenCorrectivesTest()};
+   }catch(e){message.textContent='Échec : '+e.message;create.disabled=false}
+  };
+  card.append(create,skip);overlay.append(card);document.body.append(overlay);overlay.scrollTop=0;
+ }
+ saveClean=function(){
+  const before=(S.clean||[]).length;
+  original();
+  const rec=S.clean&&S.clean[0];
+  if(S.clean.length!==before+1||!rec||rec.status==='Conforme')return;
+  if(!rec.id){rec.id='clean-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);const t=(S.trace||[]).find(z=>z.type==='Nettoyage'&&z.date===rec.date&&z.product===rec.zone);if(t)t.id=rec.id;save()}
+  show(rec);
+ };
+})();
+</script>
+<script id="mt-reception-cleaning-correctives-link">
+/* Liens de test isolés : Réception et Nettoyage vers Actions correctives. */
+(function(){
+ if(typeof saveRec!=='function'||typeof saveClean!=='function')return;
+ const originalRec=saveRec,originalClean=saveClean;
+ async function offerAction(kind,x){
+  if(!x||!cloudDb||!currentUserProfile||SITE_ID==='main')return;
+  const sourceId=kind==='Réception'?(x.receivedAt||''):kind==='Stock et DLC'?(x.receivedAt||x.createdAt||x.stockSourceId||''):(x.createdAt||'');
+  if(!sourceId)return;
+  const reason=kind==='Réception'?[x.nonConformityReason,x.tempOverRecommendation?'Température de réception hors recommandation':'',x.observation].filter(Boolean).join(' · '):kind==='Stock et DLC'?[x.stockProblem,x.nonConformityReason,x.observation].filter(Boolean).join(' · '):[x.status,x.note].filter(Boolean).join(' · ');
+  const zone=kind==='Réception'?'Réception':kind==='Stock et DLC'?'Stock et DLC':String(x.zone||'Nettoyage');
+  const uid=firebase.auth().currentUser?.uid;
+  if(!uid)return;
+  const prior=document.getElementById('mtReceptionCorrectiveSheet');if(prior)prior.remove();
+  const overlay=document.createElement('div');overlay.id='mtReceptionCorrectiveSheet';
+  overlay.style='position:fixed;inset:0;z-index:999998;background:#10241f99;overflow:auto;padding:12px';
+  const card=document.createElement('section');card.style='position:relative;background:#fff;max-width:760px;margin:3vh auto;padding:22px;border-radius:15px;box-shadow:0 14px 40px #0003;color:#143d30';
+  const heading=document.createElement('h2');heading.textContent='Non-conformité '+kind+' — Action corrective';
+  const details=document.createElement('p');details.textContent=(x.product||x.zone||'Contrôle')+' · '+reason+' · '+(x.receivedBy||x.operator||'Opérateur non renseigné');
+  const label=(t,el)=>{const l=document.createElement('label');l.textContent=t;l.style='display:block;margin:14px 0 5px;font-weight:600';card.append(l,el)};
+  const severity=document.createElement('select');[['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — intervention urgente']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;severity.append(o)});severity.value='majeure';
+  const checks=document.createElement('div');checks.style='padding:10px;border:1px solid #d5e5db;border-radius:10px';
+  const options=kind==='Réception'?['Isoler les produits concernés','Refuser la marchandise non conforme','Contrôler la température des produits','Informer le responsable HACCP','Contacter le fournisseur','Vérifier DLC et emballages','Organiser le retour de la marchandise','Enregistrer une nouvelle vérification']:kind==='Stock et DLC'?['Isoler le lot concerné','Bloquer l’utilisation du produit','Contrôler la DLC / DDM et le numéro de lot','Vérifier les conditions de stockage','Informer le responsable HACCP','Évaluer et documenter le devenir du produit','Retirer les produits non conformes selon la procédure','Effectuer un nouveau contrôle du stock']:['Réaliser un nouveau nettoyage','Désinfecter la zone ou équipement','Isoler la zone non conforme','Informer le responsable HACCP','Vérifier les produits et matériels utilisés','Effectuer un nouveau contrôle'];
+  const measureRows=[];
+  options.forEach(t=>{const row=document.createElement('div');row.style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0';const check=document.createElement('input');check.type='checkbox';check.style='width:18px;height:18px;flex:0 0 18px';const title=document.createElement('span');title.textContent=t;title.style='flex:1 1 210px';const state=document.createElement('select');state.style='width:auto;min-width:120px';[['a_faire','À faire'],['realisee','Réalisée']].forEach(([v,txt])=>{const op=document.createElement('option');op.value=v;op.textContent=txt;state.append(op)});state.disabled=true;check.onchange=()=>state.disabled=!check.checked;row.append(check,title,state);checks.append(row);measureRows.push({t,check,state})});
+  const selectBar=document.createElement('div');selectBar.style='display:flex;justify-content:flex-end;margin:0 0 9px';
+  const selectAll=document.createElement('button');selectAll.type='button';selectAll.style='padding:7px 12px;border:1px solid #9dc7b6;background:#edf7f2;color:#075e46;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer';
+  const syncSelectAll=()=>{selectAll.textContent=measureRows.every(r=>r.check.checked)?'Tout désélectionner':'Sélectionner tous'};
+  selectAll.onclick=()=>{const shouldSelect=!measureRows.every(r=>r.check.checked);measureRows.forEach(r=>{r.check.checked=shouldSelect;r.state.disabled=!shouldSelect});syncSelectAll()};
+  measureRows.forEach(r=>r.check.addEventListener('change',syncSelectAll));syncSelectAll();selectBar.append(selectAll);checks.prepend(selectBar);
+  const note=document.createElement('textarea');note.value=x.stockProblem||x.observation||x.note||'';note.placeholder='Observation complémentaire, produit et lot concernés';note.rows=3;
+  const owner=document.createElement('input');owner.value=x.receivedBy||x.operator||'';owner.placeholder='Nom du responsable';
+  const deadline=document.createElement('input');deadline.type='date';
+  const status=document.createElement('p');status.setAttribute('role','status');
+  const actions=document.createElement('div');actions.style='display:flex;flex-wrap:wrap;gap:8px;margin-top:14px';
+  const close=document.createElement('button');close.textContent='Fermer sans créer';close.type='button';close.onclick=()=>overlay.remove();
+  const submit=document.createElement('button');submit.textContent='Créer l’action corrective';submit.type='button';submit.style='background:#087657;color:white';
+  [submit,close].forEach(b=>{b.style.borderRadius='9px';b.style.padding='11px 14px';b.style.cursor='pointer';actions.append(b)});
+  const dismiss=document.createElement('button');dismiss.textContent='×';dismiss.title='Fermer';dismiss.setAttribute('aria-label','Fermer');dismiss.style='position:absolute;top:10px;right:12px;padding:6px 12px;font-size:23px;border:0;background:#eef5ef;border-radius:50%';dismiss.onclick=()=>overlay.remove();
+  card.append(dismiss,heading,details);label('Gravité évaluée',severity);label('Mesures de prise en charge (Réalisée / À faire)',checks);label('Observations libres',note);label('Responsable désigné',owner);label('Échéance',deadline);card.append(status,actions);overlay.append(card);document.body.append(overlay);
+  submit.onclick=async()=>{
+   const selected=measureRows.filter(r=>r.check.checked).map(r=>(r.state.value==='realisee'?'[Réalisée] ':'[À faire] ')+r.t);
+   if(!selected.length&&!note.value.trim()){status.textContent='Sélectionnez une mesure ou indiquez une observation.';return}
+   const text=[...selected,note.value.trim()].filter(Boolean).join('\n');
+   if(severity.value==='critique'&&!selected.some(t=>t.startsWith('[Réalisée]'))&&!note.value.trim()){status.textContent='Documentez une mesure immédiate pour une situation critique.';return}
+   submit.disabled=true;status.textContent='Enregistrement en cours…';
+   try{await createLinkedAction({severity:severity.value,immediate:text,owner:owner.value.trim(),deadline:deadline.value});status.textContent='Action corrective enregistrée dans Firebase.';submit.textContent='Ouvrir Actions correctives';submit.disabled=false;submit.onclick=()=>{overlay.remove();window.mtOpenCorrectivesTest()}}catch(e){status.textContent='Enregistrement impossible : '+e.message;submit.disabled=false}
+  };
+  async function createLinkedAction(form){
+   let outcome='';
+   await cloudDb.runTransaction(async tx=>{
+    const ref=cloudDb.collection('appState').doc(SITE_ID),snap=await tx.get(ref);
+    const rows=Array.isArray(snap.data()?.correctiveActionsRecords)?snap.data().correctiveActionsRecords:[];
+    const existing=rows.find(a=>a.source===kind&&a.sourceId===sourceId);
+    if(existing){outcome=existing.reference;return}
+    const n=1+rows.reduce((m,a)=>Math.max(m,Number(String(a.reference||'').replace('AC-',''))||0),0);
+    const reference='AC-'+String(n).padStart(4,'0'),now=new Date().toISOString();
+    const rec={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),reference,site:SITE_ID,createdAt:now,actorUid:uid,
+      severity:form.severity,zone,source:kind,sourceId,problem:(kind==='Réception'?'Réception non conforme : '+(x.product||'Produit'):kind==='Stock et DLC'?'Stock et DLC : '+(x.product||'Produit')+' · Lot '+(x.lot||'non renseigné'):'Nettoyage non conforme : '+zone)+' — '+(reason||'Anomalie à traiter'),
+      immediate:form.immediate.slice(0,900),measure:'Définir les mesures de maîtrise adaptées et vérifier leur efficacité.',
+      owner:form.owner.slice(0,120),deadline:form.deadline,status:'Ouverte',
+      events:[{at:now,by:String(x.receivedBy||x.operator||''),action:'Création depuis '+kind,note:'Contrôle lié : '+sourceId}]};
+    tx.set(ref,{correctiveActionsRecords:[...rows,rec]},{merge:true});outcome=reference;
+   });
+   return outcome;
+  }
+ window.mtOfferCorrectiveForTest=offerAction;
+ window.mtReportStockDlc=function(i,fromEdit){const x=S.stock&&S.stock[i];if(!x)return;const overdue=!!(x.dlc&&x.dlc<new Date().toISOString().slice(0,10));const issue=overdue?'DLC dépassée : '+x.dlc:(x.pack==='Non conforme'?'Emballage non conforme : '+(x.nonConformityReason||'anomalie signalée'):'');const reason=issue||prompt('Décrivez la non-conformité du produit (aucune action créée sans description) :');if(!reason||!String(reason).trim())return;const stockSourceId=x.receivedAt||x.createdAt||['stock',SITE_ID,x.product,x.lot,x.date].join(':');void offerAction('Stock et DLC',{...x,stockSourceId,stockProblem:String(reason).trim()})};
+
+})();
+</script>
+
+</body></html>';
  const w=window.open('','_blank');if(!w){alert('Autorisez les fenêtres contextuelles pour imprimer ou enregistrer le PDF.');return}
  w.document.open();w.document.write(doc);w.document.close();w.focus();
  if(asPDF)w.document.title='MT_HACCP_'+type+'_'+from+'_'+to;
@@ -1630,6 +2005,7 @@ function mtPremiumHome(){
   ['trace','Traçabilité','trace',"mtOpenModule('trace')",'#cf3443'],
   ['direction','Tableau de bord<br>Direction','chart','openDashboard()','#09a4a6'],
   ['rapports','Rapport','chart','mtReports()','#17694d'],
+  ...(SITE_ID!=='main'?[['correctives','Actions correctives','chart','mtOpenCorrectivesTest()','#b87913']]:[]),
   ...(SITE_ID!=='main'?[['audits','Audits HACCP','chart','mtOpenAudits()','#087657']]:[]),
   ['parametres','Paramètres','gear','settings()','#225a7d'],
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
@@ -2554,7 +2930,7 @@ function dashboardDLCDetail(i){if(sessionStorage.getItem('haccpDashboardUnlocked
 function dashboardTempNCDetail(ref){if(sessionStorage.getItem('haccpDashboardUnlocked')!=='1'){dashboard();return}let raw=typeof ref==='string'&&/^\d+$/.test(ref)&&!S.temps.some(t=>t&&t.id===ref)?Number(ref):ref,x=temperatureRecord(raw);if(!x){dashboardDetail('nc');return}let eq=S.equipment.find(e=>e.name===x.equipment),range=eq?(esc(eq.min)+' °C à '+esc(eq.max)+' °C'):'—';app.innerHTML=B('← Non-conformités',"dashboardDetail('nc')",'back')+`<h1>Fiche non-conformité température</h1><div class="panel"><h2>${esc(x.equipment||'Équipement')}</h2><div class="record"><b>Statut</b><br><span class="note">NON CONFORME</span></div><div class="record"><b>Température mesurée</b><br><span class="note">${esc(x.value)} °C</span></div><div class="record"><b>Plage autorisée</b><br><span class="note">${range}</span></div><div class="record"><b>Date / heure</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'Non renseigné')}</span></div><div class="record"><b>Observation / action corrective</b><br><span class="note">${esc(x.note||'Non renseignée')}</span></div></div>`}
 function dashboardReceptionNCDetail(i){if(sessionStorage.getItem('haccpDashboardUnlocked')!=='1'){dashboard();return}let x=S.stock[i];if(!x){dashboardDetail('nc');return}app.innerHTML=B('← Non-conformités',"dashboardDetail('nc')",'back')+`<h1>Fiche non-conformité réception</h1><div class="panel"><h2>${esc(x.product||'Produit')}</h2><div class="record"><b>Emballage</b><br><span class="note">${esc(x.pack||'Non conforme')}</span></div><div class="record"><b>Motif</b><br><span class="note">${esc(x.nonConformityReason||'—')}</span></div><div class="record"><b>Fournisseur</b><br><span class="note">${esc(x.supplier||'—')}</span></div><div class="record"><b>Lot</b><br><span class="note">${esc(x.lot||'—')}</span></div><div class="record"><b>Date</b><br><span class="note">${esc(x.date||'—')}</span></div><div class="record"><b>Opérateur</b><br><span class="note">${esc(x.operator||'—')}</span></div></div>`}
 
-function stock(){CURRENT_VIEW='stock';if(!Array.isArray(S.stock))S.stock=[];let now=new Date();now.setHours(0,0,0,0),exp=0,today=0,soon=0;S.stock.forEach(x=>{if(!x.dlc)return;let d=new Date(x.dlc+'T00:00:00'),diff=Math.ceil((d-now)/86400000);if(diff<0)exp++;else if(diff===0)today++;else if(diff<=3)soon++});app.innerHTML=`<h1>Stock et DLC</h1><div class="cards"><div class="metric"><span>Expirés</span><b>${exp}</b></div><div class="metric"><span>Aujourd'hui</span><b>${today}</b></div><div class="metric"><span>Sous 3 jours</span><b>${soon}</b></div></div>${S.stock.length?`<div class="panel">${S.stock.map((x,i)=>`<div class="record"><b>${x.product}</b> — Lot ${x.lot||'—'} — DLC ${x.dlc||'—'}<br><span class="note">${x.supplier||''} · reçu le ${x.date}</span><br><button class="btn" style="margin-top:8px;padding:8px 12px" onclick="authorizeStockEdit(${i})">Modifier</button></div>`).join('')}</div>`:`<p class="empty">Aucun produit en stock. Enregistrez une réception.</p>`}`}
+function stock(){CURRENT_VIEW='stock';if(!Array.isArray(S.stock))S.stock=[];let now=new Date();now.setHours(0,0,0,0),exp=0,today=0,soon=0;S.stock.forEach(x=>{if(!x.dlc)return;let d=new Date(x.dlc+'T00:00:00'),diff=Math.ceil((d-now)/86400000);if(diff<0)exp++;else if(diff===0)today++;else if(diff<=3)soon++});app.innerHTML=`<h1>Stock et DLC</h1><div class="cards"><div class="metric"><span>Expirés</span><b>${exp}</b></div><div class="metric"><span>Aujourd'hui</span><b>${today}</b></div><div class="metric"><span>Sous 3 jours</span><b>${soon}</b></div></div>${S.stock.length?`<div class="panel">${S.stock.map((x,i)=>`<div class="record"><b>${x.product}</b> — Lot ${x.lot||'—'} — DLC ${x.dlc||'—'}<br><span class="note">${x.supplier||''} · reçu le ${x.date}</span><br><button class="btn" style="margin-top:8px;padding:8px 12px" onclick="authorizeStockEdit(${i})">Modifier</button><button class="btn" style="margin:8px 0 0 8px;padding:8px 12px" onclick="mtReportStockDlc(${i})">Signaler une anomalie</button></div>`).join('')}</div>`:`<p class="empty">Aucun produit en stock. Enregistrez une réception.</p>`}`}
 
 function editStock(i){let x=S.stock[i];app.innerHTML=`<button class="btn back" onclick="stock()">← Stock</button><h1>Modifier l'article réceptionné</h1><div class="panel"><div class="row"><div><label>Catégorie *</label><div style="position:relative"><input id="ec" value="${esc(x.category)}" autocomplete="off" onfocus="showEditSuggestions('category')" oninput="showEditSuggestions('category')"><div id="ecSuggestions" style="display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:240px;overflow-y:auto;background:#fff;border:1px solid #b8c9d8;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,.14)"></div></div></div><div><label>Produit *</label><input id="ep" value="${esc(x.product)}"></div></div><div class="row"><div><label>Marque / fabricant</label><input id="ebrand" value="${esc(x.brand)}"></div><div><label>Quantité / poids</label><input id="eqty" value="${esc(x.quantity)}"></div></div><div class="row"><div><label>Fournisseur *</label><div style="position:relative"><input id="esupplier" value="${esc(x.supplier)}" autocomplete="off" onfocus="showEditSuggestions('supplier')" oninput="showEditSuggestions('supplier')"><div id="esupplierSuggestions" style="display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:240px;overflow-y:auto;background:#fff;border:1px solid #b8c9d8;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,.14)"></div></div></div><div><label>Lot</label><input id="elot" value="${esc(x.lot)}"></div></div><div class="row"><div><label>Température °C</label><input id="etemp" type="number" step=".1" value="${esc(x.temp)}"></div><div><label>Date fabrication / conditionnement</label><input id="efab" type="date" value="${esc(x.fabrication)}"><label class="note"><input id="efabNA" type="checkbox" ${x.fabricationNA?'checked':''}> Non applicable / non indiquée</label></div></div><div class="row"><div><label>DLC / DDM fabricant</label><input id="edlc" type="date" value="${esc(x.dlc)}"><label class="note"><input id="edlcNA" type="checkbox" ${x.dlcNA?'checked':''}> Non applicable / non indiquée</label></div><div><label>Code-barres</label><input id="ebarcode" inputmode="numeric" value="${esc(x.barcode)}"><div class="note">Saisie manuelle uniquement.</div></div></div><label>État emballage *</label><select id="epack"><option ${x.pack==='Conforme'?'selected':''}>Conforme</option><option ${x.pack==='Non conforme'?'selected':''}>Non conforme</option></select><label>Motif de non-conformité</label><textarea id="ereason">${esc(x.nonConformityReason)}</textarea><label>Observation</label><textarea id="eobs">${esc(x.observation)}</textarea><div class="row"><div><label>Modifié par *</label><input id="emodby" placeholder="Nom du responsable"></div><div><label>Motif de la modification *</label><input id="emodreason" placeholder="Ex. erreur de saisie"></div></div><br>${B('Enregistrer les modifications',`saveStockEdit(${i})`,'primary')}</div>`}
 
@@ -2575,7 +2951,7 @@ function chooseEditSuggestion(encoded,kind){
 }
 
 function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function saveStockEdit(i){if(!emodby.value.trim()||!emodreason.value.trim()){alert('Le nom du responsable et le motif de la modification sont obligatoires.');return}let cold=['Viandes','Volailles','Poissons & fruits de mer','Produits laitiers','Œufs & ovoproduits','Charcuterie','Surgelés'].includes(ec.value.trim());if(!ec.value.trim()||!ep.value.trim()||!esupplier.value.trim()){alert('Catégorie, produit et fournisseur sont obligatoires.');return}if(cold&&!etemp.value){alert('La température est obligatoire pour cette catégorie.');return}if(!efab.value&&!efabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');return}if(ec.value.trim()!=='Fruits & légumes'&&!edlc.value&&!edlcNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');return}if(epack.value==='Non conforme'&&!ereason.value.trim()){alert('Le motif de non-conformité est obligatoire.');return}let x=S.stock[i],old=JSON.parse(JSON.stringify(x));Object.assign(x,{category:ec.value.trim(),product:ep.value.trim(),brand:ebrand.value.trim(),quantity:eqty.value.trim(),supplier:esupplier.value.trim(),lot:elot.value.trim(),temp:etemp.value,fabrication:efab.value,fabricationNA:efabNA.checked,dlc:edlc.value,dlcNA:edlcNA.checked,barcode:ebarcode.value.trim(),pack:epack.value,nonConformityReason:ereason.value.trim(),observation:eobs.value.trim(),modifiedAt:new Date().toISOString()});let changedAt=new Date().toLocaleString('fr-FR');S.trace.unshift({type:'Modification réception',product:x.product,date:changedAt,modifiedBy:emodby.value.trim(),reason:emodreason.value.trim(),before:old,after:JSON.parse(JSON.stringify(x))});save();stock()}
+function saveStockEdit(i){if(!emodby.value.trim()||!emodreason.value.trim()){alert('Le nom du responsable et le motif de la modification sont obligatoires.');return}let cold=['Viandes','Volailles','Poissons & fruits de mer','Produits laitiers','Œufs & ovoproduits','Charcuterie','Surgelés'].includes(ec.value.trim());if(!ec.value.trim()||!ep.value.trim()||!esupplier.value.trim()){alert('Catégorie, produit et fournisseur sont obligatoires.');return}if(cold&&!etemp.value){alert('La température est obligatoire pour cette catégorie.');return}if(!efab.value&&!efabNA.checked){alert('Renseignez la date de fabrication ou cochez « Non applicable / non indiquée ».');return}if(ec.value.trim()!=='Fruits & légumes'&&!edlc.value&&!edlcNA.checked){alert('Renseignez la DLC / DDM ou cochez « Non applicable / non indiquée ».');return}if(epack.value==='Non conforme'&&!ereason.value.trim()){alert('Le motif de non-conformité est obligatoire.');return}let x=S.stock[i],old=JSON.parse(JSON.stringify(x));Object.assign(x,{category:ec.value.trim(),product:ep.value.trim(),brand:ebrand.value.trim(),quantity:eqty.value.trim(),supplier:esupplier.value.trim(),lot:elot.value.trim(),temp:etemp.value,fabrication:efab.value,fabricationNA:efabNA.checked,dlc:edlc.value,dlcNA:edlcNA.checked,barcode:ebarcode.value.trim(),pack:epack.value,nonConformityReason:ereason.value.trim(),observation:eobs.value.trim(),modifiedAt:new Date().toISOString()});let changedAt=new Date().toLocaleString('fr-FR');S.trace.unshift({type:'Modification réception',product:x.product,date:changedAt,modifiedBy:emodby.value.trim(),reason:emodreason.value.trim(),before:old,after:JSON.parse(JSON.stringify(x))});save();stock();if((x.pack==='Non conforme'||(x.dlc&&x.dlc<new Date().toISOString().slice(0,10)))&&typeof mtReportStockDlc==='function')setTimeout(()=>mtReportStockDlc(i,true),60)}
 const RECEIVING_TEMP_RULES={
  'Viande hachée':{max:2,label:'≤ +2 °C'},'Merguez':{max:4,label:'≤ +4 °C'},'Kefta':{max:4,label:'≤ +4 °C'}
 };
@@ -3088,7 +3464,7 @@ if(receptionSelectedPhotos.length){
  try{x.photoPaths=await haccpUploadReceptionPhotos(receptionSelectedPhotos)}
  catch(err){alert('Reception non enregistree : '+err.message);if(btn){btn.disabled=false;btn.textContent='✓ Enregistrer la réception'}return}
 }
-S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();if(!blAbsent&&blNumber&&confirm('Réception enregistrée. Ajouter un autre produit au même bon de livraison ?')){mtBlContinue={number:blNumber,date:blDate,supplier:rf.value,receiver:x.receivedBy};reception();return}mtBlContinue=null;stock()}
+S.stock.unshift(x);S.trace.unshift({type:'Réception',...x});save();if((x.pack==='Non conforme'||x.tempOverRecommendation)&&typeof window.mtOfferCorrectiveForTest==='function'){setTimeout(()=>window.mtOfferCorrectiveForTest('Réception',x),60)}if(!blAbsent&&blNumber&&confirm('Réception enregistrée. Ajouter un autre produit au même bon de livraison ?')){mtBlContinue={number:blNumber,date:blDate,supplier:rf.value,receiver:x.receivedBy};reception();return}mtBlContinue=null;stock()}
 function isEstablishmentManagerProfile(p){if(!p||p.site==='main')return false;const r=String(p.role||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');return r==='responsable'||r==='responsable etablissement'||r==='manager'||r==='responsable_etablissement'}
 function settings(){CURRENT_VIEW='settings';let hasPin=!!localStorage.getItem('haccpAdminPin');app.innerHTML=`<h1>Paramètres</h1>${currentUserProfile&&(currentUserProfile.site==='main'||isEstablishmentManagerProfile(currentUserProfile))?'<div class="panel"><h2>👥 Utilisateurs</h2><p class="note">'+(currentUserProfile.site==='main'?'Gérez les comptes de tous les établissements.':'Gérez uniquement les utilisateurs de votre établissement.')+'</p>'+B('Gérer les utilisateurs','usersManager()','primary')+'</div>':''}<div class="panel"><h2>🔒 Sécurité</h2><p class="note">Le code PIN protège les modifications des articles déjà réceptionnés.</p><div class="result" style="font-size:18px">${hasPin?'Code PIN administrateur configuré ✅':'Aucun code PIN configuré'}</div>${hasPin?`<h2>Modifier le code PIN</h2><label>Code PIN actuel</label><input id="oldPin" type="password" inputmode="numeric" maxlength="8" placeholder="Code actuel"><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le nouveau PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le nouveau code"></div></div><br>${B('Modifier le code PIN','changeAdminPin()','primary')}`:`<h2>Créer le code PIN administrateur</h2><div class="row"><div><label>Nouveau code PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4 à 8 chiffres"></div><div><label>Confirmer le code PIN</label><input id="confirmPin" type="password" inputmode="numeric" maxlength="8" placeholder="Répéter le code"></div></div><br>${B('Créer le code PIN','createAdminPin()','primary')}`}</div>`}
 
