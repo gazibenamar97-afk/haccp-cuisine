@@ -2622,8 +2622,12 @@ function mtSubscriptionSelect(encoded){
  mtSubData.selected=id;const sub=x.subscription||{},plan=MT_SUB_PLANS[sub.plan]?sub.plan:'essentiel',info=MT_SUB_PLANS[plan],count=mtSubData.counts[id]||0;
  const selected=(a,b)=>a===b?' selected':'';
  const options=Object.keys(MT_SUB_PLANS).map(k=>'<option value="'+k+'"'+selected(plan,k)+'>'+esc(MT_SUB_PLANS[k].label)+'</option>').join('');
+ const siteOptions=mtSubData.items.slice().sort((a,b)=>String(a.name||a.id).localeCompare(String(b.name||b.id),'fr',{sensitivity:'base'}))
+  .map(site=>'<option value="'+esc(site.id)+'"'+selected(id,site.id)+'>'+esc(site.name||site.id)+'</option>').join('');
  const start=sub.startDate||mtSubToday();const expire=sub.endDate||'';
- box.innerHTML='<h2>Activer ou modifier un forfait — '+esc(x.name||x.id)+'</h2><p class="note">Statut actuel : <b>'+esc(mtSubLabel(mtSubState(sub)))+'</b> · '+count+' compte(s) actif(s). Les comptes existants et les données HACCP sont conservés.</p>'+
+ box.innerHTML='<h2>Activer ou modifier un forfait</h2>'+ 
+ '<label for="mtSubSite">Choisir un établissement</label><select id="mtSubSite" onchange="mtSubscriptionSelect(encodeURIComponent(this.value))">'+siteOptions+'</select>'+ 
+ '<p class="note">Établissement sélectionné : <b>'+esc(x.name||x.id)+'</b> · Statut actuel : <b>'+esc(mtSubLabel(mtSubState(sub)))+'</b> · '+count+' compte(s) actif(s). Les comptes existants et les données HACCP sont conservés.</p>'+
  '<label>Forfait</label><select id="mtSubPlan" onchange="mtSubscriptionPlanChanged()">'+options+'</select>'+
  '<div class="row"><div><label>Nombre maximal d’utilisateurs actifs</label><input type="number" min="1" max="10000" id="mtSubLimit" value="'+esc(sub.maxUsers||info.users)+'"'+(plan!=='groupe'?' readonly':'')+'></div><div><label>Tarif mensuel (DT)</label><input type="number" min="0" step="0.01" id="mtSubPrice" value="'+esc(sub.monthlyPriceTnd??info.price)+'"></div></div>'+
  '<div class="row"><div><label>Date de début</label><input type="date" id="mtSubStart" value="'+esc(start)+'"></div><div><label>Date d’échéance (facultative)</label><input type="date" id="mtSubEnd" value="'+esc(expire)+'"></div></div>'+
@@ -2635,6 +2639,7 @@ function mtSubscriptionSelect(encoded){
 async function mtSubscriptionSave(status,button){
  if(!mtSubAdmin())return;
  const id=mtSubData.selected,plan=document.getElementById('mtSubPlan')?.value||'';
+ if(!id||document.getElementById('mtSubSite')?.value!==id){alert('Choisissez un établissement avant d’enregistrer le forfait.');return}
  const spec=MT_SUB_PLANS[plan],rawMax=Number(document.getElementById('mtSubLimit')?.value);
  const maxUsers=plan==='groupe'?rawMax:spec?.users;
  const monthlyPriceTnd=Number(document.getElementById('mtSubPrice')?.value);
