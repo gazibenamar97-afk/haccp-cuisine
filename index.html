@@ -1299,6 +1299,7 @@ document.addEventListener('DOMContentLoaded',mtStartGlobalNav);
 /* Premium mobile reference layout. Isolated from the desktop application. */
 function mtSvg(name){
  const icons={
+ bug:'<ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3"/>',
  leaf:'<path d="M4 21C4 9 12 3 22 2c0 11-5 19-18 19Z"/><path d="M4 21c4-6 9-11 16-16"/>',
  home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
   book:'<path d="M12 7c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V6c-3-1-6-1-9 1Z"/><path d="M12 7v14"/>',
@@ -1665,11 +1666,12 @@ function mtPremiumHome(){
   ['rapports','Rapport','chart','mtReports()','#17694d'],
   ...(SITE_ID!=='main'?[['correctives','Actions correctives','chart','mtOpenCorrectivesTest()','#b87913']]:[]),
   ...(SITE_ID!=='main'?[['audits','Audits HACCP','chart','mtOpenAudits()','#087657']]:[]),
+  ...(SITE_ID!=='main'?[['nuisibles','Lutte contre<br>les nuisibles','bug','mtPestOpen()','#6b4f2a']]:[]),
   ['parametres','Paramètres','gear','settings()','#225a7d'],
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
  const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
- const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],...(SITE_ID!=='main'?[['Audits HACCP','chart','mtOpenAudits()']]:[]),['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
+ const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],...(SITE_ID!=='main'?[['Audits HACCP','chart','mtOpenAudits()'],['Lutte contre les nuisibles','bug','mtPestOpen()']]:[]),['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
  '<header class="mtp-header"><div class="mtp-top"><button class="mtp-brand" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu"><span class="mtp-leaf">'+mtSvg('leaf')+'</span><span class="mtp-brand-copy"><strong>M&amp;T<small>HACCP</small></strong><em>Sécurité Alimentaire<br>Qualité · Traçabilité</em></span></button><div class="mtp-header-actions"><button class="mtp-open-menu" onclick="mtPremiumMenu(true)" aria-label="Ouvrir le menu de navigation">'+mtSvg('menu')+'</button><button onclick="mtHaccpGuide()" aria-label="Ouvrir le guide HACCP" title="Guide HACCP">'+mtSvg('book')+'</button><button onclick="mtPremiumMenu(true)" aria-label="Profil">'+mtSvg('user')+'</button></div></div><div class="mtp-site"><span class="mtp-site-icon">'+mtSvg('building')+'</span><span><strong>'+escapeHTML(site)+'</strong><small>Établissement</small></span><span class="mtp-site-down">'+mtSvg('down')+'</span></div></header>'+
@@ -1694,7 +1696,7 @@ function mtOpenModule(action){
 
 function mtPcNavigate(module){
  if(window.innerWidth<=850)return;
- const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,rapports:mtReports,correctives:()=>window.mtOpenCorrectivesTest(),audits:()=>window.mtOpenAudits(),supervision:openEstablishmentSupervision};
+ const routes={reception:reception,stock:stock,temperatures:temperatures,etiquetage:dlcCats,nettoyage:cleaning,fournisseurs:suppliers,tracabilite:trace,direction:openDashboard,parametres:settings,rapports:mtReports,correctives:()=>window.mtOpenCorrectivesTest(),audits:()=>window.mtOpenAudits(),nuisibles:()=>window.mtPestOpen(),supervision:openEstablishmentSupervision};
  const fn=routes[module];if(typeof fn!=='function')return;
  document.body.classList.remove('on-home','mt-premium-active');
  const legacyNav=document.querySelector('body > nav');if(legacyNav)legacyNav.style.display='none';
@@ -1711,7 +1713,7 @@ function home(){
  let mainNav=document.querySelector('nav');if(mainNav)mainNav.style.display='none';
  let pcShell=document.getElementById('mtPcShell');
  if(!pcShell){pcShell=document.createElement('div');pcShell.id='mtPcShell';document.body.appendChild(pcShell)}
- pcShell.innerHTML=`<svg class="mt-ref-defs" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute"><defs><symbol id="mt-ref-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol><symbol id="mt-ref-box" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol><symbol id="mt-ref-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></symbol><symbol id="mt-ref-therm" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol><symbol id="mt-ref-spark" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol><symbol id="mt-ref-tag" viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol><symbol id="mt-ref-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol><symbol id="mt-ref-audit" viewBox="0 0 24 24"><path d="M9 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3M9 2.5h6v3H9zM8.5 12.5l1.8 1.8 3.2-3.6M8.5 18h7"/></symbol><symbol id="mt-ref-check" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></symbol><symbol id="mt-ref-doc" viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6zM15 2v5h4M9 11h7M9 15h7M9 19h5"/></symbol><symbol id="mt-ref-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol><symbol id="mt-ref-out" viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="mt-ref-bld" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></symbol><symbol id="mt-ref-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol><symbol id="mt-ref-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="mt-ref-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol><symbol id="mt-ref-truck" viewBox="0 0 24 24"><path d="M3 5h12v12H3zM15 9h4l3 4v4h-7M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M19 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></symbol><symbol id="mt-ref-layers" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M12 4v16M16 4v16"/></symbol><symbol id="mt-ref-building" viewBox="0 0 24 24"><path d="M4 21V3h16v18M8 7h2M14 7h2M8 12h2M14 12h2M9 21v-5h6v5"/></symbol></defs></svg><aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo"><b class="mt-pc-logo-mark"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg></b><span>M&amp;THACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-home"/></svg>Accueil</button><button onclick="mtPcNavigate('reception')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg>Réception</button><button onclick="mtPcNavigate('fournisseurs')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-truck"/></svg>Fournisseurs</button><button onclick="mtPcNavigate('etiquetage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-tag"/></svg>Étiquetage HACCP</button><button onclick="mtPcNavigate('stock')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-layers"/></svg>Stock et DLC</button><button onclick="mtPcNavigate('temperatures')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-therm"/></svg>Températures</button><button onclick="mtPcNavigate('nettoyage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-spark"/></svg>Nettoyage</button><button onclick="mtPcNavigate('tracabilite')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-search"/></svg>Traçabilité</button>${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;audits&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-audit"/></svg>Audits HACCP</button>':''}${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;correctives&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-check"/></svg>Actions correctives</button>':''}<button onclick="mtPcNavigate('direction')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-chart"/></svg>Tableau de bord Direction</button><button onclick="mtPcNavigate(&#39;rapports&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-doc"/></svg>Rapports</button><button onclick="mtPcNavigate('parametres')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-gear"/></svg>Paramètres</button>${SITE_ID==='main'?'<button onclick="mtPcNavigate(&#39;supervision&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-building"/></svg>Supervision établissements</button>':''}</div><button type="button" class="mt-pc-logout" onclick="logoutAppUser()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-out"/></svg>Se déconnecter</button></aside>`;
+ pcShell.innerHTML=`<svg class="mt-ref-defs" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute"><defs><symbol id="mt-ref-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol><symbol id="mt-ref-box" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol><symbol id="mt-ref-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></symbol><symbol id="mt-ref-therm" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol><symbol id="mt-ref-spark" viewBox="0 0 24 24"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></symbol><symbol id="mt-ref-tag" viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol><symbol id="mt-ref-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol><symbol id="mt-ref-audit" viewBox="0 0 24 24"><path d="M9 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3M9 2.5h6v3H9zM8.5 12.5l1.8 1.8 3.2-3.6M8.5 18h7"/></symbol><symbol id="mt-ref-check" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></symbol><symbol id="mt-ref-bug" viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3"/></symbol><symbol id="mt-ref-doc" viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6zM15 2v5h4M9 11h7M9 15h7M9 19h5"/></symbol><symbol id="mt-ref-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol><symbol id="mt-ref-out" viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="mt-ref-bld" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></symbol><symbol id="mt-ref-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol><symbol id="mt-ref-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="mt-ref-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol><symbol id="mt-ref-truck" viewBox="0 0 24 24"><path d="M3 5h12v12H3zM15 9h4l3 4v4h-7M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M19 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></symbol><symbol id="mt-ref-layers" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M12 4v16M16 4v16"/></symbol><symbol id="mt-ref-building" viewBox="0 0 24 24"><path d="M4 21V3h16v18M8 7h2M14 7h2M8 12h2M14 12h2M9 21v-5h6v5"/></symbol></defs></svg><aside class="mt-pc-sidebar" aria-label="Navigation PC"><div class="mt-pc-logo"><b class="mt-pc-logo-mark"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg></b><span>M&amp;THACCP</span></div><div class="mt-pc-nav"><button onclick="home()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-home"/></svg>Accueil</button><button onclick="mtPcNavigate('reception')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-box"/></svg>Réception</button><button onclick="mtPcNavigate('fournisseurs')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-truck"/></svg>Fournisseurs</button><button onclick="mtPcNavigate('etiquetage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-tag"/></svg>Étiquetage HACCP</button><button onclick="mtPcNavigate('stock')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-layers"/></svg>Stock et DLC</button><button onclick="mtPcNavigate('temperatures')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-therm"/></svg>Températures</button><button onclick="mtPcNavigate('nettoyage')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-spark"/></svg>Nettoyage</button><button onclick="mtPcNavigate('tracabilite')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-search"/></svg>Traçabilité</button>${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;audits&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-audit"/></svg>Audits HACCP</button>':''}${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;correctives&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-check"/></svg>Actions correctives</button>':''}${SITE_ID!=='main'?'<button onclick="mtPcNavigate(&#39;nuisibles&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-bug"/></svg>Lutte nuisibles</button>':''}<button onclick="mtPcNavigate('direction')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-chart"/></svg>Tableau de bord Direction</button><button onclick="mtPcNavigate(&#39;rapports&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-doc"/></svg>Rapports</button><button onclick="mtPcNavigate('parametres')"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-gear"/></svg>Paramètres</button>${SITE_ID==='main'?'<button onclick="mtPcNavigate(&#39;supervision&#39;)"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-building"/></svg>Supervision établissements</button>':''}</div><button type="button" class="mt-pc-logout" onclick="logoutAppUser()"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-out"/></svg>Se déconnecter</button></aside>`;
  app.innerHTML=`<div class="home-shell"><div class="mt-pc-topbar"><strong>M&THACCP · Espace de travail</strong><div class="mt-pc-right"><span class="mt-pc-site-wrap"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-bld"/></svg><span class="mt-pc-site" id="mtPcSite"></span></span><details class="mt-pc-profile"><summary><span class="mt-pc-avatar"><svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-user"/></svg></span> Mon profil <svg class="mt-ref-icon" aria-hidden="true"><use href="#mt-ref-down"/></svg></summary><button type="button" onclick="logoutAppUser()">Déconnexion</button></details></div></div>
   <div class="mt-mobile-top">
     <div class="mt-mobile-brand"><span class="mt-brand-leaf" aria-hidden="true">🍃</span><div><strong>M&amp;T<span>HACCP</span></strong><small>Sécurité Alimentaire<br>Qualité • Traçabilité</small></div></div>
@@ -1739,6 +1741,7 @@ ${SITE_ID!=='main'?'<button class="mtpc-photo-card mtpc-correctives-card" onclic
 
 <button class="mtpc-photo-card mtpc-direction-card" onclick="mtPcNavigate('direction')"><span class="mtp-photo mtp-photo-direction"><span class="mtpc-tile-icon" style="background:#0f8a8a">▥</span></span><span class="mtpc-tile-footer"><strong>Tableau de bord Direction</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
 <button class="mtpc-photo-card" onclick="mtPcNavigate('rapports')"><span class="mtp-photo mtp-photo-rapports"><span class="mtpc-tile-icon" style="background:#0f6b45">▤</span></span><span class="mtpc-tile-footer"><strong>Rapports</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+${SITE_ID!=='main'?'<button class="mtpc-photo-card mtpc-pest-card" onclick="mtPcNavigate(&#39;nuisibles&#39;)"><span class="mtp-photo mtpc-pest-bg"></span><span class="mtpc-tile-footer"><strong>Lutte contre les nuisibles</strong><span class="mtpc-go">›</span></span></button>':''}
 </div>
 <div class="mtpc-photo-grid mtpc-supervision-grid">
 ${SITE_ID==='main'?'<button class="mtpc-photo-card" onclick="mtPcNavigate(&#39;supervision&#39;)"><span class="mtp-photo mtp-photo-supervision"><span class="mtpc-tile-icon" style="background:#0f6b45">▤</span></span><span class="mtpc-tile-footer"><strong>Supervision des établissements</strong><span class="mtpc-go"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>':''}
@@ -4131,6 +4134,7 @@ temperatures:'<path d="M14 14V5a3 3 0 0 0-6 0v9a5 5 0 1 0 6 0Z M11 9v9"/>',
 nettoyage:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
 tracabilite:'<circle cx="10" cy="10" r="7"/><path d="m16 16 5 5"/>',
 direction:'<path d="M3 3v18h18 M8 17v-5 M13 17V8 M18 17V5"/>',
+nuisibles:'<ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3"/>',
 audits:'<path d="M9 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3M9 2.5h6v3H9zM8.5 12.5l1.8 1.8 3.2-3.6M8.5 18h7"/>',
 correctives:'<path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/>',
 parametres:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M19 5l-2 2 M7 17l-2 2"/>',
@@ -4141,10 +4145,10 @@ gallery:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" 
 lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
 };
 function svg(key){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[key]||paths.reception)+'</svg>'}
-const titles={audits:'Audits HACCP',correctives:'Actions correctives HACCP',reception:'Réception des marchandises',fournisseurs:'Fournisseurs',etiquetage:'Étiquetage HACCP',stock:'Stock et DLC',temperatures:'Contrôle des températures',nettoyage:'Nettoyage',tracabilite:'Traçabilité',direction:'Tableau de bord Direction',parametres:'Paramètres'};
+const titles={nuisibles:'Plan de lutte contre les nuisibles',audits:'Audits HACCP',correctives:'Actions correctives HACCP',reception:'Réception des marchandises',fournisseurs:'Fournisseurs',etiquetage:'Étiquetage HACCP',stock:'Stock et DLC',temperatures:'Contrôle des températures',nettoyage:'Nettoyage',tracabilite:'Traçabilité',direction:'Tableau de bord Direction',parametres:'Paramètres'};
 function moduleKey(){
 const view=typeof CURRENT_VIEW==='string'?CURRENT_VIEW:'';
-const map={reception:'reception',stock:'stock',temperatures:'temperatures',labeling:'etiquetage',trace:'tracabilite',dashboard:'direction',settings:'parametres','correctives-test':'correctives',audits:'audits'};
+const map={reception:'reception',stock:'stock',temperatures:'temperatures',labeling:'etiquetage',trace:'tracabilite',dashboard:'direction',settings:'parametres','correctives-test':'correctives',audits:'audits',pest:'nuisibles'};
 if(map[view])return map[view];
 const t=(document.querySelector('#app>h1,#app>section h1')||{}).textContent||'';
 return Object.keys(titles).find(k=>t.includes(titles[k]))||(/Fournisseur/i.test(t)?'fournisseurs':/Nettoyage/i.test(t)?'nettoyage':null);
@@ -4719,5 +4723,446 @@ window.addEventListener('message',async e=>{
  window.mtReportStockDlc=function(i,fromEdit){const x=S.stock&&S.stock[i];if(!x)return;const overdue=!!(x.dlc&&x.dlc<new Date().toISOString().slice(0,10));const issue=overdue?'DLC dépassée : '+x.dlc:(x.pack==='Non conforme'?'Emballage non conforme : '+(x.nonConformityReason||'anomalie signalée'):'');const reason=issue||prompt('Décrivez la non-conformité du produit (aucune action créée sans description) :');if(!reason||!String(reason).trim())return;const stockSourceId=x.receivedAt||x.createdAt||['stock',SITE_ID,x.product,x.lot,x.date].join(':');void offerAction('Stock et DLC',{...x,stockSourceId,stockProblem:String(reason).trim()})};
 
 })();
+</script>
+<style id="mt-pest-style">
+.mt-pest-view{max-width:1200px;margin:0 auto;padding:6px 4px 40px}
+.mt-pest-view h1{margin:8px 0 14px}
+.mt-pest-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.mt-pest-tab,.mt-pest-chip{border:1px solid #c5d6cc;background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-weight:600;color:#17594a;cursor:pointer}
+.mt-pest-tab.active,.mt-pest-chip.active{background:#0f6b45;color:#fff;border-color:#0f6b45}
+.mt-pest-count{background:#d33;color:#fff;border-radius:999px;padding:1px 7px;font-size:12px;margin-left:4px}
+.mt-pest-view .cards.mt-pest-cards{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}
+.mt-pest-cards .metric{display:flex;flex-direction:column;gap:4px}
+.mt-pest-cards .metric b{font-size:30px}
+.mt-pest-cards .metric b.mt-pest-small{font-size:20px}
+.mt-pest-red{color:#c62828}.mt-pest-orange{color:#c77700}
+.mt-pest-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e8edf0;color:#40505a}
+.mt-pest-badge.ok{background:#dff3e6;color:#126b3a}.mt-pest-badge.warn{background:#fff0d1;color:#8a5a00}.mt-pest-badge.bad{background:#fde1e1;color:#a52020}
+.mt-pest-alert{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-left:5px solid #c77700;background:#fff7e6;padding:11px 14px;border-radius:8px;margin:6px 0;font:inherit;cursor:pointer}
+.mt-pest-alert.bad{border-color:#c62828;background:#fdecec}.mt-pest-alert.ok{border-color:#1b8a4b;background:#e8f6ee;cursor:default}
+.mt-pest-alert span{font-weight:700;white-space:nowrap}
+.mt-pest-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mt-pest-headrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.mt-pest-tablewrap{overflow-x:auto}
+.mt-pest-table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+.mt-pest-table th,.mt-pest-table td{border-bottom:1px solid #dfe8e2;padding:8px;text-align:left;vertical-align:middle}
+.mt-pest-table th{background:#f1f6f3;color:#2a4b3e}
+.mt-pest-table select,.mt-pest-table input{width:100%;min-width:90px}
+.mt-pest-muted{opacity:.55}
+.mt-pest-rowact{white-space:nowrap}.mt-pest-rowact .btn{padding:6px 10px;margin-right:4px}
+.mt-pest-chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.mt-pest-detail{margin-top:8px;padding:8px 10px;background:#f5f9f6;border-radius:8px;font-size:14px}
+.mt-pest-planbox{position:relative;display:inline-block;max-width:100%;border:1px solid #c5d6cc;border-radius:8px;overflow:hidden;margin-bottom:8px}
+.mt-pest-planbox img{display:block;max-width:100%;height:auto}
+.mt-pest-planbox.placing{cursor:crosshair;outline:3px solid #e7a51c}
+.mt-pest-marker{position:absolute;transform:translate(-50%,-50%);padding:2px 7px;border-radius:999px;font-size:11px;font-weight:800;color:#fff;background:#1b8a4b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
+.mt-pest-marker.warn{background:#d98a00}.mt-pest-marker.bad{background:#c62828}.mt-pest-marker.placing{outline:3px solid #e7a51c}
+.mt-pest-view textarea,.mt-pest-view select,.mt-pest-view input:not([type=file]):not([type=checkbox]){width:100%;box-sizing:border-box}
+@media(max-width:850px){.mt-pest-view .cards.mt-pest-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+body.on-home:has(#mtPcShell) .mtpc-management-grid>.mtpc-pest-card{grid-column:1/-1!important}
+body.on-home:has(#mtPcShell) .mtpc-management-grid>.mtpc-pest-card>.mtpc-pest-bg{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.28)' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='14' rx='5' ry='6'/%3E%3Cpath d='M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3'/%3E%3C/svg%3E") center,linear-gradient(120deg,#3f5a2c,#7a6a35 60%,#9a7b3a);background-size:110px 110px,cover!important;background-repeat:no-repeat!important;background-position:center,center!important}
+body.on-home:has(#mtPcShell) .mtpc-management-grid>.mtpc-pest-card .mtpc-tile-footer:before{content:""!important;font-size:0!important;background:#6b4f2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='14' rx='5' ry='6'/%3E%3Cpath d='M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3'/%3E%3C/svg%3E") center/26px no-repeat!important}
+body .mtp-tiles .mtp-photo-nuisibles{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.28)' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='14' rx='5' ry='6'/%3E%3Cpath d='M12 8V5M9 5l3 3 3-3M7 11H3M7 15H3M17 11h4M17 15h4M8 19l-3 3M16 19l3 3'/%3E%3C/svg%3E") center/60% no-repeat,linear-gradient(120deg,#3f5a2c,#7a6a35 60%,#9a7b3a)!important}
+</style>
+<script id="mt-pest-module">
+/* Module : Plan de lutte contre les nuisibles
+   Données : S.pest = { plan, traps[], activity[], inspections[], interventions[], followups[], provider{} }
+   Synchronisées avec le reste de l'état (localStorage + Firestore) via save(). */
+(function(){
+'use strict';
+const TABS=[['overview','Vue d’ensemble'],['plan','Plan des pièges'],['rounds','Relevés d’activité'],['inspections','Inspections'],['provider','Prestataire'],['followups','Fiches de suivi']];
+const TRAP_TYPES=['Boîte d’appâtage (rongeurs)','Piège à glu (rongeurs)','Piège mécanique (rongeurs)','Lampe UV (insectes volants)','Piège à phéromones (mites)','Piège à glu (insectes rampants)','Autre dispositif'];
+const ACTIVITY=['Aucune activité','Activité détectée','Capture','Appât consommé','Piège endommagé ou déplacé','Piège manquant'];
+const POINTS=['Traces ou excréments de rongeurs','Insectes rampants (blattes, fourmis…)','Insectes volants (mouches, mites…)','Points d’entrée ouverts (portes, aérations, trous)','Stockage des denrées et emballages (surélevés, fermés)','Déchets et local poubelles','Propreté sous et derrière les équipements','Pièges en place, accessibles et en bon état'];
+const ZONES=['Cuisine principale','Réserve sèche','Chambre froide','Zone de réception','Local poubelles','Plonge / laverie','Restaurant / salle','Vestiaires et sanitaires','Extérieur / abords','Autre'];
+const INT_TYPES=['Contrôle préventif','Dératisation','Désinsectisation','Désinfection','Intervention curative','Autre'];
+const PESTS=['Rongeurs','Blattes','Mouches / insectes volants','Mites alimentaires','Fourmis','Oiseaux','Autre'];
+const SEVERITY=['Mineure','Majeure','Critique'];
+const FSTATUS=['Ouverte','En cours','Clôturée'];
+let tab='overview',placing='',fFilter='Toutes',editFiche='',photos={},openInsp='';
+
+function $(id){return document.getElementById(id)}
+function v(id){const e=$(id);return e?String(e.value||'').trim():''}
+function e(x){return typeof esc==='function'?esc(x):String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function P(){
+  if(!S.pest||typeof S.pest!=='object')S.pest={};
+  const p=S.pest;
+  ['traps','activity','inspections','interventions','followups'].forEach(k=>{if(!Array.isArray(p[k]))p[k]=[]});
+  if(!p.provider||typeof p.provider!=='object')p.provider={};
+  if(typeof p.plan!=='string')p.plan='';
+  return p;
+}
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function addDays(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function fd(s){if(!s)return '—';if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const d=new Date(s+'T12:00:00');return d.toLocaleDateString('fr-FR')}const d=new Date(s);return isNaN(d)?e(s):d.toLocaleString('fr-FR')}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function prof(){return (typeof currentUserProfile!=='undefined'&&currentUserProfile)||{}}
+function who(){const p=prof();const n=p.displayName||p.name||p.username||p.email||'';return n.includes('@')?n.split('@')[0]:n}
+function canManage(){return ['admin','responsable','haccp'].includes(prof().role)}
+function stamp(o){const p=prof();o.actorUid=p.uid||'';o.actorRole=p.role||'';o.createdAt=new Date().toISOString();return o}
+function trace(summary,status,operator,note){
+  if(!Array.isArray(S.trace))S.trace=[];
+  S.trace.unshift({type:'Nuisibles',product:summary,date:new Date().toLocaleString('fr-FR'),status:status||'',operator:operator||'',note:note||''});
+}
+function persist(){save()}
+function days(from,to){return Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000)}
+function badge(txt,cls){return '<span class="mt-pest-badge '+cls+'">'+e(txt)+'</span>'}
+function optList(list,sel,placeholder){return (placeholder?'<option value="">'+e(placeholder)+'</option>':'')+list.map(x=>'<option'+(x===sel?' selected':'')+'>'+e(x)+'</option>').join('')}
+function activeTraps(){return P().traps.filter(t=>t.active!==false)}
+function lastReading(trapId){
+  let best=null;
+  P().activity.forEach(a=>{if(a.trapId===trapId&&(!best||(a.date+a.createdAt)>(best.date+best.createdAt)))best=a});
+  return best;
+}
+function trapState(t){
+  const l=lastReading(t.id),freq=Number(t.freq)||7;
+  if(!l)return {l:null,late:true,txt:'Jamais relevé',cls:'warn'};
+  const age=days(l.date,today());
+  const abnormal=l.status!==ACTIVITY[0];
+  return {l,late:age>freq,txt:fd(l.date)+(abnormal?' · '+l.status:''),cls:abnormal?'bad':(age>freq?'warn':'ok'),age};
+}
+function openFollowups(){return P().followups.filter(f=>f.status!=='Clôturée')}
+function nextRef(){const n=1+P().followups.reduce((m,f)=>Math.max(m,Number(String(f.reference||'').replace('NUI-',''))||0),0);return 'NUI-'+String(n).padStart(4,'0')}
+
+/* ---------- photos ---------- */
+function compress(file,maxW,q,done){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=function(){const im=new Image();im.onload=function(){
+    const s=Math.min(1,maxW/im.width,maxW/im.height),w=Math.max(1,Math.round(im.width*s)),h=Math.max(1,Math.round(im.height*s));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,w,h);c.drawImage(im,0,0,w,h);
+    done(cv.toDataURL('image/webp',q));
+  };im.src=r.result};
+  r.readAsDataURL(file);
+}
+function pickPhoto(key,file){
+  compress(file,1000,.65,function(url){photos[key]=url;const p=$('pst-prev-'+key);if(p)p.innerHTML='<img src="'+url+'" alt="Photo jointe" style="max-width:220px;max-height:160px;border-radius:8px;display:block;margin-top:6px"><button type="button" class="btn" style="margin-top:6px;padding:6px 10px" onclick="mtPest.dropPhoto(\''+key+'\')">Retirer la photo</button>'});
+}
+function dropPhoto(key){delete photos[key];const p=$('pst-prev-'+key);if(p)p.innerHTML=''}
+function photoField(key,label){return '<label>'+e(label)+'</label><input type="file" accept="image/*" onchange="mtPest.pickPhoto(\''+key+'\',this.files[0])"><div id="pst-prev-'+key+'">'+(photos[key]?'<img src="'+photos[key]+'" alt="Photo jointe" style="max-width:220px;max-height:160px;border-radius:8px;display:block;margin-top:6px">':'')+'</div>'}
+function thumb(url,alt){return url?'<img src="'+url+'" alt="'+e(alt)+'" style="max-width:130px;max-height:90px;border-radius:8px;cursor:zoom-in;margin-top:6px" onclick="mtPest.zoom(this.src)">':''}
+function zoom(src){if(typeof haccpEnlargePhoto==='function'){haccpEnlargePhoto(src);return}const w=window.open('','_blank');if(w){w.document.write('<img src="'+src+'" style="max-width:100%">');w.document.close()}}
+
+/* ---------- affichage ---------- */
+function shell(body){
+  const n=openFollowups().length;
+  const tabs=TABS.map(([k,l])=>'<button type="button" class="mt-pest-tab'+(k===tab?' active':'')+'" onclick="mtPest.tab(\''+k+'\')">'+e(l)+(k==='followups'&&n?' <span class="mt-pest-count">'+n+'</span>':'')+'</button>').join('');
+  return '<section class="mt-pest-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Plan de lutte contre les nuisibles</h1><div class="mt-pest-tabs" role="tablist">'+tabs+'</div>'+body+'</section>';
+}
+function render(){
+  const root=$('app');if(!root)return;
+  let body='';
+  try{
+    body=tab==='plan'?vPlan():tab==='rounds'?vRounds():tab==='inspections'?vInspections():tab==='provider'?vProvider():tab==='followups'?vFollowups():vOverview();
+  }catch(err){console.error('Nuisibles',err);body='<div class="panel"><p>Erreur d’affichage : '+e(err&&err.message||err)+'</p></div>'}
+  root.innerHTML=shell(body);
+}
+function open(){
+  if(typeof SITE_ID!=='undefined'&&SITE_ID==='main'){alert('Module réservé aux établissements');return}
+  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='pest';
+  document.body.classList.remove('on-home','mt-premium-active','on-login');
+  const legacy=document.querySelector('body > nav');if(legacy)legacy.style.display='none';
+  const ps=$('mtPcShell');if(ps)ps.hidden=false;
+  P();render();window.scrollTo(0,0);
+}
+function setTab(k){tab=k;if(k!=='plan')placing='';if(k!=='followups')editFiche='';render();window.scrollTo(0,0)}
+
+/* ----- vue d'ensemble ----- */
+function vOverview(){
+  const p=P(),t=today(),traps=activeTraps();
+  const since=addDays(t,-30);
+  const act30=p.activity.filter(a=>a.date>=since&&a.status!==ACTIVITY[0]).length;
+  const open=openFollowups();
+  const late=open.filter(f=>f.due&&f.due<t).length;
+  const next=p.provider.nextVisit||'';
+  const nextLate=next&&next<t;
+  const toCheck=traps.filter(x=>trapState(x).late);
+  const lastInsp=p.inspections.reduce((m,i)=>i.date>m?i.date:m,'');
+  const alerts=[];
+  if(!traps.length)alerts.push(['warn','Aucun piège défini. Commencez par le plan des pièges.','plan']);
+  if(toCheck.length)alerts.push(['warn',toCheck.length+' piège(s) à relever : '+toCheck.slice(0,6).map(x=>e(x.code)).join(', ')+(toCheck.length>6?'…':''),'rounds']);
+  if(nextLate)alerts.push(['bad','Visite du prestataire en retard (prévue le '+fd(next)+').','provider']);
+  else if(!next)alerts.push(['warn','Prochaine visite du prestataire non planifiée.','provider']);
+  if(!lastInsp||days(lastInsp,t)>30)alerts.push(['warn','Aucune inspection interne depuis plus de 30 jours.','inspections']);
+  if(late)alerts.push(['bad',late+' fiche(s) de suivi en retard.','followups']);
+  const alertHtml=alerts.length?alerts.map(a=>'<button type="button" class="mt-pest-alert '+a[0]+'" onclick="mtPest.tab(\''+a[2]+'\')">'+a[1]+'<span>Voir →</span></button>').join(''):'<div class="mt-pest-alert ok">Tout est à jour.</div>';
+  const events=[];
+  p.activity.filter(a=>a.status!==ACTIVITY[0]).forEach(a=>events.push({d:a.date,c:a.createdAt||'',t:'Relevé',s:(a.trapCode||'')+' · '+a.status+(a.count?' ('+a.count+')':''),k:'bad'}));
+  p.inspections.forEach(i=>events.push({d:i.date,c:i.createdAt||'',t:'Inspection',s:(i.zone||'')+' · '+i.status,k:i.status==='Conforme'?'ok':'bad'}));
+  p.interventions.forEach(i=>events.push({d:i.date,c:i.createdAt||'',t:'Prestataire',s:(i.type||'')+(i.technician?' · '+i.technician:''),k:'muted'}));
+  p.followups.forEach(f=>events.push({d:f.opened,c:f.createdAt||'',t:'Fiche '+(f.reference||''),s:(f.title||'')+' · '+f.status,k:f.status==='Clôturée'?'ok':'warn'}));
+  events.sort((a,b)=>(b.d+b.c).localeCompare(a.d+a.c));
+  const rec=events.slice(0,8).map(x=>'<div class="record"><b>'+e(x.t)+'</b> — '+fd(x.d)+'<br><span class="note">'+e(x.s)+'</span></div>').join('')||'<p class="note">Aucun évènement enregistré.</p>';
+  return '<div class="cards mt-pest-cards">'
+   +'<div class="metric"><span>Pièges actifs</span><b>'+traps.length+'</b></div>'
+   +'<div class="metric"><span>Activité sur 30 jours</span><b class="'+(act30?'mt-pest-red':'')+'">'+act30+'</b></div>'
+   +'<div class="metric"><span>Fiches ouvertes</span><b class="'+(open.length?'mt-pest-orange':'')+'">'+open.length+'</b></div>'
+   +'<div class="metric"><span>Prochaine visite</span><b class="mt-pest-small '+(nextLate?'mt-pest-red':'')+'">'+(next?fd(next):'À planifier')+'</b></div></div>'
+   +'<div class="panel"><h2>À traiter</h2>'+alertHtml+'<div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.tab(\'rounds\')">Faire un relevé</button><button class="btn" onclick="mtPest.tab(\'inspections\')">Nouvelle inspection</button><button class="btn" onclick="mtPest.newFiche()">Ouvrir une fiche de suivi</button></div></div>'
+   +'<div class="panel"><h2>Derniers évènements</h2>'+rec+'</div>';
+}
+
+/* ----- plan des pièges ----- */
+function vPlan(){
+  const p=P(),mg=canManage();
+  const traps=p.traps;
+  let plan='';
+  if(p.plan){
+    const markers=traps.filter(t=>t.active!==false&&typeof t.x==='number').map(t=>{const s=trapState(t);return '<span class="mt-pest-marker '+s.cls+(placing===t.id?' placing':'')+'" style="left:'+t.x+'%;top:'+t.y+'%" title="'+e(t.code+' · '+t.location)+'">'+e(t.code)+'</span>'}).join('');
+    plan='<div class="mt-pest-planbox'+(placing?' placing':'')+'" onclick="mtPest.planClick(event)"><img src="'+p.plan+'" alt="Plan des locaux" id="pst-planimg">'+markers+'</div>'
+      +(placing?'<p class="note"><b>Touchez le plan</b> pour placer le piège '+e((traps.find(t=>t.id===placing)||{}).code||'')+'. <button class="btn" style="padding:6px 10px" onclick="mtPest.cancelPlace()">Annuler</button></p>':'<p class="note">Les pastilles montrent l’état du dernier relevé : vert conforme, orange à relever, rouge activité détectée.</p>')
+      +(mg?'<button class="btn" onclick="mtPest.removePlan()">Supprimer le plan</button>':'');
+  }else{
+    plan='<p class="note">Aucun plan des locaux. '+(mg?'Ajoutez une image (photo ou capture du plan) pour positionner les pièges.':'')+'</p>';
+  }
+  const planUpload=mg?'<label>'+(p.plan?'Remplacer':'Ajouter')+' le plan des locaux</label><input type="file" accept="image/*" onchange="mtPest.uploadPlan(this.files[0])">':'';
+  const rows=traps.map(t=>{
+    const s=t.active===false?{txt:'Retiré le '+fd(t.removedAt),cls:'muted'}:trapState(t);
+    return '<tr class="'+(t.active===false?'mt-pest-muted':'')+'"><td><b>'+e(t.code)+'</b></td><td>'+e(t.type)+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+badge(s.txt,s.cls)+'</td><td class="mt-pest-rowact">'
+      +(mg&&t.active!==false?'<button class="btn" onclick="mtPest.place(\''+t.id+'\')">'+(typeof t.x==='number'?'Déplacer':'Placer')+'</button><button class="btn" onclick="mtPest.removeTrap(\''+t.id+'\')">Retirer</button>':'')+'</td></tr>';
+  }).join('');
+  const table=traps.length?'<div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Code</th><th>Type</th><th>Emplacement</th><th>Relevé tous les</th><th>Dernier relevé</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="note">Aucun piège enregistré.</p>';
+  const nextCode=guessCode('Boîte d’appâtage (rongeurs)');
+  const form=mg?'<div class="panel"><h2>Ajouter un piège ou dispositif</h2><div class="row"><div><label>Code</label><input id="pst-t-code" value="'+e(nextCode)+'"></div><div><label>Type</label><select id="pst-t-type" onchange="mtPest.typeChanged()">'+optList(TRAP_TYPES,TRAP_TYPES[0])+'</select></div></div><div class="row"><div><label>Emplacement</label><input id="pst-t-loc" placeholder="Ex. Réserve sèche, près de la porte arrière"></div><div><label>Relevé tous les (jours)</label><input id="pst-t-freq" type="number" min="1" max="365" value="7"></div></div><button class="btn primary" onclick="mtPest.addTrap()">Ajouter au plan</button></div>':'<p class="note">Seuls les responsables peuvent modifier le plan des pièges.</p>';
+  return '<div class="panel"><h2>Plan des locaux</h2>'+plan+planUpload+'</div><div class="panel"><div class="mt-pest-headrow"><h2>Registre des pièges</h2><button class="btn" onclick="mtPest.printRegister()">Imprimer le registre</button></div>'+table+'</div>'+form;
+}
+function guessCode(type){
+  const pre=/rongeurs/.test(type)?'R':/UV/.test(type)?'U':/phéromones/.test(type)?'M':/rampants/.test(type)?'B':'D';
+  const n=1+P().traps.filter(t=>String(t.code).startsWith(pre+'-')).reduce((m,t)=>Math.max(m,Number(String(t.code).split('-')[1])||0),0);
+  return pre+'-'+String(n).padStart(2,'0');
+}
+function typeChanged(){const c=$('pst-t-code'),t=$('pst-t-type');if(c&&t){c.value=guessCode(t.value);const f=$('pst-t-freq');if(f)f.value=/UV/.test(t.value)?30:7}}
+function addTrap(){
+  if(!canManage()){alert('Action réservée aux responsables.');return}
+  const code=v('pst-t-code'),type=v('pst-t-type'),loc=v('pst-t-loc'),freq=Number(v('pst-t-freq'))||7;
+  if(!code){alert('Indiquez le code du piège.');return}
+  if(!loc){alert('Indiquez l’emplacement du piège.');return}
+  if(P().traps.some(t=>t.active!==false&&t.code.toLowerCase()===code.toLowerCase())){alert('Ce code existe déjà.');return}
+  P().traps.push(stamp({id:uid(),code,type,location:loc,freq,active:true,addedAt:today()}));
+  trace('Piège ajouté : '+code+' · '+loc,'',who(),type);
+  persist();render();
+}
+function removeTrap(id){
+  if(!canManage())return;
+  const t=P().traps.find(x=>x.id===id);if(!t)return;
+  if(!confirm('Retirer le piège '+t.code+' du plan ? Son historique de relevés est conservé.'))return;
+  t.active=false;t.removedAt=today();
+  trace('Piège retiré : '+t.code,'',who(),t.location);
+  persist();render();
+}
+function place(id){placing=id;render();const b=document.querySelector('.mt-pest-planbox');if(b)b.scrollIntoView({behavior:'smooth',block:'center'})}
+function cancelPlace(){placing='';render()}
+function planClick(ev){
+  if(!placing)return;
+  const img=$('pst-planimg');if(!img)return;
+  const r=img.getBoundingClientRect();
+  const x=Math.round(((ev.clientX-r.left)/r.width)*1000)/10,y=Math.round(((ev.clientY-r.top)/r.height)*1000)/10;
+  if(x<0||x>100||y<0||y>100)return;
+  const t=P().traps.find(z=>z.id===placing);if(!t)return;
+  t.x=x;t.y=y;placing='';persist();render();
+}
+function uploadPlan(file){
+  if(!file||!canManage())return;
+  compress(file,1200,.62,function(url){P().plan=url;persist();render()});
+}
+function removePlan(){
+  if(!canManage())return;
+  if(!confirm('Supprimer le plan des locaux ? Les positions des pièges seront effacées.'))return;
+  const p=P();p.plan='';p.traps.forEach(t=>{delete t.x;delete t.y});persist();render();
+}
+
+/* ----- relevés d'activité ----- */
+function vRounds(){
+  const traps=activeTraps();
+  if(!traps.length)return '<div class="panel"><p>Aucun piège actif. Définissez d’abord le plan des pièges.</p><button class="btn primary" onclick="mtPest.tab(\'plan\')">Aller au plan des pièges</button></div>';
+  const rows=traps.map(t=>{
+    const s=trapState(t);
+    return '<tr><td><b>'+e(t.code)+'</b><br><span class="note">'+e(t.location)+'</span></td><td><select id="pst-r-s-'+t.id+'" onchange="mtPest.roundChanged(\''+t.id+'\')">'+optList(ACTIVITY,ACTIVITY[0])+'</select></td><td><input id="pst-r-n-'+t.id+'" type="number" min="0" placeholder="Nombre" style="max-width:90px"></td><td><input id="pst-r-o-'+t.id+'" placeholder="Observation"></td><td>'+badge(s.l?fd(s.l.date):'Jamais',s.cls)+'</td></tr>';
+  }).join('');
+  const hist=P().activity.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt)).slice(0,40).map(a=>'<div class="record"><b>'+e(a.trapCode)+'</b> — '+fd(a.date)+' '+badge(a.status,a.status===ACTIVITY[0]?'ok':'bad')+'<br><span class="note">'+e(a.location||'')+(a.count?' · '+a.count+' constaté(s)':'')+(a.note?' · '+e(a.note):'')+(a.operator?' · par '+e(a.operator):'')+'</span></div>').join('')||'<p class="note">Aucun relevé enregistré.</p>';
+  return '<div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Date du relevé</label><input id="pst-r-date" type="date" value="'+today()+'" max="'+today()+'"></div><div><label>Opérateur</label><input id="pst-r-op" value="'+e(who())+'"></div></div><div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Piège</th><th>Constat</th><th>Nombre</th><th>Observation</th><th>Dernier</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Laissez « Aucune activité » pour les pièges sans anomalie : tous les pièges de la liste sont enregistrés ensemble.</p><button class="btn primary" onclick="mtPest.saveRound()">Enregistrer le relevé</button></div><div class="panel"><h2>Historique des relevés</h2>'+hist+'</div>';
+}
+function roundChanged(id){const s=$('pst-r-s-'+id);if(s&&s.value!==ACTIVITY[0]){const n=$('pst-r-n-'+id);if(n&&!n.value)n.focus()}}
+function saveRound(){
+  const date=v('pst-r-date')||today(),op=v('pst-r-op');
+  if(date>today()){alert('La date du relevé ne peut pas être dans le futur.');return}
+  if(!op){alert('Indiquez l’opérateur.');return}
+  const traps=activeTraps(),recs=[];
+  for(const t of traps){
+    const st=v('pst-r-s-'+t.id)||ACTIVITY[0],cnt=v('pst-r-n-'+t.id),note=v('pst-r-o-'+t.id);
+    if(st!==ACTIVITY[0]&&!note&&!cnt){alert('Piège '+t.code+' : indiquez un nombre ou une observation pour une activité détectée.');return}
+    recs.push(stamp({id:uid(),trapId:t.id,trapCode:t.code,location:t.location,date,status:st,count:cnt?Number(cnt):0,note,operator:op}));
+  }
+  const bad=recs.filter(r=>r.status!==ACTIVITY[0]);
+  P().activity.push(...recs);
+  trace('Relevé de pièges : '+recs.length+' contrôlé(s), '+bad.length+' avec activité',bad.length?'Non conforme':'Conforme',op,bad.map(b=>b.trapCode+' : '+b.status).join(' ; '));
+  persist();render();
+  if(bad.length&&confirm(bad.length+' piège(s) avec activité. Ouvrir une fiche de suivi maintenant ?')){
+    newFiche({source:'Relevé d’activité',title:'Activité détectée : '+bad.map(b=>b.trapCode).join(', '),description:bad.map(b=>b.trapCode+' ('+b.location+') : '+b.status+(b.count?', '+b.count:'')+(b.note?' — '+b.note:'')).join('\n'),zone:bad[0].location});
+  }
+}
+
+/* ----- inspections ----- */
+function vInspections(){
+  const rows=POINTS.map((p,i)=>'<tr><td>'+e(p)+'</td><td><select id="pst-i-p'+i+'">'+optList(['Conforme','À corriger','Sans objet'],'Conforme')+'</select></td></tr>').join('');
+  const hist=P().inspections.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt)).map(i=>{
+    const bad=(i.points||[]).filter(x=>x.result==='À corriger');
+    const det=openInsp===i.id?'<div class="mt-pest-detail">'+(i.points||[]).map(x=>'<div>'+e(x.label)+' : <b>'+e(x.result)+'</b></div>').join('')+(i.note?'<p>'+e(i.note)+'</p>':'')+thumb(i.photo,'Photo inspection')+'</div>':'';
+    return '<div class="record clickable" style="cursor:pointer" onclick="mtPest.toggleInsp(\''+i.id+'\')"><b>'+e(i.zone)+'</b> — '+fd(i.date)+' '+badge(i.status,i.status==='Conforme'?'ok':'bad')+'<br><span class="note">Par '+e(i.inspector||'—')+(bad.length?' · '+bad.length+' point(s) à corriger':'')+' · '+(openInsp===i.id?'Masquer':'Voir le détail')+'</span>'+det+'</div>';
+  }).join('')||'<p class="note">Aucune inspection enregistrée.</p>';
+  return '<div class="panel"><h2>Nouvelle inspection</h2><div class="row"><div><label>Date</label><input id="pst-i-date" type="date" value="'+today()+'" max="'+today()+'"></div><div><label>Inspecteur</label><input id="pst-i-who" value="'+e(who())+'"></div></div><label>Zone inspectée</label><select id="pst-i-zone" onchange="mtPest.zoneChanged()">'+optList(ZONES,'', 'Choisir une zone')+'</select><input id="pst-i-zone2" placeholder="Précisez la zone" style="display:none;margin-top:8px"><div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Point de contrôle</th><th>Résultat</th></tr></thead><tbody>'+rows+'</tbody></table></div><label>Observations</label><textarea id="pst-i-note" rows="3" placeholder="Constats, localisation, mesures immédiates"></textarea>'+photoField('insp','Photo (facultative)')+'<br><button class="btn primary" onclick="mtPest.saveInspection()">Enregistrer l’inspection</button></div><div class="panel"><h2>Historique des inspections</h2>'+hist+'</div>';
+}
+function zoneChanged(){const z=$('pst-i-zone'),o=$('pst-i-zone2');if(z&&o)o.style.display=z.value==='Autre'?'block':'none'}
+function toggleInsp(id){openInsp=openInsp===id?'':id;render()}
+function saveInspection(){
+  const date=v('pst-i-date')||today(),who_=v('pst-i-who');
+  let zone=v('pst-i-zone');if(zone==='Autre')zone=v('pst-i-zone2');
+  if(date>today()){alert('La date ne peut pas être dans le futur.');return}
+  if(!zone){alert('Choisissez la zone inspectée.');return}
+  if(!who_){alert('Indiquez l’inspecteur.');return}
+  const points=POINTS.map((label,i)=>({label,result:v('pst-i-p'+i)||'Conforme'}));
+  const bad=points.filter(p=>p.result==='À corriger');
+  const note=v('pst-i-note');
+  if(bad.length&&!note){alert('Décrivez les points à corriger dans les observations.');return}
+  const rec=stamp({id:uid(),date,inspector:who_,zone,points,note,photo:photos.insp||'',status:bad.length?'Non conforme':'Conforme'});
+  P().inspections.push(rec);delete photos.insp;
+  trace('Inspection nuisibles : '+zone,rec.status,who_,bad.map(b=>b.label).join(' ; '));
+  persist();render();
+  if(bad.length&&confirm('Inspection non conforme. Ouvrir une fiche de suivi maintenant ?')){
+    newFiche({source:'Inspection',sourceId:rec.id,title:'Inspection non conforme : '+zone,description:bad.map(b=>b.label).join('\n')+(note?'\n'+note:''),zone});
+  }
+}
+
+/* ----- prestataire ----- */
+function vProvider(){
+  const p=P(),pr=p.provider,mg=canManage(),t=today();
+  const next=pr.nextVisit||'';
+  const info=mg?'<div class="row"><div><label>Société prestataire</label><input id="pst-p-name" value="'+e(pr.name||'')+'"></div><div><label>Contact / téléphone</label><input id="pst-p-phone" value="'+e(pr.phone||'')+'"></div></div><div class="row"><div><label>E-mail</label><input id="pst-p-mail" value="'+e(pr.email||'')+'"></div><div><label>N° de contrat</label><input id="pst-p-contract" value="'+e(pr.contract||'')+'"></div></div><div class="row"><div><label>Fréquence des visites</label><input id="pst-p-freq" value="'+e(pr.frequency||'')+'" placeholder="Ex. mensuelle"></div><div><label>Prochaine visite prévue</label><input id="pst-p-next" type="date" value="'+e(next)+'"></div></div><button class="btn primary" onclick="mtPest.saveProvider()">Enregistrer le prestataire</button>'
+    :'<p><b>'+e(pr.name||'Non renseigné')+'</b><br><span class="note">'+e(pr.phone||'')+(pr.email?' · '+e(pr.email):'')+(pr.contract?' · Contrat '+e(pr.contract):'')+(pr.frequency?' · '+e(pr.frequency):'')+'</span></p>';
+  const nextTxt=next?(next<t?badge('Visite en retard : '+fd(next),'bad'):badge('Prochaine visite : '+fd(next),'ok')):badge('Prochaine visite non planifiée','warn');
+  const prodRows=[0,1,2].map(i=>'<div class="row"><div><label>Produit '+(i+1)+'</label><input id="pst-v-pn'+i+'" placeholder="Nom commercial"></div><div><label>Matière active</label><input id="pst-v-pa'+i+'"></div><div><label>Quantité</label><input id="pst-v-pq'+i+'" placeholder="Ex. 200 g"></div></div>').join('');
+  const form=mg?'<div class="panel"><h2>Enregistrer une intervention</h2><div class="row"><div><label>Date</label><input id="pst-v-date" type="date" value="'+t+'" max="'+t+'"></div><div><label>Technicien</label><input id="pst-v-tech"></div></div><div class="row"><div><label>Type d’intervention</label><select id="pst-v-type">'+optList(INT_TYPES,INT_TYPES[0])+'</select></div><div><label>Prochaine visite</label><input id="pst-v-next" type="date" value="'+(pr.frequency?'':'')+'"></div></div><label>Zones traitées</label><input id="pst-v-zones" placeholder="Ex. cuisine, réserve, local poubelles">'+prodRows+'<label>Conclusions et recommandations du prestataire</label><textarea id="pst-v-note" rows="3"></textarea>'+photoField('int','Rapport d’intervention (photo du document)')+'<br><button class="btn primary" onclick="mtPest.saveIntervention()">Enregistrer l’intervention</button></div>':'';
+  const hist=p.interventions.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt)).map(i=>'<div class="record"><b>'+e(i.type)+'</b> — '+fd(i.date)+'<br><span class="note">'+(i.technician?'Technicien : '+e(i.technician)+' · ':'')+(i.zones?'Zones : '+e(i.zones):'')+'</span>'+((i.products||[]).length?'<div class="mt-pest-detail">'+i.products.map(x=>'<div>'+e(x.name)+(x.active?' ('+e(x.active)+')':'')+(x.qty?' — '+e(x.qty):'')+'</div>').join('')+'</div>':'')+(i.note?'<p class="note">'+e(i.note)+'</p>':'')+thumb(i.photo,'Rapport d’intervention')+'</div>').join('')||'<p class="note">Aucune intervention enregistrée.</p>';
+  return '<div class="panel"><h2>Prestataire de lutte antiparasitaire</h2>'+nextTxt+'<div style="margin-top:10px">'+info+'</div></div>'+form+'<div class="panel"><h2>Interventions du prestataire</h2>'+hist+'</div>';
+}
+function saveProvider(){
+  if(!canManage())return;
+  const pr=P().provider;
+  pr.name=v('pst-p-name');pr.phone=v('pst-p-phone');pr.email=v('pst-p-mail');pr.contract=v('pst-p-contract');pr.frequency=v('pst-p-freq');pr.nextVisit=v('pst-p-next');
+  trace('Prestataire nuisibles mis à jour : '+(pr.name||'—'),'',who(),pr.nextVisit?'Prochaine visite le '+fd(pr.nextVisit):'');
+  persist();render();
+}
+function saveIntervention(){
+  if(!canManage())return;
+  const date=v('pst-v-date')||today(),type=v('pst-v-type');
+  if(date>today()){alert('La date ne peut pas être dans le futur.');return}
+  const tech=v('pst-v-tech');
+  if(!tech){alert('Indiquez le nom du technicien.');return}
+  const products=[0,1,2].map(i=>({name:v('pst-v-pn'+i),active:v('pst-v-pa'+i),qty:v('pst-v-pq'+i)})).filter(x=>x.name);
+  const note=v('pst-v-note'),next=v('pst-v-next');
+  if(next&&next<=date){alert('La prochaine visite doit être postérieure à l’intervention.');return}
+  const rec=stamp({id:uid(),date,technician:tech,type,zones:v('pst-v-zones'),products,note,photo:photos.int||'',provider:P().provider.name||''});
+  P().interventions.push(rec);delete photos.int;
+  if(next)P().provider.nextVisit=next;
+  trace('Intervention prestataire : '+type,'',tech,products.map(x=>x.name).join(', '));
+  persist();render();
+  if(note&&confirm('Une recommandation a été notée. Ouvrir une fiche de suivi ?')){
+    newFiche({source:'Prestataire',sourceId:rec.id,title:'Recommandation du prestataire ('+fd(date)+')',description:note,zone:rec.zones});
+  }
+}
+
+/* ----- fiches de suivi ----- */
+function vFollowups(){
+  if(editFiche!=='')return vFicheForm();
+  const t=today();
+  const list=P().followups.filter(f=>fFilter==='Toutes'||f.status===fFilter).sort((a,b)=>(b.opened+b.createdAt).localeCompare(a.opened+a.createdAt));
+  const filters=['Toutes',...FSTATUS].map(s=>'<button type="button" class="mt-pest-chip'+(s===fFilter?' active':'')+'" onclick="mtPest.filter(\''+s+'\')">'+s+'</button>').join('');
+  const rows=list.map(f=>{
+    const late=f.status!=='Clôturée'&&f.due&&f.due<t;
+    return '<div class="record clickable" style="cursor:pointer" onclick="mtPest.editFiche(\''+f.id+'\')"><b>'+e(f.reference)+'</b> · '+e(f.title)+' '+badge(f.status,f.status==='Clôturée'?'ok':f.status==='En cours'?'warn':'bad')+(late?' '+badge('En retard','bad'):'')+(f.severity?' '+badge(f.severity,f.severity==='Critique'?'bad':f.severity==='Majeure'?'warn':'muted'):'')+'<br><span class="note">Ouverte le '+fd(f.opened)+(f.pest?' · '+e(f.pest):'')+(f.zone?' · '+e(f.zone):'')+(f.due?' · Échéance '+fd(f.due):'')+(f.owner?' · '+e(f.owner):'')+'</span></div>';
+  }).join('')||'<p class="note">Aucune fiche.</p>';
+  return '<div class="panel"><div class="mt-pest-headrow"><h2>Fiches de suivi</h2><button class="btn primary" onclick="mtPest.newFiche()">Nouvelle fiche</button></div><div class="mt-pest-chips">'+filters+'</div>'+rows+'</div>';
+}
+function setFilter(s){fFilter=s;render()}
+function newFiche(pre){
+  tab='followups';
+  const f=Object.assign({id:'',reference:nextRef(),opened:today(),status:'Ouverte',severity:'Mineure',title:'',description:'',zone:'',pest:'',source:'Autre',sourceId:'',immediate:'',corrective:'',owner:'',due:'',events:[]},pre||{});
+  window.__pestDraft=f;editFiche='new';render();window.scrollTo(0,0);
+}
+function openFiche(id){const f=P().followups.find(x=>x.id===id);if(!f)return;window.__pestDraft=JSON.parse(JSON.stringify(f));editFiche=id;render();window.scrollTo(0,0)}
+function vFicheForm(){
+  const f=window.__pestDraft||{},isNew=editFiche==='new',mg=canManage();
+  const dis=(!isNew&&!mg)?' disabled':'';
+  const evs=(f.events||[]).map(x=>'<div class="record"><b>'+fd(x.at)+'</b> — '+e(x.by||'')+'<br><span class="note">'+e(x.action)+(x.note?' : '+e(x.note):'')+'</span></div>').join('');
+  return '<div class="panel"><button class="btn back" onclick="mtPest.closeForm()">← Fiches de suivi</button><h2>Fiche de suivi '+e(f.reference)+'</h2>'
+   +'<label>Intitulé</label><input id="pst-f-title" value="'+e(f.title)+'"'+dis+'>'
+   +'<div class="row"><div><label>Date d’ouverture</label><input id="pst-f-opened" type="date" value="'+e(f.opened)+'"'+dis+'></div><div><label>Gravité</label><select id="pst-f-sev"'+dis+'>'+optList(SEVERITY,f.severity)+'</select></div></div>'
+   +'<div class="row"><div><label>Nuisible concerné</label><select id="pst-f-pest"'+dis+'>'+optList(PESTS,f.pest,'À préciser')+'</select></div><div><label>Zone</label><input id="pst-f-zone" value="'+e(f.zone)+'"'+dis+'></div></div>'
+   +'<label>Constat</label><textarea id="pst-f-desc" rows="3"'+dis+'>'+e(f.description)+'</textarea>'
+   +'<label>Mesure immédiate prise</label><textarea id="pst-f-imm" rows="2"'+dis+'>'+e(f.immediate)+'</textarea>'
+   +'<label>Action corrective ou préventive prévue</label><textarea id="pst-f-cor" rows="2"'+dis+'>'+e(f.corrective)+'</textarea>'
+   +'<div class="row"><div><label>Responsable</label><input id="pst-f-owner" value="'+e(f.owner)+'"'+dis+'></div><div><label>Échéance</label><input id="pst-f-due" type="date" value="'+e(f.due)+'"'+dis+'></div></div>'
+   +'<div class="row"><div><label>Statut</label><select id="pst-f-status"'+(mg||isNew?'':' disabled')+'>'+optList(FSTATUS,f.status)+'</select></div><div><label>Origine</label><input value="'+e(f.source)+'" disabled></div></div>'
+   +'<label>Note de suivi ou de vérification</label><textarea id="pst-f-note" rows="2" placeholder="Ex. vérification d’efficacité après traitement"'+dis+'></textarea>'
+   +((!isNew&&!mg)?'<p class="note">Seuls les responsables peuvent modifier ou clôturer une fiche.</p>':'<div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.saveFiche()">Enregistrer la fiche</button>'+(isNew?'':'<button class="btn" onclick="mtPest.printFiche(\''+f.id+'\')">Imprimer la fiche</button>')+'</div>')
+   +(evs?'<h3>Historique</h3>'+evs:'')+'</div>';
+}
+function closeForm(){editFiche='';window.__pestDraft=null;render()}
+function saveFiche(){
+  const f=window.__pestDraft;if(!f)return;
+  const isNew=editFiche==='new';
+  if(!isNew&&!canManage())return;
+  const title=v('pst-f-title');
+  if(!title){alert('Indiquez l’intitulé de la fiche.');return}
+  const desc=v('pst-f-desc');
+  if(!desc){alert('Décrivez le constat.');return}
+  const status=v('pst-f-status')||'Ouverte',sev=v('pst-f-sev')||'Mineure',note=v('pst-f-note');
+  if(status==='Clôturée'&&!note&&!v('pst-f-cor')){alert('Pour clôturer, indiquez l’action réalisée ou la vérification effectuée.');return}
+  const data={title,opened:v('pst-f-opened')||today(),severity:sev,pest:v('pst-f-pest'),zone:v('pst-f-zone'),description:desc,immediate:v('pst-f-imm'),corrective:v('pst-f-cor'),owner:v('pst-f-owner'),due:v('pst-f-due'),status};
+  const by=who();
+  if(isNew){
+    const rec=stamp(Object.assign({},f,data,{id:uid(),reference:nextRef(),events:[{at:new Date().toISOString(),by,action:'Création de la fiche',note:''}]}));
+    if(status==='Clôturée')rec.closedAt=today();
+    P().followups.push(rec);
+    trace('Fiche nuisibles '+rec.reference+' : '+title,'Ouverte',by,desc.slice(0,200));
+  }else{
+    const rec=P().followups.find(x=>x.id===editFiche);if(!rec)return;
+    const old=rec.status;
+    Object.assign(rec,data);
+    rec.events=rec.events||[];
+    rec.events.push({at:new Date().toISOString(),by,action:old!==status?'Statut : '+old+' → '+status:'Mise à jour',note});
+    if(status==='Clôturée'&&old!=='Clôturée'){rec.closedAt=today();rec.closedBy=by;trace('Fiche nuisibles clôturée '+rec.reference,'Clôturée',by,note)}
+    if(status!=='Clôturée'){delete rec.closedAt;delete rec.closedBy}
+  }
+  persist();closeForm();
+}
+
+/* ----- impressions ----- */
+function openPrint(title,body){
+  const w=window.open('','_blank');
+  if(!w){alert('Autorisez les fenêtres contextuelles pour imprimer.');return}
+  const site=(typeof siteDisplayName!=='undefined'&&siteDisplayName)||(typeof SITE_ID!=='undefined'?SITE_ID:'');
+  w.document.open();
+  w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+e(title)+'</title><style>body{font-family:Segoe UI,Arial,sans-serif;color:#17251f;margin:24px}h1{color:#0d4a36;font-size:22px}h2{font-size:16px;color:#0d4a36;margin-top:20px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #b8c7bf;padding:6px 8px;text-align:left;vertical-align:top}th{background:#e8f1ec}.sign{display:flex;gap:30px;margin-top:40px}.sign div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px}.bar{margin-bottom:16px}@media print{.bar{display:none}}</style></head><body><div class="bar"><button onclick="window.print()">Imprimer ou enregistrer en PDF</button></div><h1>'+e(title)+'</h1><p>Établissement : '+e(site)+' · Édité le '+new Date().toLocaleString('fr-FR')+' par '+e(who())+'</p>'+body+'</body></html>');
+  w.document.close();
+}
+function printFiche(id){
+  const f=P().followups.find(x=>x.id===id);if(!f)return;
+  const rows=[['Référence',f.reference],['Intitulé',f.title],['Ouverte le',fd(f.opened)],['Gravité',f.severity],['Nuisible',f.pest||'—'],['Zone',f.zone||'—'],['Origine',f.source||'—'],['Constat',f.description],['Mesure immédiate',f.immediate||'—'],['Action corrective / préventive',f.corrective||'—'],['Responsable',f.owner||'—'],['Échéance',fd(f.due)],['Statut',f.status+(f.closedAt?' le '+fd(f.closedAt):'')]].map(r=>'<tr><th style="width:32%">'+e(r[0])+'</th><td>'+e(r[1]).replace(/\n/g,'<br>')+'</td></tr>').join('');
+  const ev=(f.events||[]).map(x=>'<tr><td>'+fd(x.at)+'</td><td>'+e(x.by||'')+'</td><td>'+e(x.action)+(x.note?' : '+e(x.note):'')+'</td></tr>').join('');
+  openPrint('Fiche de suivi nuisibles '+f.reference,'<table>'+rows+'</table><h2>Historique</h2><table><tr><th>Date</th><th>Par</th><th>Action</th></tr>'+ev+'</table><div class="sign"><div>Rédigé par</div><div>Vérifié par</div><div>Date et signature</div></div>');
+}
+function printRegister(){
+  const p=P();
+  const planImg=p.plan?'<h2>Plan des locaux</h2><div style="position:relative;display:inline-block;max-width:100%"><img src="'+p.plan+'" style="max-width:100%;display:block">'+p.traps.filter(t=>t.active!==false&&typeof t.x==='number').map(t=>'<span style="position:absolute;left:'+t.x+'%;top:'+t.y+'%;transform:translate(-50%,-50%);background:#0d4a36;color:#fff;font-size:11px;padding:2px 5px;border-radius:9px">'+e(t.code)+'</span>').join('')+'</div>':'';
+  const rows=p.traps.map(t=>{const s=t.active===false?{txt:'Retiré le '+fd(t.removedAt)}:trapState(t);return '<tr><td>'+e(t.code)+'</td><td>'+e(t.type)+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+e(s.txt)+'</td></tr>'}).join('');
+  const pr=p.provider;
+  openPrint('Plan de lutte contre les nuisibles',planImg+'<h2>Registre des pièges</h2><table><tr><th>Code</th><th>Type</th><th>Emplacement</th><th>Relevé</th><th>Dernier relevé</th></tr>'+rows+'</table><h2>Prestataire</h2><p>'+e(pr.name||'Non renseigné')+(pr.phone?' · '+e(pr.phone):'')+(pr.contract?' · Contrat '+e(pr.contract):'')+(pr.nextVisit?' · Prochaine visite le '+fd(pr.nextVisit):'')+'</p><div class="sign"><div>Établi par</div><div>Validé par</div><div>Date et signature</div></div>');
+}
+
+window.mtPest={open:open,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
+window.mtPestOpen=open;
+})();
+
 </script>
 </body></html>
