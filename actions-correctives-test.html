@@ -4287,7 +4287,7 @@ window.mtOpenCorrectivesTest=function(){
  if(typeof CURRENT_VIEW!=='undefined')CURRENT_VIEW='correctives-test';
  document.body.classList.remove('on-home','mt-premium-active','on-login');
  const root=document.getElementById('app');if(!root)return;
- root.innerHTML='<section class="mt-ac-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Actions correctives HACCP — Test</h1><iframe class="mt-ac-frame" title="Actions correctives" src="actions-correctives-module-test.html?v=6-start-top"></iframe></section>';
+ root.innerHTML='<section class="mt-ac-view"><button class="btn back" onclick="home()">← Accueil</button><h1>Actions correctives HACCP — Test</h1><iframe class="mt-ac-frame" title="Actions correctives" src="actions-correctives-module-test.html?v=7-select-all"></iframe></section>';
  const frame=root.querySelector('.mt-ac-frame');
  const resetScroll=()=>{window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;if(frame){try{frame.contentWindow.scrollTo(0,0)}catch(_){}}};
  if(frame)frame.addEventListener('load',()=>{resetScroll();requestAnimationFrame(resetScroll)},{once:true});
