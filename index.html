@@ -1674,7 +1674,17 @@ function mtPremiumHome(){
   ['parametres','Paramètres','gear','settings()','#225a7d'],
   ...(SITE_ID==='main'?[['supervision','Supervision<br>des établissements','building','openEstablishmentSupervision()','#9c6846']]:[])
  ];
- const tiles=cards.map(([photo,title,icon,action,color])=>'<button type="button" class="mtp-tile" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>').join('');
+ const MT_ORDER=['reception','etiquetage','stock','temperature','clean','trace','nuisibles','dechets','documents','audits','correctives','direction','rapports','parametres','supervision'];
+ const MT_SEC={reception:'Opérations quotidiennes',etiquetage:'Opérations quotidiennes',stock:'Opérations quotidiennes',temperature:'Opérations quotidiennes',clean:'Opérations quotidiennes',trace:'Opérations quotidiennes',nuisibles:'Maîtrise sanitaire',dechets:'Maîtrise sanitaire',documents:'Maîtrise sanitaire',audits:'Pilotage et conformité',correctives:'Pilotage et conformité',direction:'Pilotage et conformité',rapports:'Pilotage et conformité',parametres:'Administration',supervision:'Administration'};
+ const sortedCards=cards.slice().sort((a,b)=>MT_ORDER.indexOf(a[0])-MT_ORDER.indexOf(b[0]));
+ const secCount={};sortedCards.forEach(c=>{const k=MT_SEC[c[0]];secCount[k]=(secCount[k]||0)+1});
+ const secSeen={};let lastSec='';
+ const tiles=sortedCards.map(([photo,title,icon,action,color])=>{
+  const sec=MT_SEC[photo],n=secSeen[sec]=(secSeen[sec]||0)+1;
+  const head=sec!==lastSec?'<h2 class="mtp-section-title">'+sec+'</h2>':'';lastSec=sec;
+  const wide=(n===secCount[sec]&&secCount[sec]%2===1)?' mtp-wide':'';
+  return head+'<button type="button" class="mtp-tile'+wide+'" onclick="'+action+'" aria-label="'+title.replace(/<br>/g,' ')+'"><span class="mtp-photo mtp-photo-'+photo+'"></span><span class="mtp-tile-icon" style="background:'+color+'">'+mtSvg(icon)+'</span><span class="mtp-tile-bottom"><strong>'+title+'</strong><span class="mtp-round-go">'+mtSvg('chevron')+'</span></span></button>';
+ }).join('');
  const menuEntries=[['Accueil','box','mtPremiumMenu(false)'],['Réception de marchandises','box','reception()'],['Fournisseurs','truck','suppliers()'],['Étiquetage HACCP','tag','dlcCats()'],['Stock et DLC','box',"mtOpenModule('stock')"],['Températures','thermo','temperatures()'],['Nettoyage','clean','cleaning()'],['Traçabilité','trace',"mtOpenModule('trace')"],['Tableau de bord Direction','chart','openDashboard()'],...(SITE_ID!=='main'?[['Audits HACCP','chart','mtOpenAudits()'],['Lutte contre les nuisibles','bug','mtPestOpen()'],['Gestion des déchets','trash','mtWasteOpen()'],['Gestion documentaire','folder','mtDocsOpen()']]:[]),['Paramètres','gear','settings()'],...(SITE_ID!=='main'?[['Rapports','chart','mtReports()']]:[]),...(SITE_ID==='main'?[['Supervision des établissements','building','openEstablishmentSupervision()']]:[])];
  const nav=menuEntries.map(([label,icon,action],i)=>'<button class="'+(i===0?'mtp-selected':'')+'" onclick="'+action+'">'+mtSvg(icon)+escapeHTML(label)+'</button>').join('');
  app.innerHTML='<div class="mtp-app">'+
@@ -4732,6 +4742,12 @@ window.addEventListener('message',async e=>{
 })();
 </script>
 <style id="mt-pest-style">
+body.mt-premium-active .mtp-tiles>.mtp-section-title{grid-column:1/-1!important;margin:14px 2px 0!important;font-size:12px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase;color:#0d4a36!important;display:flex;align-items:center;gap:10px}
+body.mt-premium-active .mtp-tiles>.mtp-section-title:after{content:"";flex:1;height:1px;background:#c5d6cc}
+body.mt-premium-active .mtp-tiles>.mtp-section-title:first-child{margin-top:2px!important}
+body.mt-premium-active .mtp-tiles>.mtp-tile.mtp-wide{grid-column:1/-1!important;height:169px!important}
+body.mt-premium-active .mtp-tiles>.mtp-tile.mtp-wide .mtp-photo{height:110px!important}
+body.mt-premium-active .mtp-tiles>.mtp-tile.mtp-wide .mtp-tile-icon{top:90px!important}
 body.mt-photo-nuisibles.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-pest-card .mtpc-pest-bg,body.mt-photo-nuisibles .mtp-tiles .mtp-photo-nuisibles{background:#d1e4d9 url("nuisibles.jpg?v=2") center 45%/cover no-repeat!important}
 body.mt-photo-dechets.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-waste-card .mtpc-waste-bg,body.mt-photo-dechets .mtp-tiles .mtp-photo-dechets{background:#d1e4d9 url("dechets.jpg?v=2") center 40%/cover no-repeat!important}
 body.mt-photo-documents.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-docs-card .mtpc-docs-bg,body.mt-photo-documents .mtp-tiles .mtp-photo-documents{background:#d1e4d9 url("documents.jpg?v=2") center 20%/cover no-repeat!important}
