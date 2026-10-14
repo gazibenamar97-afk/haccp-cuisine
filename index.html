@@ -1211,8 +1211,8 @@ body.on-login main{padding-top:12px!important}
 
 <style id="mt-desktop-scale-final">
 /* Adaptation automatique PC/tablette (>= 851 px) : un seul réglage, valable pour l'accueil et tous les modules.
-   Facteur = largeur de la fenêtre / 1280 (plafonné), calculé par le script mt-desktop-responsive-scale-script.
-   Un navigateur à 100 pour cent sur un écran 1920 px donne donc le rendu d'un zoom de 150 pour cent. */
+   Facteur = largeur de la fenêtre / 1536 (plafonné), calculé par le script mt-desktop-responsive-scale-script.
+   Un navigateur à 100 pour cent sur un écran 1920 px donne donc le rendu d'un zoom de 125 pour cent. */
 @media screen and (min-width:851px){
  html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2){zoom:var(--mt-scale,1)!important;overflow-x:hidden!important}
  html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) > main{margin-left:250px!important;width:calc(100% - 250px)!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
@@ -4211,7 +4211,7 @@ setTimeout(decorate,0);
 <script id="mt-desktop-responsive-scale-script">
 /* Paramètres modifiables : largeur de référence et plafond d'agrandissement. */
 (function(){
- const MT_REFERENCE_WIDTH=1280;
+ const MT_REFERENCE_WIDTH=1536;
  const MT_MAX_SCALE=2.25;
  let resizeDelay;
  function mtApplyDesktopScale(){
