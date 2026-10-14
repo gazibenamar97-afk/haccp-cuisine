@@ -4787,7 +4787,7 @@ const INT_TYPES=['Contrôle préventif','Dératisation','Désinsectisation','Dé
 const PESTS=['Rongeurs','Blattes','Mouches / insectes volants','Mites alimentaires','Fourmis','Oiseaux','Autre'];
 const SEVERITY=['Mineure','Majeure','Critique'];
 const FSTATUS=['Ouverte','En cours','Clôturée'];
-let tab='overview',placing='',fFilter='Toutes',editFiche='',photos={},openInsp='';
+let curPlan='',tab='overview',placing='',fFilter='Toutes',editFiche='',photos={},openInsp='';
 
 function $(id){return document.getElementById(id)}
 function v(id){const e=$(id);return e?String(e.value||'').trim():''}
@@ -4797,7 +4797,9 @@ function P(){
   const p=S.pest;
   ['traps','activity','inspections','interventions','followups'].forEach(k=>{if(!Array.isArray(p[k]))p[k]=[]});
   if(!p.provider||typeof p.provider!=='object')p.provider={};
-  if(typeof p.plan!=='string')p.plan='';
+  if(!Array.isArray(p.plans))p.plans=[];
+  if(!p.plans.length&&(p.plan||(p.planData&&p.planData.length))){p.plans.push({id:'plan1',name:'Plan principal',image:p.plan||'',data:p.planData||[]});p.traps.forEach(t=>{if(!t.planId&&typeof t.x==='number')t.planId='plan1'})}
+  delete p.plan;delete p.planData;
   return p;
 }
 function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
@@ -4911,29 +4913,51 @@ function vOverview(){
 }
 
 /* ----- plan des pièges ----- */
+function curP(){const pl=P().plans;return pl.find(x=>x.id===curPlan)||pl[0]||null}
+function planName(id){const x=P().plans.find(z=>z.id===id);return x?x.name:'—'}
+function roomsOf(id){const pl=P().plans.find(x=>x.id===id);return pl?Array.from(new Set((pl.data||[]).filter(x=>x.t==='room'&&x.label).map(x=>x.label))):[]}
+const OTHER='Autre local…';
+function localOpts(id){return optList(roomsOf(id).concat([OTHER]),'','Choisir un local')}
 function vPlan(){
-  const p=P(),mg=canManage();
-  const traps=p.traps;
+  const p=P(),mg=canManage(),traps=p.traps,pl=curP();
+  const chips=p.plans.map(x=>'<button type="button" class="mt-pest-chip'+(pl&&x.id===pl.id?' active':'')+'" onclick="mtPest.selPlan(\''+x.id+'\')">'+e(x.name)+'</button>').join('')+(mg?'<button type="button" class="mt-pest-chip" onclick="mtPest.newPlan()">+ Nouveau plan</button>':'');
   let plan='';
-  if(p.plan){
-    const markers=traps.filter(t=>t.active!==false&&typeof t.x==='number').map(t=>{const s=trapState(t);return '<span class="mt-pest-marker '+s.cls+(placing===t.id?' placing':'')+'" style="left:'+t.x+'%;top:'+t.y+'%" title="'+e(t.code+' · '+t.location)+'">'+e(t.code)+'</span>'}).join('');
-    plan='<div class="mt-pest-planbox'+(placing?' placing':'')+'" onclick="mtPest.planClick(event)"><img src="'+p.plan+'" alt="Plan des locaux" id="pst-planimg">'+markers+'</div>'
-      +(placing?'<p class="note"><b>Touchez le plan</b> pour placer le piège '+e((traps.find(t=>t.id===placing)||{}).code||'')+'. <button class="btn" style="padding:6px 10px" onclick="mtPest.cancelPlace()">Annuler</button></p>':'<p class="note">Les pastilles montrent l’état du dernier relevé : vert conforme, orange à relever, rouge activité détectée.</p>')
-      +(mg?'<button class="btn" onclick="mtPest.removePlan()">Supprimer le plan</button>':'');
-  }else{
-    plan='<p class="note">Aucun plan des locaux. '+(mg?'Ajoutez une image (photo ou capture du plan) pour positionner les pièges.':'')+'</p>';
+  if(!pl){plan='<p class="note">Aucun plan. '+(mg?'Créez un plan par lieu (ex. Cuisine centrale, Restaurant, Annexe, Réserve extérieure).':'')+'</p>'}
+  else{
+    if(pl.image){
+      const markers=traps.filter(t=>t.planId===pl.id&&t.active!==false&&typeof t.x==='number').map(t=>{const s=trapState(t);return '<span class="mt-pest-marker '+s.cls+(placing===t.id?' placing':'')+'" style="left:'+t.x+'%;top:'+t.y+'%" title="'+e(t.code+' · '+t.location)+'">'+e(t.code)+'</span>'}).join('');
+      plan='<div class="mt-pest-planbox'+(placing?' placing':'')+'" onclick="mtPest.planClick(event)"><img src="'+pl.image+'" alt="'+e(pl.name)+'" id="pst-planimg">'+markers+'</div>'
+        +(placing?'<p class="note"><b>Touchez le plan</b> pour placer le piège '+e((traps.find(t=>t.id===placing)||{}).code||'')+'. <button class="btn" style="padding:6px 10px" onclick="mtPest.cancelPlace()">Annuler</button></p>':'<p class="note">Les pastilles montrent l’état du dernier relevé : vert conforme, orange à relever, rouge activité détectée.</p>');
+    }else plan='<p class="note">Ce plan est vide. '+(mg?'Dessinez-le ou importez une image.':'')+'</p>';
+    if(mg)plan+='<div class="mt-pest-actions" style="margin:0 0 10px"><button class="btn primary" onclick="mtPest.draw()">'+((pl.data&&pl.data.length)?'Modifier le dessin':'Dessiner ce plan')+'</button><button class="btn" onclick="mtPest.renamePlan()">Renommer</button><button class="btn" onclick="mtPest.removePlan()">Supprimer ce plan</button></div><label>'+(pl.image?'Remplacer par une image importée':'Ou importer une image')+'</label><input type="file" accept="image/*" onchange="mtPest.uploadPlan(this.files[0])">';
   }
-  const planUpload=mg?'<button class="btn primary" onclick="mtPest.draw()">'+(p.planData&&p.planData.length?'Modifier le dessin du plan':'Dessiner le plan des locaux')+'</button> <span class="note">ou importez une image :</span><br><label>'+(p.plan?'Remplacer':'Ajouter')+' le plan des locaux</label><input type="file" accept="image/*" onchange="mtPest.uploadPlan(this.files[0])">':'';
   const rows=traps.map(t=>{
     const s=t.active===false?{txt:'Retiré le '+fd(t.removedAt),cls:'muted'}:trapState(t);
-    return '<tr class="'+(t.active===false?'mt-pest-muted':'')+'"><td><b>'+e(t.code)+'</b></td><td>'+e(t.type)+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+badge(s.txt,s.cls)+'</td><td class="mt-pest-rowact">'
+    return '<tr class="'+(t.active===false?'mt-pest-muted':'')+'"><td><b>'+e(t.code)+'</b></td><td>'+e(t.type)+'</td><td>'+e(planName(t.planId))+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+badge(s.txt,s.cls)+'</td><td class="mt-pest-rowact">'
       +(mg&&t.active!==false?'<button class="btn" onclick="mtPest.place(\''+t.id+'\')">'+(typeof t.x==='number'?'Déplacer':'Placer')+'</button><button class="btn" onclick="mtPest.removeTrap(\''+t.id+'\')">Retirer</button>':'')+'</td></tr>';
   }).join('');
-  const table=traps.length?'<div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Code</th><th>Type</th><th>Emplacement</th><th>Relevé tous les</th><th>Dernier relevé</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="note">Aucun piège enregistré.</p>';
-  const nextCode=guessCode('Boîte d’appâtage (rongeurs)');
-  const form=mg?'<div class="panel"><h2>Ajouter un piège ou dispositif</h2><div class="row"><div><label>Code</label><input id="pst-t-code" value="'+e(nextCode)+'"></div><div><label>Type</label><select id="pst-t-type" onchange="mtPest.typeChanged()">'+optList(TRAP_TYPES,TRAP_TYPES[0])+'</select></div></div><div class="row"><div><label>Emplacement</label><input id="pst-t-loc" placeholder="Ex. Réserve sèche, près de la porte arrière"></div><div><label>Relevé tous les (jours)</label><input id="pst-t-freq" type="number" min="1" max="365" value="7"></div></div><button class="btn primary" onclick="mtPest.addTrap()">Ajouter au plan</button></div>':'<p class="note">Seuls les responsables peuvent modifier le plan des pièges.</p>';
-  return '<div class="panel"><h2>Plan des locaux</h2>'+plan+planUpload+'</div><div class="panel"><div class="mt-pest-headrow"><h2>Registre des pièges</h2><button class="btn" onclick="mtPest.printRegister()">Imprimer le registre</button></div>'+table+'</div>'+form;
+  const table=traps.length?'<div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Code</th><th>Type</th><th>Plan</th><th>Local</th><th>Relevé tous les</th><th>Dernier relevé</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="note">Aucun piège enregistré.</p>';
+  let form='<p class="note">Seuls les responsables peuvent modifier le plan des pièges.</p>';
+  if(mg){
+    form=pl?'<div class="panel"><h2>Ajouter un piège ou dispositif</h2><div class="row"><div><label>Plan (lieu)</label><select id="pst-t-plan" onchange="mtPest.planChanged()">'+p.plans.map(x=>'<option value="'+x.id+'"'+(x.id===pl.id?' selected':'')+'>'+e(x.name)+'</option>').join('')+'</select></div><div><label>Local</label><select id="pst-t-loc" onchange="mtPest.locChanged()">'+localOpts(pl.id)+'</select><input id="pst-t-loc2" placeholder="Nom du local" style="display:none;margin-top:8px"></div></div><div class="row"><div><label>Type</label><select id="pst-t-type" onchange="mtPest.typeChanged()">'+optList(TRAP_TYPES,TRAP_TYPES[0])+'</select></div><div><label>Code</label><input id="pst-t-code" value="'+e(guessCode(TRAP_TYPES[0]))+'"></div><div><label>Relevé tous les (jours)</label><input id="pst-t-freq" type="number" min="1" max="365" value="7"></div></div><button class="btn primary" onclick="mtPest.addTrap()">Ajouter le piège</button><p class="note">Ensuite, utilisez « Placer » dans le registre, ou dessinez-le directement sur le plan.</p></div>':'<div class="panel"><p class="note">Créez d’abord un plan pour pouvoir ajouter des pièges.</p></div>';
+  }
+  return '<div class="panel"><h2>Plans des locaux</h2><div class="mt-pest-chips">'+chips+'</div>'+plan+'</div><div class="panel"><div class="mt-pest-headrow"><h2>Registre des pièges</h2><button class="btn" onclick="mtPest.printRegister()">Imprimer le registre</button></div>'+table+'</div>'+form;
 }
+function selPlan(id){curPlan=id;placing='';render()}
+function newPlan(){
+  if(!canManage())return;
+  const n=prompt('Nom du plan (ex. Cuisine centrale, Restaurant, Annexe, Réserve extérieure) :');
+  if(!n||!n.trim())return;
+  const pl={id:uid(),name:n.trim(),image:'',data:[]};
+  P().plans.push(pl);curPlan=pl.id;persist();render();
+}
+function renamePlan(){
+  const pl=curP();if(!pl||!canManage())return;
+  const n=prompt('Nouveau nom du plan :',pl.name);
+  if(!n||!n.trim())return;pl.name=n.trim();persist();render();
+}
+function planChanged(){const id=v('pst-t-plan');curPlan=id;const l=$('pst-t-loc');if(l)l.innerHTML=localOpts(id);const o=$('pst-t-loc2');if(o)o.style.display='none'}
+function locChanged(){const l=$('pst-t-loc'),o=$('pst-t-loc2');if(l&&o)o.style.display=l.value===OTHER?'block':'none'}
 function guessCode(type){
   const pre=/rongeurs/.test(type)?'R':/UV/.test(type)?'U':/phéromones/.test(type)?'M':/rampants/.test(type)?'B':'D';
   const n=1+P().traps.filter(t=>String(t.code).startsWith(pre+'-')).reduce((m,t)=>Math.max(m,Number(String(t.code).split('-')[1])||0),0);
@@ -4942,13 +4966,15 @@ function guessCode(type){
 function typeChanged(){const c=$('pst-t-code'),t=$('pst-t-type');if(c&&t){c.value=guessCode(t.value);const f=$('pst-t-freq');if(f)f.value=/UV/.test(t.value)?30:7}}
 function addTrap(){
   if(!canManage()){alert('Action réservée aux responsables.');return}
-  const code=v('pst-t-code'),type=v('pst-t-type'),loc=v('pst-t-loc'),freq=Number(v('pst-t-freq'))||7;
+  const planId=v('pst-t-plan'),code=v('pst-t-code'),type=v('pst-t-type'),freq=Number(v('pst-t-freq'))||7;
+  let loc=v('pst-t-loc');if(loc===OTHER)loc=v('pst-t-loc2');
+  if(!planId){alert('Choisissez le plan.');return}
   if(!code){alert('Indiquez le code du piège.');return}
-  if(!loc){alert('Indiquez l’emplacement du piège.');return}
+  if(!loc){alert('Choisissez ou indiquez le local du piège.');return}
   if(P().traps.some(t=>t.active!==false&&t.code.toLowerCase()===code.toLowerCase())){alert('Ce code existe déjà.');return}
-  P().traps.push(stamp({id:uid(),code,type,location:loc,freq,active:true,addedAt:today()}));
-  trace('Piège ajouté : '+code+' · '+loc,'',who(),type);
-  persist();render();
+  P().traps.push(stamp({id:uid(),code,type,planId,location:loc,freq,active:true,addedAt:today()}));
+  trace('Piège ajouté : '+code+' · '+planName(planId)+' · '+loc,'',who(),type);
+  curPlan=planId;persist();render();
 }
 function removeTrap(id){
   if(!canManage())return;
@@ -4958,7 +4984,12 @@ function removeTrap(id){
   trace('Piège retiré : '+t.code,'',who(),t.location);
   persist();render();
 }
-function place(id){placing=id;render();const b=document.querySelector('.mt-pest-planbox');if(b)b.scrollIntoView({behavior:'smooth',block:'center'})}
+function place(id){
+  const t=P().traps.find(x=>x.id===id);if(!t)return;
+  const pl=P().plans.find(x=>x.id===t.planId)||curP();
+  if(!pl||!pl.image){alert('Dessinez ou importez d’abord le plan de ce lieu.');return}
+  curPlan=pl.id;placing=id;render();const b=document.querySelector('.mt-pest-planbox');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});
+}
 function cancelPlace(){placing='';render()}
 function planClick(ev){
   if(!placing)return;
@@ -4967,25 +4998,27 @@ function planClick(ev){
   const x=Math.round(((ev.clientX-r.left)/r.width)*1000)/10,y=Math.round(((ev.clientY-r.top)/r.height)*1000)/10;
   if(x<0||x>100||y<0||y>100)return;
   const t=P().traps.find(z=>z.id===placing);if(!t)return;
-  t.x=x;t.y=y;placing='';persist();render();
+  t.x=x;t.y=y;t.planId=curP().id;placing='';persist();render();
 }
 function uploadPlan(file){
-  if(!file||!canManage())return;
-  compress(file,1200,.62,function(url){P().plan=url;persist();render()});
+  const pl=curP();
+  if(!file||!pl||!canManage())return;
+  compress(file,1200,.62,function(url){pl.image=url;pl.data=[];P().traps.forEach(t=>{if(t.planId===pl.id){delete t.x;delete t.y}});persist();render()});
 }
 function removePlan(){
-  if(!canManage())return;
-  if(!confirm('Supprimer le plan des locaux ? Les positions des pièges seront effacées.'))return;
-  const p=P();p.plan='';p.planData=[];p.traps.forEach(t=>{delete t.x;delete t.y});persist();render();
+  const pl=curP();if(!pl||!canManage())return;
+  if(!confirm('Supprimer le plan « '+pl.name+' » ? Ses pièges restent dans le registre mais ne seront plus placés.'))return;
+  const p=P();p.plans=p.plans.filter(x=>x.id!==pl.id);
+  p.traps.forEach(t=>{if(t.planId===pl.id){delete t.planId;delete t.x;delete t.y}});
+  curPlan='';placing='';persist();render();
 }
-
 /* ----- relevés d'activité ----- */
 function vRounds(){
   const traps=activeTraps();
   if(!traps.length)return '<div class="panel"><p>Aucun piège actif. Définissez d’abord le plan des pièges.</p><button class="btn primary" onclick="mtPest.tab(\'plan\')">Aller au plan des pièges</button></div>';
   const rows=traps.map(t=>{
     const s=trapState(t);
-    return '<tr><td><b>'+e(t.code)+'</b><br><span class="note">'+e(t.location)+'</span></td><td><select id="pst-r-s-'+t.id+'" onchange="mtPest.roundChanged(\''+t.id+'\')">'+optList(ACTIVITY,ACTIVITY[0])+'</select></td><td><input id="pst-r-n-'+t.id+'" type="number" min="0" placeholder="Nombre" style="max-width:90px"></td><td><input id="pst-r-o-'+t.id+'" placeholder="Observation"></td><td>'+badge(s.l?fd(s.l.date):'Jamais',s.cls)+'</td></tr>';
+    return '<tr><td><b>'+e(t.code)+'</b><br><span class="note">'+e(planName(t.planId)!=='—'?planName(t.planId)+' · ':'')+e(t.location)+'</span></td><td><select id="pst-r-s-'+t.id+'" onchange="mtPest.roundChanged(\''+t.id+'\')">'+optList(ACTIVITY,ACTIVITY[0])+'</select></td><td><input id="pst-r-n-'+t.id+'" type="number" min="0" placeholder="Nombre" style="max-width:90px"></td><td><input id="pst-r-o-'+t.id+'" placeholder="Observation"></td><td>'+badge(s.l?fd(s.l.date):'Jamais',s.cls)+'</td></tr>';
   }).join('');
   const hist=P().activity.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt)).slice(0,40).map(a=>'<div class="record"><b>'+e(a.trapCode)+'</b> — '+fd(a.date)+' '+badge(a.status,a.status===ACTIVITY[0]?'ok':'bad')+'<br><span class="note">'+e(a.location||'')+(a.count?' · '+a.count+' constaté(s)':'')+(a.note?' · '+e(a.note):'')+(a.operator?' · par '+e(a.operator):'')+'</span></div>').join('')||'<p class="note">Aucun relevé enregistré.</p>';
   return '<div class="panel"><h2>Nouveau relevé</h2><div class="row"><div><label>Date du relevé</label><input id="pst-r-date" type="date" value="'+today()+'" max="'+today()+'"></div><div><label>Opérateur</label><input id="pst-r-op" value="'+e(who())+'"></div></div><div class="mt-pest-tablewrap"><table class="mt-pest-table"><thead><tr><th>Piège</th><th>Constat</th><th>Nombre</th><th>Observation</th><th>Dernier</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Laissez « Aucune activité » pour les pièges sans anomalie : tous les pièges de la liste sont enregistrés ensemble.</p><button class="btn primary" onclick="mtPest.saveRound()">Enregistrer le relevé</button></div><div class="panel"><h2>Historique des relevés</h2>'+hist+'</div>';
@@ -5162,12 +5195,11 @@ function printFiche(id){
 }
 function printRegister(){
   const p=P();
-  const planImg=p.plan?'<h2>Plan des locaux</h2><div style="position:relative;display:inline-block;max-width:100%"><img src="'+p.plan+'" style="max-width:100%;display:block">'+p.traps.filter(t=>t.active!==false&&typeof t.x==='number').map(t=>'<span style="position:absolute;left:'+t.x+'%;top:'+t.y+'%;transform:translate(-50%,-50%);background:#0d4a36;color:#fff;font-size:11px;padding:2px 5px;border-radius:9px">'+e(t.code)+'</span>').join('')+'</div>':'';
-  const rows=p.traps.map(t=>{const s=t.active===false?{txt:'Retiré le '+fd(t.removedAt)}:trapState(t);return '<tr><td>'+e(t.code)+'</td><td>'+e(t.type)+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+e(s.txt)+'</td></tr>'}).join('');
+  const planImg=p.plans.filter(pl=>pl.image).map(pl=>'<h2>Plan : '+e(pl.name)+'</h2><div style="position:relative;display:inline-block;max-width:100%"><img src="'+pl.image+'" style="max-width:100%;display:block">'+p.traps.filter(t=>t.planId===pl.id&&t.active!==false&&typeof t.x==='number').map(t=>'<span style="position:absolute;left:'+t.x+'%;top:'+t.y+'%;transform:translate(-50%,-50%);background:#0d4a36;color:#fff;font-size:11px;padding:2px 5px;border-radius:9px">'+e(t.code)+'</span>').join('')+'</div>').join('');
+  const rows=p.traps.map(t=>{const s=t.active===false?{txt:'Retiré le '+fd(t.removedAt)}:trapState(t);return '<tr><td>'+e(t.code)+'</td><td>'+e(t.type)+'</td><td>'+e(planName(t.planId))+'</td><td>'+e(t.location)+'</td><td>'+(Number(t.freq)||7)+' j</td><td>'+e(s.txt)+'</td></tr>'}).join('');
   const pr=p.provider;
-  openPrint('Plan de lutte contre les nuisibles',planImg+'<h2>Registre des pièges</h2><table><tr><th>Code</th><th>Type</th><th>Emplacement</th><th>Relevé</th><th>Dernier relevé</th></tr>'+rows+'</table><h2>Prestataire</h2><p>'+e(pr.name||'Non renseigné')+(pr.phone?' · '+e(pr.phone):'')+(pr.contract?' · Contrat '+e(pr.contract):'')+(pr.nextVisit?' · Prochaine visite le '+fd(pr.nextVisit):'')+'</p><div class="sign"><div>Établi par</div><div>Validé par</div><div>Date et signature</div></div>');
+  openPrint('Plan de lutte contre les nuisibles',planImg+'<h2>Registre des pièges</h2><table><tr><th>Code</th><th>Type</th><th>Plan</th><th>Local</th><th>Relevé</th><th>Dernier relevé</th></tr>'+rows+'</table><h2>Prestataire</h2><p>'+e(pr.name||'Non renseigné')+(pr.phone?' · '+e(pr.phone):'')+(pr.contract?' · Contrat '+e(pr.contract):'')+(pr.nextVisit?' · Prochaine visite le '+fd(pr.nextVisit):'')+'</p><div class="sign"><div>Établi par</div><div>Validé par</div><div>Date et signature</div></div>');
 }
-
 /* ----- éditeur de plan 2D ----- */
 let dr=null;
 const GRID=20,VW=1000,VH=640;
@@ -5196,11 +5228,12 @@ function drSvg(els,sel,forExport){
 }
 function drOpen(){
   if(!canManage()){alert('Action réservée aux responsables.');return}
-  const p=P();
-  dr={els:JSON.parse(JSON.stringify(p.planData||[])).filter(x=>x.t!=='trap'),tool:'room',sel:-1,cur:null,hist:[],ttype:TRAP_TYPES[0],had:[]};
-  p.traps.forEach(t=>{if(t.active!==false&&typeof t.x==='number'){dr.els.push({t:'trap',x:Math.round(t.x/100*VW/GRID)*GRID,y:Math.round(t.y/100*VH/GRID)*GRID,code:t.code,type:t.type,trapId:t.id});dr.had.push(t.id)}});
+  const p=P(),pl0=curP();
+  if(!pl0){alert('Créez d’abord un plan.');return}
+  dr={planId:pl0.id,els:JSON.parse(JSON.stringify(pl0.data||[])).filter(x=>x.t!=='trap'),tool:'room',sel:-1,cur:null,hist:[],ttype:TRAP_TYPES[0],had:[]};
+  p.traps.forEach(t=>{if(t.active!==false&&t.planId===pl0.id&&typeof t.x==='number'){dr.els.push({t:'trap',x:Math.round(t.x/100*VW/GRID)*GRID,y:Math.round(t.y/100*VH/GRID)*GRID,code:t.code,type:t.type,trapId:t.id});dr.had.push(t.id)}});
   const ov=document.createElement('div');ov.id='pst-draw';ov.className='mt-pest-draw';
-  ov.innerHTML='<div class="mt-pest-draw-box"><div class="mt-pest-draw-bar"><b>Dessiner le plan des locaux</b><span id="pst-dr-tools"></span></div><div id="pst-dr-hint" class="note"></div><div class="mt-pest-draw-canvas" id="pst-dr-canvas"></div><div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.drSave()">Enregistrer le plan</button><button class="btn" onclick="mtPest.drClose()">Annuler</button></div></div>';
+  ov.innerHTML='<div class="mt-pest-draw-box"><div class="mt-pest-draw-bar"><b>Dessiner : '+e(pl0.name)+'</b><span id="pst-dr-tools"></span></div><div id="pst-dr-hint" class="note"></div><div class="mt-pest-draw-canvas" id="pst-dr-canvas"></div><div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.drSave()">Enregistrer le plan</button><button class="btn" onclick="mtPest.drClose()">Annuler</button></div></div>';
   document.documentElement.appendChild(ov);
   const c=$('pst-dr-canvas');
   c.addEventListener('pointerdown',drDown);c.addEventListener('pointermove',drMove);c.addEventListener('pointerup',drUp);
@@ -5260,25 +5293,26 @@ function drSave(){
   const xml=drSvg(dr.els,-1,true),els=dr.els.filter(x=>x.t!=='trap'),tels=dr.els.filter(x=>x.t==='trap'),had=dr.had.slice();
   const rooms=els.filter(x=>x.t==='room');
   const roomOf=pt=>{const r=rooms.filter(q=>pt.x>=q.x&&pt.x<=q.x+q.w&&pt.y>=q.y&&pt.y<=q.y+q.h).sort((a,b)=>a.w*a.h-b.w*b.h)[0];return r&&r.label?r.label:'Plan des locaux'};
-  const keep=[];
+  const keep=[],plId=dr.planId;
   const im=new Image();
   im.onload=function(){
     const cv=document.createElement('canvas');cv.width=VW;cv.height=VH;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,VW,VH);c.drawImage(im,0,0,VW,VH);
-    const p=P();p.plan=cv.toDataURL('image/webp',.8);p.planData=els;
+    const p=P(),pl=p.plans.find(x=>x.id===plId);if(!pl){drClose();return}
+    pl.image=cv.toDataURL('image/webp',.8);pl.data=els;
     tels.forEach(q=>{
       let t=q.trapId?p.traps.find(z=>z.id===q.trapId):p.traps.find(z=>z.active!==false&&z.code===q.code);
-      if(!t){t=stamp({id:uid(),code:q.code,type:q.type,location:roomOf(q),freq:/UV/.test(q.type)?30:7,active:true,addedAt:today()});p.traps.push(t);trace('Piège ajouté : '+t.code+' · '+t.location,'',who(),t.type)}
-      t.x=Math.round(q.x/VW*1000)/10;t.y=Math.round(q.y/VH*1000)/10;keep.push(t.id);
+      if(!t){t=stamp({id:uid(),code:q.code,type:q.type,planId:plId,location:roomOf(q),freq:/UV/.test(q.type)?30:7,active:true,addedAt:today()});p.traps.push(t);trace('Piège ajouté : '+t.code+' · '+t.location,'',who(),t.type)}
+      t.planId=plId;t.x=Math.round(q.x/VW*1000)/10;t.y=Math.round(q.y/VH*1000)/10;keep.push(t.id);
     });
     had.forEach(id=>{if(keep.indexOf(id)<0){const t=p.traps.find(z=>z.id===id);if(t){delete t.x;delete t.y}}});
-    trace('Plan des locaux dessiné','',who(),els.filter(x=>x.t==='room').map(x=>x.label).join(', '));
+    trace('Plan dessiné : '+pl.name,'',who(),els.filter(x=>x.t==='room').map(x=>x.label).join(', '));
     persist();drClose();render();
   };
   im.onerror=function(){alert('Enregistrement impossible, réessayez.')};
   im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
 }
 
-window.mtPest={open:open,draw:drOpen,drType:drType,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
+window.mtPest={open:open,draw:drOpen,selPlan:selPlan,newPlan:newPlan,renamePlan:renamePlan,planChanged:planChanged,locChanged:locChanged,drType:drType,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
 window.mtPestOpen=open;
 })();
 
