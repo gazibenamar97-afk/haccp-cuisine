@@ -4732,6 +4732,9 @@ window.addEventListener('message',async e=>{
 })();
 </script>
 <style id="mt-pest-style">
+body.mt-photo-nuisibles.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-pest-card .mtpc-pest-bg,body.mt-photo-nuisibles .mtp-tiles .mtp-photo-nuisibles{background:#d1e4d9 url("nuisibles.jpg?v=1") center/cover no-repeat!important}
+body.mt-photo-dechets.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-waste-card .mtpc-waste-bg,body.mt-photo-dechets .mtp-tiles .mtp-photo-dechets{background:#d1e4d9 url("dechets.jpg?v=1") center/cover no-repeat!important}
+body.mt-photo-documents.on-home:has(#mtPcShell) .mtpc-work-grid .mtpc-docs-card .mtpc-docs-bg,body.mt-photo-documents .mtp-tiles .mtp-photo-documents{background:#d1e4d9 url("documents.jpg?v=1") center/cover no-repeat!important}
 body.on-home:has(#mtPcShell) .mtpc-work-grid .mtp-photo-rapports{background:#d1e4d9 url("rapports-module.jpg?v=20261011b") center/cover no-repeat!important}
 body.on-home:has(#mtPcShell) .mtpc-work-grid .mtp-photo-rapports:before,body.on-home:has(#mtPcShell) .mtpc-work-grid .mtp-photo-rapports:after{content:none!important;display:none!important}
 h2.mtpc-section-title{display:flex!important;align-items:center;gap:12px;margin:22px 2px 10px!important;font-size:13px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase;color:#0d4a36!important}
@@ -5748,5 +5751,8 @@ window.mtDocs={go:go,open:openDoc,newDoc:function(){newDoc()},save:saveDoc,appro
 window.mtDocsOpen=open;
 })();
 
+</script>
+<script id="mt-module-photos">
+(function(){["nuisibles","dechets","documents"].forEach(function(k){var i=new Image();i.onload=function(){document.body.classList.add("mt-photo-"+k)};i.src=k+".jpg?v=1"})})();
 </script>
 </body></html>
