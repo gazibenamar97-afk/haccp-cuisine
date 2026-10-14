@@ -1,102 +1,177 @@
 rules_version = '2';
 
-// M&T HACCP - Firestore security rules (isolation par établissement)
-// Publier : console Firebase > Firestore Database > Règles > coller ce fichier > Publier.
-//
-// Modèle :
-//  - users/{uid}        profil du compte : { site, role, active, name, ... }
-//  - appState/{site}    données d'exploitation d'un établissement (+ appState/establishments = registre)
-//  - appUsers/{site}    miroir de compatibilité de la liste des comptes d'un établissement
-//
-// Un compte actif d'un établissement ne voit et n'écrit QUE les données de son établissement.
-// L'administrateur (role admin, site main) voit tous les établissements.
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------- Fonctions ----------
     function signedIn() {
       return request.auth != null;
     }
 
-    function me() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function profile() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
     }
 
-    function hasProfile() {
+    function activeUser() {
       return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+        && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        )
+        && profile().active == true;
     }
 
-    function isActive() {
-      return hasProfile() && me().get('active', true) != false;
+    function isAdmin() {
+      return activeUser()
+        && profile().site == "main"
+        && profile().role == "admin";
     }
 
-    // Administrateur général M&T HACCP
-    function isMainAdmin() {
-      return isActive() && me().role == 'admin' && me().site == 'main';
+    function isSiteManager() {
+      return activeUser()
+        && profile().role == "responsable"
+        && profile().site != "main";
     }
 
-    // Compte actif de l'établissement donné
-    function inSite(site) {
-      return isActive() && me().site == site && site != 'main';
+
+    /* ================================
+       DONNÉES HACCP DES ÉTABLISSEMENTS
+       ================================ */
+
+    match /appState/{siteId} {
+
+      allow read: if activeUser()
+        && (
+          isAdmin()
+          || profile().site == siteId
+        );
+
+      allow create: if activeUser()
+        && (
+          isAdmin()
+          || profile().site == siteId
+        );
+
+      // NOUVEAU : seuls l'administrateur et les responsables
+      // peuvent modifier les paramètres (code PIN administrateur).
+      allow update: if activeUser()
+        && (
+          isAdmin()
+          || profile().site == siteId
+        )
+        && (
+          isAdmin()
+          || isSiteManager()
+          || !request.resource.data.diff(resource.data)
+               .affectedKeys().hasAny(['settings'])
+        );
+
+      allow delete: if false;
     }
 
-    // Responsable d'établissement (peut gérer les comptes de son établissement)
-    function isSiteManager(site) {
-      return inSite(site)
-        && me().role in ['responsable', 'responsable_etablissement', 'responsable etablissement', 'manager'];
-    }
 
-    // ---------- Registre des établissements (lu avant connexion : liste des noms) ----------
-    match /appState/establishments {
-      allow read: if true;
-      allow write: if isMainAdmin();
-    }
+    /* ================================
+       UTILISATEURS
+       ================================ */
 
-    // ---------- Données d'un établissement ----------
-    match /appState/{site} {
-      allow read, write: if isMainAdmin() || inSite(site);
-    }
+    match /users/{userId} {
 
-    // ---------- Profils des comptes ----------
-    match /users/{uid} {
-      // Lire son propre profil (obligatoire pour se connecter), ou ceux de son établissement
-      allow get: if signedIn() && (
-        request.auth.uid == uid
-        || isMainAdmin()
-        || (isActive() && resource != null && resource.data.site == me().site && me().site != 'main')
-      );
-      // Requêtes where('site','==',...) : l'établissement demandé doit être le sien
-      allow list: if isMainAdmin()
-        || (isActive() && me().site != 'main' && resource.data.site == me().site);
+      // Chaque utilisateur peut lire son propre profil.
+      // L'administrateur peut lire tous les profils.
+      // Un responsable peut lire tous les profils
+      // appartenant à son établissement.
+      allow read: if activeUser()
+        && (
+          request.auth.uid == userId
+          || isAdmin()
+          || (
+            isSiteManager()
+            && resource.data.site == profile().site
+          )
+        );
 
-      // Création d'un compte
-      allow create: if isMainAdmin()
-        || (isSiteManager(request.resource.data.site)
-            && request.resource.data.role in ['responsable', 'haccp', 'employe']);
+
+      // Création des utilisateurs
+      allow create: if isAdmin()
+        || (
+          isSiteManager()
+
+          && request.resource.data.site == profile().site
+
+          // NOUVEAU : l'identifiant du profil doit correspondre au compte
+          && request.resource.data.uid == userId
+
+          && (
+            request.resource.data.role == "responsable"
+            || request.resource.data.role == "haccp"
+            || request.resource.data.role == "employe"
+          )
+
+          && request.resource.data.active == true
+        );
+
 
       // Modification
-      allow update: if isMainAdmin()
-        // un responsable gère les comptes de son établissement, sans changer d'établissement ni créer d'admin
-        || (isSiteManager(resource.data.site)
-            && request.resource.data.site == resource.data.site
-            && request.resource.data.role in ['responsable', 'haccp', 'employe'])
-        // chacun peut mettre à jour son profil, sans toucher à son rôle, son site ou son statut
-        || (signedIn() && request.auth.uid == uid
-            && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasAny(['role', 'site', 'active', 'uid']) == false);
+      allow update: if isAdmin()
+        || (
+          isSiteManager()
 
-      allow delete: if isMainAdmin();
+          && resource.data.site == profile().site
+          && request.resource.data.site == resource.data.site
+
+          && (
+            resource.data.role == "responsable"
+            || resource.data.role == "haccp"
+            || resource.data.role == "employe"
+          )
+
+          && (
+            request.resource.data.role == "responsable"
+            || request.resource.data.role == "haccp"
+            || request.resource.data.role == "employe"
+          )
+
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.email == resource.data.email
+        );
+
+      // Pas de suppression définitive
+      allow delete: if false;
     }
 
-    // ---------- Miroir de compatibilité des comptes ----------
-    match /appUsers/{site} {
-      allow read: if isMainAdmin() || isSiteManager(site);
-      allow write: if isMainAdmin() || isSiteManager(site);
+
+    /* ================================
+       LISTE DES UTILISATEURS PAR SITE
+       ================================ */
+
+    match /appUsers/{siteId} {
+
+      allow read: if activeUser()
+        && (
+          isAdmin()
+          || (
+            isSiteManager()
+            && profile().site == siteId
+          )
+        );
+
+      allow create, update: if activeUser()
+        && (
+          isAdmin()
+          || (
+            isSiteManager()
+            && profile().site == siteId
+          )
+        );
+
+      allow delete: if false;
     }
 
-    // ---------- Tout le reste est fermé ----------
+
+    /* ================================
+       TOUT LE RESTE EST BLOQUÉ
+       ================================ */
+
     match /{document=**} {
       allow read, write: if false;
     }
