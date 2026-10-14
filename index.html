@@ -1235,6 +1235,16 @@ body.on-login main{padding-top:12px!important}
  html body:has(#mtPcShell):not(.on-login):not(.mt-n1):not(.mt-n2) > main{margin-left:0!important;width:100%!important}
 }
 </style>
+
+<style id="mt-mobile-tile-photos">
+/* Accueil mobile : photos des tuiles Rapports, Actions correctives et Audits HACCP */
+@media screen and (max-width:850px){
+ body .mtp-tiles .mtp-photo-audits{background:#d1e4d9 url("audits.jpg?v=20261014") center 20%/cover no-repeat!important}
+ body .mtp-tiles .mtp-photo-rapports{background:#d1e4d9 url("rapports-module.jpg?v=20261011b") center/cover no-repeat!important}
+ body .mtp-tiles .mtp-photo-rapports:after{content:none!important;display:none!important}
+ body .mtp-tiles .mtp-photo-correctives{background:#d1e4d9 url("actions-correctives.jpg?v=20261014") center/cover no-repeat!important}
+}
+</style>
 </head><body class="on-home">
 <main><div id="app"></div></main>
 <script>
