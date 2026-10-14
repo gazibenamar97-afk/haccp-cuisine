@@ -4270,8 +4270,29 @@ window.mtOpenAudits=function(){
     const uid=firebase.auth().currentUser.uid;
     const savedAt=new Date().toISOString();
     const record={id:uid+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),savedAt,site:SITE_ID,actorUid:uid,actorName:currentUserProfile.name||currentUserProfile.email||'',date:a.date,auditor:a.auditor,zone:a.zone,entries:a.entries.map(x=>({category:String(x.category||'').slice(0,100),question:String(x.question||'').slice(0,300),result:x.result,note:String(x.note||'').slice(0,1500)})),progress:10,score:a.score,nonConformities:a.nonConformities,status:a.status};
-    await doc.update({auditsRecords:firebase.firestore.FieldValue.arrayUnion(record)});
-    respond({id:record.id,savedAt});return;
+    let linkedCount=0;
+    await cloudDb.runTransaction(async tx=>{
+     const snap=await tx.get(doc),data=snap.data()||{};
+     const audits=Array.isArray(data.auditsRecords)?data.auditsRecords:[];
+     const correctives=Array.isArray(data.correctiveActionsRecords)?data.correctiveActionsRecords:[];
+     let maxRef=correctives.reduce((n,x)=>Math.max(n,parseInt(String(x.reference||'').replace('AC-',''))||0),0);
+     const newActions=[];
+     record.entries.forEach((entry,i)=>{
+      if(entry.result!=='nc')return;
+      const sourceId=record.id+':'+i;
+      if(correctives.some(c=>c.source==='Audit HACCP'&&c.sourceId===sourceId))return;
+      const when=savedAt,reference='AC-'+String(++maxRef).padStart(4,'0');
+      newActions.push({id:record.id+'-nc-'+i,reference,site:SITE_ID,createdAt:when,actorUid:uid,
+       severity:'majeure',zone:record.zone,source:'Audit HACCP',sourceId,auditId:record.id,
+       problem:('Audit HACCP : '+entry.question+(entry.note?' — '+entry.note:'')).slice(0,900),
+       immediate:'',measure:'Définir les mesures appropriées et contrôler leur efficacité.',
+       owner:record.auditor,deadline:'',status:'Ouverte',
+       events:[{at:when,by:record.auditor,action:'Création depuis Audit HACCP',note:'Non-conformité numéro '+(i+1)+' de l’audit '+record.id}]});
+     });
+     linkedCount=newActions.length;
+     tx.set(doc,{auditsRecords:[...audits,record],correctiveActionsRecords:[...correctives,...newActions]},{merge:true});
+    });
+    respond({id:record.id,savedAt,linkedActions:linkedCount});return;
    }
    throw Error('Action inconnue.');
   }catch(err){respond(null,err&&err.message||'Erreur Firebase inconnue.');}
