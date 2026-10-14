@@ -3555,6 +3555,14 @@ async function loadResetSiteOptions(){
 // Remise à zéro de toutes les données d'exploitation d'un établissement.
 // Les profils Firebase Auth/users, le répertoire des établissements et les réglages
 // d'accès ne sont jamais modifiés par cette fonction.
+function mtResetSameValue(a,b){
+ if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>mtResetSameValue(v,b[i]));
+ if(a&&b&&typeof a==='object'&&typeof b==='object'){
+  const ak=Object.keys(a),bk=Object.keys(b);
+  return ak.length===bk.length&&ak.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&mtResetSameValue(a[k],b[k]));
+ }
+ return a===b;
+}
 function mtEmptyOperationalFields(){
  return {
   stock:[],temps:[],clean:[],trace:[],suppliers:[],
@@ -3591,7 +3599,7 @@ async function resetEstablishmentData(){
   // update() remplace chaque champ en entier (pas de fusion) : les registres sont vraiment vidés.
   try{await ref.update(payload)}catch(e0){if(e0&&e0.code==='not-found')await ref.set(payload);else throw e0}
   const check=await ref.get({source:'server'}),server=check.data()||{};
-  const bad=Object.keys(empty).filter(k=>JSON.stringify(server[k])!==JSON.stringify(empty[k]));if(!check.exists||bad.length)throw Error('Vérification serveur échouée, registres non vides : '+bad.join(', '));
+  const bad=Object.keys(empty).filter(k=>!mtResetSameValue(server[k],empty[k]));if(!check.exists||bad.length)throw Error('Vérification serveur échouée, registres non vides : '+bad.join(', '));
   if(site===SITE_ID){Object.assign(S,empty);localStorage.setItem(SITE_STORAGE_KEY,JSON.stringify(S));sessionStorage.removeItem('haccpDashboardUnlocked')}
   if(status){status.textContent='Remise à zéro vérifiée sur Firebase pour « '+est.name+' ». Tous les registres d’exploitation ont été vidés. Comptes et réglages conservés.';status.style.color='#20543e'}
  }catch(e){console.error('resetEstablishmentData',e);if(status){status.textContent='Échec / vérification incomplète : '+(e.code||e.message||e);status.style.color='#9e4545'}}
