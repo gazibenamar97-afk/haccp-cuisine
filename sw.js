@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v189-notifications-20261014';
+const CACHE='mt-haccp-shell-v190-notifications-pc-20261014';
 const CORE=['./index.html','./audits-advanced.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));

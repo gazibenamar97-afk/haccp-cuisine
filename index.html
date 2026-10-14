@@ -6267,6 +6267,7 @@ function css(){
   const s=document.createElement('style');s.id='mt-notify-css';
   s.textContent='.mtn-bell{position:fixed;z-index:99978;width:50px;height:50px;border-radius:50%;border:0;background:#0f6b45;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;right:22px;bottom:22px;zoom:1}'
   +'@media(max-width:850px){.mtn-bell{right:auto;left:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px))}}'
+  +'.mtn-lab{display:none}@media(min-width:851px){.mtn-bell{width:auto;height:48px;border-radius:999px;padding:0 20px 0 16px;gap:9px;right:28px;bottom:26px;font:700 15px system-ui,Segoe UI,Arial,sans-serif}.mtn-lab{display:inline}.mtn-badge{top:-7px;right:-5px}}'
   +'.mtn-bell svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}'
   +'.mtn-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#d32f2f;color:#fff;font:700 12px/20px system-ui,Arial,sans-serif;text-align:center;border:2px solid #fff;box-sizing:border-box}'
   +'.mtn-badge.warn{background:#e08a00}.mtn-badge[hidden]{display:none}'
@@ -6290,7 +6291,7 @@ function ensureBell(){
   css();
   if(!bell){
     bell=document.createElement('button');bell.type='button';bell.className='mtn-bell';bell.setAttribute('aria-label','Notifications');
-    bell.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0"/></svg><span class="mtn-badge" hidden></span>';
+    bell.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0"/></svg><span class="mtn-lab">Notifications</span><span class="mtn-badge" hidden></span>';
     bell.onclick=openPanel;document.documentElement.appendChild(bell);
   }
 }
