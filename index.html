@@ -1946,6 +1946,7 @@ window.addEventListener('message',async e=>{
    });
    return outcome;
   }
+ }
  window.mtOfferCorrectiveForTest=offerAction;
  window.mtReportStockDlc=function(i,fromEdit){const x=S.stock&&S.stock[i];if(!x)return;const overdue=!!(x.dlc&&x.dlc<new Date().toISOString().slice(0,10));const issue=overdue?'DLC dépassée : '+x.dlc:(x.pack==='Non conforme'?'Emballage non conforme : '+(x.nonConformityReason||'anomalie signalée'):'');const reason=issue||prompt('Décrivez la non-conformité du produit (aucune action créée sans description) :');if(!reason||!String(reason).trim())return;const stockSourceId=x.receivedAt||x.createdAt||['stock',SITE_ID,x.product,x.lot,x.date].join(':');void offerAction('Stock et DLC',{...x,stockSourceId,stockProblem:String(reason).trim()})};
 
