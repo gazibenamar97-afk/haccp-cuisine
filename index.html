@@ -5948,7 +5948,7 @@ function vOverview(){
   const ah=alerts.length?alerts.map(a=>'<button type="button" class="mt-pest-alert '+a[0]+'" onclick="mtTrain.go(\''+a[2]+'\')">'+e(a[1])+'<span>Voir →</span></button>').join(''):'<div class="mt-pest-alert ok">Formations à jour.</div>';
   const todo=g.slice(0,12).map(x=>'<div class="record" style="cursor:pointer" onclick="mtTrain.openStaff(\''+x.s.id+'\')"><b>'+e(x.s.name)+'</b> · '+e(x.t.title)+' '+badge(x.r.txt,cls(x.r.k))+'</div>').join('');
   const nx=next.slice(0,5).map(x=>{const t=trainOf(x.trainingId);return '<div class="record" style="cursor:pointer" onclick="mtTrain.openSess(\''+x.id+'\')"><b>'+fd(x.date)+'</b> · '+e(t?t.title:'Formation')+' <span class="note">· '+(x.participants||[]).length+' participant(s)</span></div>'}).join('');
-  const none0=!T().catalog.length&&mg?'<div class="panel"><h2>Pour commencer</h2><p class="note">Créez d’abord le catalogue des formations (hygiène, HACCP, allergènes…), puis les fiches du personnel, avec ou sans compte.</p><div class="mt-pest-actions"><button class="btn primary" onclick="mtTrain.addAllStd()">Créer le catalogue type</button><button class="btn" onclick="mtTrain.importAccounts()">Importer les comptes de l’établissement</button><button class="btn" onclick="mtTrain.newStaff()">Nouvelle fiche</button></div></div>':'';
+  const none0=!T().catalog.length&&mg?'<div class="panel"><h2>Pour commencer</h2><p class="note">Créez d’abord le catalogue des formations (hygiène, HACCP, allergènes…), puis les fiches du personnel, avec ou sans compte.</p><div class="mt-pest-actions"><button class="btn primary" onclick="mtTrain.addAllStd()">Créer le catalogue type</button>'+(['admin','responsable'].includes((prof()||{}).role)?'<button class="btn" onclick="mtTrain.importAccounts()">Importer les comptes de l’établissement</button>':'')+'<button class="btn" onclick="mtTrain.newStaff()">Nouvelle fiche</button></div></div>':'';
   return '<div class="cards mt-pest-cards"><div class="metric"><span>Personnel actif</span><b>'+list.length+'</b></div><div class="metric"><span>Formations à jour</span><b class="'+(pct==null?'':pct>=90?'':pct>=60?'mt-pest-orange':'mt-pest-red')+'">'+(pct==null?'—':pct+' %')+'</b></div><div class="metric"><span>À renouveler</span><b class="'+(soon.length?'mt-pest-orange':'')+'">'+soon.length+'</b></div><div class="metric"><span>Expirées / manquantes</span><b class="'+(late.length+none.length?'mt-pest-red':'')+'">'+(late.length+none.length)+'</b></div></div>'
    +none0
    +'<div class="panel"><h2>À traiter</h2>'+ah+(todo?'<div style="margin-top:10px">'+todo+'</div>':'')+(mg?'<div class="mt-pest-actions"><button class="btn primary" onclick="mtTrain.newSess()">Enregistrer une session</button><button class="btn" onclick="mtTrain.newStaff()">Nouvelle fiche</button><button class="btn" onclick="mtTrain.printRegister()">Imprimer le registre</button></div>':'')+'</div>'
@@ -6026,7 +6026,7 @@ function delHab(i){
   const t=o.habil[i].title;o.habil.splice(i,1);trace('Habilitation retirée : '+o.name,'',who(),t);save();openStaff(o.id);
 }
 async function importAccounts(){
-  if(!canManage())return;
+  if(!['admin','responsable'].includes((prof()||{}).role))return;
   if(typeof cloudDb==='undefined'||!cloudDb){alert('Connexion indisponible. Réessayez en ligne.');return}
   try{
     const site=(typeof SITE_ID!=='undefined')?SITE_ID:'';
