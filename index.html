@@ -2555,6 +2555,121 @@ function adminSiteDetail(type){
  if(type==='trace'){title='Traçabilité';rows=trace.map(x=>rec(x.type||'Opération',esc(x.date||'—')+' · '+esc(x.product||x.equipment||'')+'<br>Opérateur : '+esc(x.operator||x.modifiedBy||'—')+' · Motif / observation : '+esc(x.reason||x.observation||'—')))}
  app.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1>'+esc(title)+' — '+esc(ADMIN_SITE_ID)+'</h1>'+B('← Supervision',"renderAdminSiteDashboard(ADMIN_SITE_ID,ADMIN_SITE_DATA)")+'</div><div class="panel">'+(rows.length?rows.join(''):'<p class="empty">Aucune donnée enregistrée dans cette rubrique.</p>')+'</div>';
 }
+/* M&T HACCP — Gestion des abonnements, réservée à l'administrateur principal. */
+const MT_SUB_PLANS={
+ essentiel:{label:'Essentiel',users:5,price:79},
+ professionnel:{label:'Professionnel',users:15,price:149},
+ premium:{label:'Premium',users:30,price:249},
+ groupe:{label:'Groupe / personnalisé',users:5,price:199}
+};
+let mtSubData={items:[],counts:{},selected:''};
+function mtSubAdmin(){
+ return SITE_ID==='main'&&currentUserProfile?.site==='main'&&currentUserProfile?.role==='admin'&&
+ !!firebase.auth().currentUser&&firebase.auth().currentUser.uid===currentUserProfile.uid;
+}
+function mtSubToday(){
+ const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function mtSubState(sub){
+ if(!sub||!sub.plan)return 'non_attribue';
+ if(sub.status==='actif'&&sub.endDate&&sub.endDate<mtSubToday())return 'expire';
+ return sub.status||'en_attente';
+}
+function mtSubLabel(state){return ({actif:'Actif',en_attente:'En attente',suspendu:'Suspendu',expire:'Expiré',non_attribue:'Non attribué'})[state]||'Non attribué'}
+function mtSubMoney(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:2})+' DT'}
+async function mtSubscriptionsOpen(preselect=''){
+ if(!mtSubAdmin()){home();return}
+ CURRENT_VIEW='subscriptions';document.body.classList.remove('on-home','mt-premium-active','on-login');
+ app.innerHTML='<section class="mt-subscriptions"><button type="button" class="btn back" onclick="openEstablishmentSupervision()">← Supervision</button><h1>Gestion des abonnements</h1><p class="note">Administration des forfaits M&THACCP — réservé au compte administrateur principal. Les modifications sont enregistrées dans Firebase.</p><div class="panel" id="mtSubDashboard">Chargement des abonnements…</div><div class="panel" id="mtSubEditor"></div></section>';
+ if(!cloudDb){document.getElementById('mtSubDashboard').textContent='Firebase indisponible.';return}
+ try{
+  const reg=await cloudDb.collection('appState').doc('establishments').get({source:'server'});
+  const data=reg.data()||{},items=Array.isArray(data.items)?data.items.filter(x=>x&&x.id&&x.id!=='main'&&x.id!=='establishments'):[];
+  const counts={};let countError='';
+  try{
+   const users=await cloudDb.collection('users').get({source:'server'});
+   users.forEach(d=>{const u=d.data()||{};if(u.site&&u.site!=='main'&&u.active!==false)counts[u.site]=(counts[u.site]||0)+1});
+  }catch(err){countError='Le décompte des comptes actifs est temporairement indisponible.';console.warn('Subscription users count',err)}
+  mtSubData={items,counts,selected:''};
+  const statuses=items.map(x=>mtSubState(x.subscription));
+  const active=statuses.filter(x=>x==='actif').length,waiting=statuses.filter(x=>x==='en_attente').length,expired=statuses.filter(x=>x==='expire').length;
+  const monthly=items.reduce((sum,x)=>mtSubState(x.subscription)==='actif'?sum+Number(x.subscription?.monthlyPriceTnd||0):sum,0);
+  const rows=items.map(x=>{
+   const sub=x.subscription||{},state=mtSubState(sub),limit=sub.maxUsers||x.maxUsers||null;
+   return '<tr data-sub-status="'+state+'"><td><b>'+esc(x.name||x.id)+'</b><br><small>'+esc(x.id)+'</small></td><td>'+esc(MT_SUB_PLANS[sub.plan]?.label||'—')+'</td><td>'+esc(mtSubLabel(state))+'</td><td>'+((counts[x.id]===undefined)?(countError?'—':0):counts[x.id])+' / '+(limit||'—')+'</td><td>'+esc(sub.endDate||'—')+'</td><td>'+mtSubMoney(sub.monthlyPriceTnd)+'</td><td><button class="btn" style="width:auto;padding:8px 12px" onclick="mtSubscriptionSelect(\''+encodeURIComponent(x.id)+'\')">Gérer</button></td></tr>';
+  }).join('');
+  const box=document.getElementById('mtSubDashboard');if(!box)return;
+  box.innerHTML='<div class="cards" style="margin-bottom:14px"><div class="metric"><span>Abonnements actifs</span><b>'+active+'</b></div><div class="metric"><span>En attente</span><b>'+waiting+'</b></div><div class="metric"><span>Expirés</span><b>'+expired+'</b></div></div><p class="note"><b>Montant mensuel théorique des abonnements actifs : '+mtSubMoney(monthly)+'</b> — suivi commercial, non connecté à une passerelle de paiement.</p>'+
+   (countError?'<p style="color:#a12622">'+esc(countError)+'</p>':'')+
+   '<label for="mtSubFilter">Afficher les abonnements</label><select id="mtSubFilter" onchange="mtSubscriptionsFilter(this.value)"><option value="tous">Tous les établissements</option><option value="actif">Actifs</option><option value="en_attente">En attente</option><option value="suspendu">Suspendus</option><option value="expire">Expirés</option><option value="non_attribue">Sans forfait</option></select>'+
+   '<div style="overflow-x:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse"><thead><tr><th>Établissement</th><th>Forfait</th><th>Statut</th><th>Utilisateurs</th><th>Échéance</th><th>Mensualité</th><th>Gestion</th></tr></thead><tbody id="mtSubRows">'+(rows||'<tr><td colspan="7">Aucun établissement.</td></tr>')+'</tbody></table></div>';
+  const pick=preselect||items[0]?.id||'';if(pick)mtSubscriptionSelect(encodeURIComponent(pick));else document.getElementById('mtSubEditor').textContent='Ajoutez d’abord un établissement depuis la gestion des établissements.';
+ }catch(e){console.error('Subscriptions load',e);const box=document.getElementById('mtSubDashboard');if(box)box.textContent='Chargement impossible : '+(e.message||e)}
+}
+function mtSubscriptionsFilter(value){
+ document.querySelectorAll('#mtSubRows tr[data-sub-status]').forEach(row=>row.hidden=value!=='tous'&&row.dataset.subStatus!==value);
+}
+function mtSubscriptionPlanChanged(){
+ const plan=document.getElementById('mtSubPlan')?.value,p=MT_SUB_PLANS[plan];
+ if(!p)return;
+ const limit=document.getElementById('mtSubLimit'),price=document.getElementById('mtSubPrice');
+ if(limit){limit.value=p.users;limit.readOnly=plan!=='groupe'}
+ if(price)price.value=p.price;
+}
+function mtSubscriptionSelect(encoded){
+ if(!mtSubAdmin())return;
+ const id=decodeURIComponent(encoded),x=mtSubData.items.find(v=>v.id===id),box=document.getElementById('mtSubEditor');if(!x||!box)return;
+ mtSubData.selected=id;const sub=x.subscription||{},plan=MT_SUB_PLANS[sub.plan]?sub.plan:'essentiel',info=MT_SUB_PLANS[plan],count=mtSubData.counts[id]||0;
+ const selected=(a,b)=>a===b?' selected':'';
+ const options=Object.keys(MT_SUB_PLANS).map(k=>'<option value="'+k+'"'+selected(plan,k)+'>'+esc(MT_SUB_PLANS[k].label)+'</option>').join('');
+ const start=sub.startDate||mtSubToday();const expire=sub.endDate||'';
+ box.innerHTML='<h2>Activer ou modifier un forfait — '+esc(x.name||x.id)+'</h2><p class="note">Statut actuel : <b>'+esc(mtSubLabel(mtSubState(sub)))+'</b> · '+count+' compte(s) actif(s). Les comptes existants et les données HACCP sont conservés.</p>'+
+ '<label>Forfait</label><select id="mtSubPlan" onchange="mtSubscriptionPlanChanged()">'+options+'</select>'+
+ '<div class="row"><div><label>Nombre maximal d’utilisateurs actifs</label><input type="number" min="1" max="10000" id="mtSubLimit" value="'+esc(sub.maxUsers||info.users)+'"'+(plan!=='groupe'?' readonly':'')+'></div><div><label>Tarif mensuel (DT)</label><input type="number" min="0" step="0.01" id="mtSubPrice" value="'+esc(sub.monthlyPriceTnd??info.price)+'"></div></div>'+
+ '<div class="row"><div><label>Date de début</label><input type="date" id="mtSubStart" value="'+esc(start)+'"></div><div><label>Date d’échéance (facultative)</label><input type="date" id="mtSubEnd" value="'+esc(expire)+'"></div></div>'+
+ '<label>Notes internes (administrateur)</label><textarea id="mtSubNotes" rows="2" placeholder="Référence de contrat, commentaire…">'+esc(sub.notes||'')+'</textarea>'+
+ '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px"><button class="btn primary" onclick="mtSubscriptionSave(\'actif\',this)">Activer / renouveler</button><button class="btn" onclick="mtSubscriptionSave(\'en_attente\',this)">Mettre en attente</button><button class="btn" style="color:#a12622;border-color:#dca6a6" onclick="mtSubscriptionSave(\'suspendu\',this)">Suspendre</button></div>'+
+ '<p class="note">Une suspension bloque les nouvelles créations et réactivations de comptes dans l’application. Les comptes existants restent accessibles. Les prix sont enregistrés à titre de suivi administratif ; aucun paiement n’est prélevé automatiquement.</p>'+
+ '<div id="mtSubStatus" role="status" class="note" style="margin-top:12px"></div>';
+}
+async function mtSubscriptionSave(status,button){
+ if(!mtSubAdmin())return;
+ const id=mtSubData.selected,plan=document.getElementById('mtSubPlan')?.value||'';
+ const spec=MT_SUB_PLANS[plan],rawMax=Number(document.getElementById('mtSubLimit')?.value);
+ const maxUsers=plan==='groupe'?rawMax:spec?.users;
+ const monthlyPriceTnd=Number(document.getElementById('mtSubPrice')?.value);
+ const startDate=document.getElementById('mtSubStart')?.value||'',endDate=document.getElementById('mtSubEnd')?.value||'';
+ const notes=(document.getElementById('mtSubNotes')?.value||'').trim().slice(0,1000);
+ const st=document.getElementById('mtSubStatus');
+ const say=(message,bad=false)=>{if(st){st.textContent=message;st.style.color=bad?'#a12622':'#20543e'}};
+ if(!spec||!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>10000||!Number.isFinite(monthlyPriceTnd)||monthlyPriceTnd<0||!startDate||!/^\\d{4}-\\d{2}-\\d{2}$/.test(startDate)||endDate&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(endDate)||endDate&&endDate<startDate){say('Vérifiez le forfait, les dates, le nombre de comptes et le montant.',true);return}
+ if(status==='actif'&&endDate&&endDate<mtSubToday()){say('La date d’échéance est dépassée : choisissez une date future pour activer.',true);return}
+ if(maxUsers<(mtSubData.counts[id]||0)&&!confirm('Cet établissement a déjà '+mtSubData.counts[id]+' utilisateurs actifs. La nouvelle limite est '+maxUsers+' ; aucune session ne sera supprimée, mais les nouvelles créations seront bloquées. Continuer ?'))return;
+ const action=status==='actif'?'activer ou renouveler':status==='suspendu'?'suspendre':'mettre en attente';
+ if(!confirm('Confirmer : '+action+' le forfait « '+spec.label+' » de cet établissement ?'))return;
+ if(button)button.disabled=true;say('Enregistrement sécurisé dans Firebase…');
+ try{
+  const actor=firebase.auth().currentUser;
+  if(!actor||actor.uid!==currentUserProfile.uid)throw Error('Session administrateur invalide.');
+  const reg=cloudDb.collection('appState').doc('establishments'),state=cloudDb.collection('appState').doc(id);
+  const newSub={plan,status,maxUsers,monthlyPriceTnd,startDate,endDate,notes,updatedAt:new Date().toISOString(),updatedBy:actor.uid};
+  await cloudDb.runTransaction(async tx=>{
+   const snap=await tx.get(reg),data=snap.data()||{},items=Array.isArray(data.items)?data.items.slice():[];
+   const idx=items.findIndex(x=>x&&x.id===id);if(idx<0)throw Error('Établissement introuvable dans le registre serveur.');
+   const old=items[idx].subscription||{};
+   newSub.history=[...(Array.isArray(old.history)?old.history:[]),{action:status,plan,maxUsers,monthlyPriceTnd,at:newSub.updatedAt,by:actor.uid}].slice(-50);
+   items[idx]={...items[idx],maxUsers,subscription:newSub};
+   tx.set(reg,{items,updatedAt:newSub.updatedAt,updatedBy:actor.uid},{merge:true});
+   tx.set(state,{maxUsers,subscriptionStatus:status,subscriptionExpiresAt:endDate,subscriptionPlan:plan},{merge:true});
+  });
+  const verify=await Promise.all([reg.get({source:'server'}),state.get({source:'server'})]);
+  const saved=(verify[0].data()?.items||[]).find(x=>x.id===id);
+  if(saved?.subscription?.updatedAt!==newSub.updatedAt||verify[1].data()?.maxUsers!==maxUsers||verify[1].data()?.subscriptionStatus!==status)throw Error('Enregistrement non confirmé par Firebase.');
+  try{localStorage.setItem('mtEstablishmentsCache',JSON.stringify(verify[0].data().items||[]))}catch(_){}
+  await mtSubscriptionsOpen(id);
+  const msg=document.getElementById('mtSubStatus');if(msg){msg.textContent='Forfait '+spec.label+' : '+mtSubLabel(status)+'. Limite '+maxUsers+' utilisateurs. Enregistrement confirmé.';msg.style.color='#20543e'}
+ }catch(e){console.error('Subscriptions update',e);say('Enregistrement impossible : '+(e.message||e),true);if(button)button.disabled=false}
+}
 function openEstablishmentSupervision(){
  if(SITE_ID!=='main'){home();return}
  CURRENT_VIEW='supervision';
@@ -2564,7 +2679,7 @@ function openEstablishmentSupervision(){
  if(ADMIN_SITE_UNSUB){try{ADMIN_SITE_UNSUB()}catch(e){} ADMIN_SITE_UNSUB=null}
  app.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h1>Supervision des établissements</h1><p class="note">Supervision en temps réel et gestion complète de tous les établissements.</p></div>'+B('← Accueil',"home()")+'</div>'+
  '<div class="panel"><h2>🏢 Gestion des établissements</h2><p class="note">Ajoutez, modifiez, activez ou désactivez vos établissements depuis ce module.</p>'+B('Gérer les établissements',"establishmentsManager()",'primary')+'</div>'+
- '<div class="panel"><h2>📊 Supervision en temps réel</h2><p class="note">Sélectionnez un établissement pour consulter ses produits, DLC, non-conformités, températures, nettoyages et traçabilité.</p><label>Établissement à superviser</label><div class="row" style="align-items:end"><div><select id="supervisionSite" onchange="openSelectedSupervision()"><option value="">Choisir un établissement…</option></select></div></div><div id="supervisionSiteStatus" class="note"></div></div>'+
+ '<div class="panel" style="border-color:#b8d9c8;background:#f7fbf9"><h2>💳 Gestion des abonnements</h2><p class="note">Consultez les forfaits actifs, les échéances, les tarifs et le nombre de comptes. Activez, renouvelez ou suspendez un abonnement depuis votre compte administrateur.</p>'+B('Ouvrir la gestion des abonnements',"mtSubscriptionsOpen()",'primary')+'</div>'+'<div class="panel"><h2>📊 Supervision en temps réel</h2><p class="note">Sélectionnez un établissement pour consulter ses produits, DLC, non-conformités, températures, nettoyages et traçabilité.</p><label>Établissement à superviser</label><div class="row" style="align-items:end"><div><select id="supervisionSite" onchange="openSelectedSupervision()"><option value="">Choisir un établissement…</option></select></div></div><div id="supervisionSiteStatus" class="note"></div></div>'+
  '<div class="panel"><h2>👥 Utilisateurs des établissements</h2><p class="note">Choisissez un établissement pour afficher et gérer ses comptes utilisateurs.</p><label>Choisir l’établissement</label><select id="supervisionUsersSite" onchange="loadSupervisionUsers()"><option value="">Choisir un établissement…</option></select><label style="margin-top:14px">Choisir un utilisateur</label><select id="supervisionUserSelect" onchange="showSelectedSupervisionUser()"><option value="">Choisir un utilisateur…</option></select><div id="supervisionUsersList" class="note" style="margin-top:16px">Sélectionnez un utilisateur.</div></div>'+
  '<div class="panel" style="border-color:#d9b8b8"><h2>🧪 Remise à zéro d’un établissement</h2><p class="note">Efface les données d’exploitation de l’établissement choisi sans supprimer ses comptes ni les autres établissements.</p><label>Établissement à remettre à zéro</label><select id="resetSite"><option value="">Choisir un établissement…</option></select><br><br><button class="btn" style="background:#fff;border-color:#b96b6b;color:#8b3030" onclick="resetEstablishmentData()">↺ Remettre cet établissement à zéro</button><div id="resetSiteStatus" class="note"></div></div>'+
  '<div class="panel" style="border-color:#b96b6b;background:#fffafa"><h2>⚠️ Remise à zéro globale des établissements</h2><p class="note"><b>La structure M&THACCP est conservée.</b> Cette opération retire tous les établissements et désactive leurs profils utilisateurs dans Firestore. Elle efface leurs données d’exploitation, mais ne supprime ni l’application, ni ses modules, ni le catalogue intégré, ni le compte administrateur principal. Vous pourrez ajouter immédiatement un nouvel établissement après la remise à zéro.</p><button id="globalResetBtn" class="btn danger" style="width:auto" onclick="globalResetEstablishments(this)">Remise à zéro globale</button><div id="globalResetStatus" class="note" style="margin-top:10px"></div></div>';
@@ -3272,12 +3387,12 @@ async function saveSupervisionUser(uid){
   document.getElementById('supervisionUserEditPanel')?.remove();
  }catch(e){say('Enregistrement impossible : '+(e.code||e.message||String(e)))}
 }
-async function toggleSupervisionUser(uid,isActive){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid);if(!isActive){const us=await ref.get({source:'server'}),lim=await mtUserLimitInfo((us.data()||{}).site);if(lim.max&&lim.count>=lim.max){alert('Limite atteinte : '+lim.count+' / '+lim.max+' utilisateurs actifs pour cet établissement. Désactivez un autre compte ou augmentez la limite.');return}}await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
+async function toggleSupervisionUser(uid,isActive){if(!cloudDb||currentUserProfile?.site!=='main')return;const ref=cloudDb.collection('users').doc(uid);if(!isActive){const us=await ref.get({source:'server'}),lim=await mtUserLimitInfo((us.data()||{}).site);if(lim.status&&lim.status!=='actif'){alert('Abonnement non actif ou expiré : réactivation impossible.');return}if(lim.max&&lim.count<0){alert('Quota indisponible : réessayez.');return}if(lim.max&&lim.count>=lim.max){alert('Limite atteinte : '+lim.count+' / '+lim.max+' utilisateurs actifs pour cet établissement. Désactivez un autre compte ou augmentez la limite.');return}}await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});await loadSupervisionUsers()}
 
 async function establishmentsManager(){if(SITE_ID!=='main'||!currentUserProfile||currentUserProfile.site!=='main'){home();return}CURRENT_VIEW='establishments-manager';app.innerHTML=B('← Supervision','openEstablishmentSupervision()','back')+'<h1>Gestion des établissements</h1><div class="panel"><h2>Ajouter un établissement</h2><div class="row"><div><label>Nom de l’établissement *</label><input id="newEstablishmentName" placeholder="Ex. Le Grand Bleu"></div><div><label>Type d’établissement *</label><select id="newEstablishmentType"><option value="">Choisir…</option><option>Restaurant</option><option>Hôtel</option><option>Café / Cafétéria</option><option>Salon de thé</option><option>Fast-food</option><option>Pâtisserie / Boulangerie</option><option>Traiteur</option><option>Cuisine centrale</option><option>Autre</option></select></div></div><label>Adresse</label><input id="newEstablishmentAddress" placeholder="Adresse complète"><div class="row"><div><label>Ville / Gouvernorat</label><input id="newEstablishmentCity" placeholder="Ex. Gammarth, Tunis"></div><div><label>Téléphone</label><input id="newEstablishmentPhone" type="tel" placeholder="+216 ..."></div></div><div class="row"><div><label>E-mail</label><input id="newEstablishmentEmail" type="email" placeholder="contact@etablissement.tn"></div><div><label>Capacité / nombre de couverts</label><input id="newEstablishmentCapacity" type="number" min="0" inputmode="numeric" placeholder="Ex. 250"></div></div><div class="row"><div><label>Utilisateurs maximum (laisser vide = illimité)</label><input id="newEstablishmentMaxUsers" type="number" min="1" inputmode="numeric" placeholder="Illimité"></div></div><h3>Responsable de l’établissement</h3><div class="row"><div><label>Nom du responsable</label><input id="newEstablishmentManager" placeholder="Nom et prénom"></div><div><label>Téléphone du responsable</label><input id="newEstablishmentManagerPhone" type="tel" placeholder="+216 ..."></div></div><label style="display:flex;gap:10px;align-items:center;margin-top:14px"><input id="newEstablishmentActive" type="checkbox" checked style="width:auto"> Établissement actif</label><br><button id="addEstablishmentBtn" class="btn primary" style="width:auto">Ajouter l’établissement</button><p id="establishmentStatus" class="note" style="font-weight:700"></p></div><div class="panel"><h2>Établissements enregistrés</h2><div id="establishmentsList"><p class="note">Chargement…</p></div></div>';document.getElementById('addEstablishmentBtn').onclick=addEstablishment;renderEstablishmentsList()}
 function establishmentFormData(){const v=id=>(document.getElementById(id)?.value||'').trim();return{name:v('newEstablishmentName'),type:v('newEstablishmentType'),address:v('newEstablishmentAddress'),city:v('newEstablishmentCity'),phone:v('newEstablishmentPhone'),email:v('newEstablishmentEmail'),capacity:v('newEstablishmentCapacity'),maxUsers:v('newEstablishmentMaxUsers'),manager:v('newEstablishmentManager'),managerPhone:v('newEstablishmentManagerPhone'),active:document.getElementById('newEstablishmentActive')?.checked!==false}}
 async function mtSyncUserLimit(site,n){try{await cloudDb.collection('appState').doc(site).set({maxUsers:n?Number(n):firebase.firestore.FieldValue.delete()},{merge:true})}catch(e){console.warn('maxUsers sync',e)}}
-async function mtUserLimitInfo(site){const out={max:null,count:0};try{const st=await cloudDb.collection('appState').doc(site).get({source:'server'});const m=Number(st.exists?(st.data()||{}).maxUsers:0);out.max=m>0?m:null}catch(_){}try{const q=await cloudDb.collection('users').where('site','==',site).get({source:'server'});q.forEach(d=>{if((d.data()||{}).active!==false)out.count++})}catch(_){out.count=-1}return out}
+async function mtUserLimitInfo(site){const out={max:null,count:0,status:null};try{const st=await cloudDb.collection('appState').doc(site).get({source:'server'});const d=st.exists?(st.data()||{}):{},m=Number(d.maxUsers||0);out.max=m>0?m:null;if(d.subscriptionStatus){out.status=d.subscriptionStatus==='actif'&&d.subscriptionExpiresAt&&d.subscriptionExpiresAt<mtSubToday()?'expire':d.subscriptionStatus}}catch(e){out.count=-1;out.status='indisponible';return out}try{const q=await cloudDb.collection('users').where('site','==',site).get({source:'server'});q.forEach(d=>{if((d.data()||{}).active!==false)out.count++})}catch(_){out.count=-1}return out}
 async function addEstablishment(){const status=document.getElementById('establishmentStatus'),btn=document.getElementById('addEstablishmentBtn'),f=establishmentFormData();if(!f.name||!f.type){status.textContent='Le nom et le type d’établissement sont obligatoires.';status.style.color='#9e4545';return}if(f.email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(f.email)){status.textContent='Adresse e-mail invalide.';status.style.color='#9e4545';return}let id=establishmentSlug(f.name);if(!id||id==='main'||id==='establishments'){status.textContent='Nom invalide.';status.style.color='#9e4545';return}btn.disabled=true;try{const items=await getEstablishments();if(items.some(x=>x.id===id)){status.textContent='Cet établissement existe déjà.';status.style.color='#9e4545';return}items.push({...f,id,capacity:f.capacity?Number(f.capacity):null,maxUsers:f.maxUsers?Math.max(1,Number(f.maxUsers)):null,createdAt:new Date().toISOString(),createdBy:auditIdentity?auditIdentity():'M&T Admin'});const saved=await saveEstablishments(items);await mtSyncUserLimit(id,f.maxUsers?Math.max(1,Number(f.maxUsers)):null);status.textContent='Établissement ajouté avec succès.';status.style.color='#20543e';await renderEstablishmentsList(saved);['newEstablishmentName','newEstablishmentAddress','newEstablishmentCity','newEstablishmentPhone','newEstablishmentEmail','newEstablishmentCapacity','newEstablishmentManager','newEstablishmentManagerPhone','newEstablishmentMaxUsers'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('newEstablishmentType').value=''}catch(e){status.textContent='Impossible d’ajouter : '+(e.message||e);status.style.color='#9e4545'}finally{btn.disabled=false}}
 async function renderEstablishmentsList(preferredItems){
  const box=document.getElementById('establishmentsList');if(!box)return;
@@ -3297,7 +3412,7 @@ async function renderEstablishmentsList(preferredItems){
  }catch(e){console.warn('Establishments live list',e)}
 }
 async function editEstablishment(id){const items=await getEstablishments(),x=items.find(e=>e.id===id);if(!x)return;CURRENT_VIEW='establishment-edit';const types=['Restaurant','Hôtel','Café / Cafétéria','Salon de thé','Fast-food','Pâtisserie / Boulangerie','Traiteur','Cuisine centrale','Autre'];app.innerHTML=B('← Établissements','establishmentsManager()','back')+'<h1>Modifier l’établissement</h1><div class="panel"><label>Nom *</label><input id="eeName" value="'+esc(x.name||'')+'"><label>Type *</label><select id="eeType">'+types.map(t=>'<option'+(x.type===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select><label>Adresse</label><input id="eeAddress" value="'+esc(x.address||'')+'"><div class="row"><div><label>Ville / Gouvernorat</label><input id="eeCity" value="'+esc(x.city||'')+'"></div><div><label>Téléphone</label><input id="eePhone" type="tel" value="'+esc(x.phone||'')+'"></div></div><div class="row"><div><label>E-mail</label><input id="eeEmail" type="email" value="'+esc(x.email||'')+'"></div><div><label>Capacité</label><input id="eeCapacity" type="number" min="0" value="'+esc(x.capacity??'')+'"></div></div><div class="row"><div><label>Utilisateurs maximum (vide = illimité)</label><input id="eeMaxUsers" type="number" min="1" placeholder="Illimité" value="'+esc(x.maxUsers??'')+'"></div></div><div class="row"><div><label>Nom du responsable</label><input id="eeManager" value="'+esc(x.manager||'')+'"></div><div><label>Téléphone responsable</label><input id="eeManagerPhone" type="tel" value="'+esc(x.managerPhone||'')+'"></div></div><br><button id="saveEstablishmentBtn" class="btn primary">Enregistrer</button><p id="eeStatus" class="note"></p></div>';document.getElementById('saveEstablishmentBtn').onclick=()=>saveEstablishmentEdit(id)}
-async function saveEstablishmentEdit(id){const items=await getEstablishments(),x=items.find(e=>e.id===id),v=i=>(document.getElementById(i)?.value||'').trim(),status=document.getElementById('eeStatus');if(!x)return;const name=v('eeName'),type=v('eeType');if(!name||!type){status.textContent='Nom et type obligatoires.';status.style.color='#9e4545';return}Object.assign(x,{name,type,address:v('eeAddress'),city:v('eeCity'),phone:v('eePhone'),email:v('eeEmail'),capacity:v('eeCapacity')?Number(v('eeCapacity')):null,maxUsers:v('eeMaxUsers')?Math.max(1,Number(v('eeMaxUsers'))):null,manager:v('eeManager'),managerPhone:v('eeManagerPhone'),updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'});await saveEstablishments(items);await mtSyncUserLimit(id,x.maxUsers);await establishmentsManager()}
+async function saveEstablishmentEdit(id){const items=await getEstablishments(),x=items.find(e=>e.id===id),v=i=>(document.getElementById(i)?.value||'').trim(),status=document.getElementById('eeStatus');if(!x)return;const name=v('eeName'),type=v('eeType');if(!name||!type){status.textContent='Nom et type obligatoires.';status.style.color='#9e4545';return}Object.assign(x,{name,type,address:v('eeAddress'),city:v('eeCity'),phone:v('eePhone'),email:v('eeEmail'),capacity:v('eeCapacity')?Number(v('eeCapacity')):null,maxUsers:x.subscription?x.maxUsers:(v('eeMaxUsers')?Math.max(1,Number(v('eeMaxUsers'))):null),manager:v('eeManager'),managerPhone:v('eeManagerPhone'),updatedAt:new Date().toISOString(),updatedBy:'M&T Admin'});await saveEstablishments(items);if(!x.subscription)await mtSyncUserLimit(id,x.maxUsers);await establishmentsManager()}
 async function toggleEstablishment(id){
  try{
   if(!currentUserProfile||currentUserProfile.site!=='main'||currentUserProfile.role!=='admin')throw new Error('Accès réservé à l’administrateur');
@@ -3435,6 +3550,8 @@ async function createAppUser(btn){
  if(btn){btn.disabled=true;btn.textContent='Création…'}
  try{
   const lim=await mtUserLimitInfo(site);
+  if(lim.status&&lim.status!=='actif'){say('Abonnement non actif ou expiré : contactez l’administrateur M&T HACCP.',true);return}
+  if(lim.max&&lim.count<0){say('Vérification du quota indisponible. Réessayez plus tard.',true);return}
   if(lim.max&&lim.count>=lim.max){say('Limite atteinte : '+lim.count+' / '+lim.max+' utilisateurs actifs pour cet établissement. Désactivez un compte ou contactez M&T HACCP pour augmenter la limite.',true);return}
   let creator;try{creator=firebase.app('mtUserCreator')}catch(e){creator=firebase.initializeApp(FIREBASE_CONFIG,'mtUserCreator')}
   const cred=await creator.auth().createUserWithEmailAndPassword(email,password);
@@ -3550,7 +3667,7 @@ async function toggleAppUser(uid,isActive){
  try{
   const ref=cloudDb.collection('users').doc(uid),snap=await ref.get({source:'server'});
   if(!snap.exists||!canManageUserProfile({...snap.data(),uid}))throw new Error('Profil introuvable ou accès refusé');
-  if(!isActive){const lim=await mtUserLimitInfo(snap.data().site);if(lim.max&&lim.count>=lim.max){alert('Limite atteinte : '+lim.count+' / '+lim.max+' utilisateurs actifs pour cet établissement. Désactivez un autre compte ou augmentez la limite.');return}}
+  if(!isActive){const lim=await mtUserLimitInfo(snap.data().site);if(lim.status&&lim.status!=='actif'){alert('Abonnement non actif ou expiré : réactivation impossible.');return}if(lim.max&&lim.count<0){alert('Quota indisponible : réessayez.');return}if(lim.max&&lim.count>=lim.max){alert('Limite atteinte : '+lim.count+' / '+lim.max+' utilisateurs actifs pour cet établissement. Désactivez un autre compte ou augmentez la limite.');return}}
   await ref.update({active:!isActive,updatedAt:new Date().toISOString(),updatedBy:currentUserProfile.uid||''});
   await loadAppUsers();
   alert('Compte '+(isActive?'désactivé':'réactivé')+' avec succès.');
