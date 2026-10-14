@@ -4513,6 +4513,9 @@ window.addEventListener('message',async e=>{
 #mtCleanAcOverlay .mt-clean-check{display:flex;gap:10px;align-items:center;margin:9px 0;padding:8px;border:1px solid #d5e5db;border-radius:9px}
 #mtCleanAcOverlay .mt-clean-check input{width:18px;height:18px;flex:none}
 #mtCleanAcOverlay .mt-clean-check span{flex:1}
+#mtCleanAcOverlay .mt-select-all{display:block;margin:3px 0 12px auto;padding:7px 12px;background:#edf5ef;color:#086348;border:1px solid #b5d2c3;font-size:13px;font-weight:600}
+#mtCleanAcOverlay .mt-clean-ac-card{margin:12px auto 24px}
+#mtCleanAcOverlay{overscroll-behavior:contain}
 </style>
 <script id="mt-cleaning-corrective-test-link">
 (function(){
@@ -4531,6 +4534,11 @@ window.addEventListener('message',async e=>{
   [['mineure','Mineure'],['majeure','Majeure'],['critique','Critique — urgence']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;gravity.append(o)});gravity.value='majeure';
   const h=document.createElement('h3');h.textContent='Mesures de prise en charge (facultatives)';card.append(h);
   const checks=options.map(label=>{const row=document.createElement('label');row.className='mt-clean-check';const input=document.createElement('input');input.type='checkbox';const t=document.createElement('span');t.textContent=label;row.append(input,t);card.append(row);return {label,input}});
+  const selectAll=document.createElement('button');selectAll.type='button';selectAll.className='mt-select-all';selectAll.textContent='Sélectionner tous';
+  const updateSelect=()=>{selectAll.textContent=checks.every(c=>c.input.checked)?'Tout désélectionner':'Sélectionner tous'};
+  selectAll.onclick=()=>{const checked=!checks.every(c=>c.input.checked);checks.forEach(c=>c.input.checked=checked);updateSelect()};
+  checks.forEach(c=>c.input.addEventListener('change',updateSelect));
+  h.insertAdjacentElement('afterend',selectAll);
   const note=add('Mesures immédiates / observations complémentaires',document.createElement('textarea'));note.value=rec.note||'';note.rows=3;
   const owner=add('Responsable désigné',document.createElement('input'));owner.value=rec.operator||'';
   const deadline=add('Échéance',document.createElement('input'));deadline.type='date';
