@@ -4725,6 +4725,7 @@ window.addEventListener('message',async e=>{
 })();
 </script>
 <style id="mt-pest-style">
+#pst-draw select{width:auto!important;max-width:280px;padding:6px 10px}
 .mt-pest-draw,.mt-pest-draw *{font-family:"Segoe UI",Inter,Arial,sans-serif}
 .mt-pest-draw{position:fixed;left:0;top:0;width:100vw;height:100vh;zoom:1!important;z-index:99999;background:rgba(10,30,22,.6);display:flex;align-items:center;justify-content:center;padding:10px}
 .mt-pest-draw-box{background:#fff;border-radius:12px;padding:14px;max-width:1040px;width:100%;max-height:calc(100vh - 20px);overflow:auto;box-sizing:border-box}
@@ -5170,6 +5171,16 @@ function printRegister(){
 /* ----- éditeur de plan 2D ----- */
 let dr=null;
 const GRID=20,VW=1000,VH=640;
+function trapIcon(x,hl){
+  const ty=x.type||'',c=/UV/.test(ty)?'#d9a400':/phéromones/.test(ty)?'#7a4fd1':/rampants/.test(ty)?'#2f7de1':/glu/.test(ty)?'#c77700':/mécanique/.test(ty)?'#8a5a2b':'#1b8a4b';
+  let g;
+  if(/UV/.test(ty))g='<circle r="13" fill="'+c+'" stroke="#fff" stroke-width="3"/><path d="M2 -9L-5 2H0L-2 10L5 -1H0Z" fill="#fff"/>';
+  else if(/phéromones/.test(ty))g='<path d="M0 -14L14 11H-14Z" fill="'+c+'" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>';
+  else if(/rampants/.test(ty))g='<path d="M0 -15L15 0L0 15L-15 0Z" fill="'+c+'" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>';
+  else if(/Autre/.test(ty))g='<circle r="12" fill="'+c+'" stroke="#fff" stroke-width="3"/>';
+  else g='<rect x="-13" y="-13" width="26" height="26" rx="5" fill="'+c+'" stroke="#fff" stroke-width="3"/><circle r="4" fill="#fff"/>';
+  return '<g transform="translate('+x.x+' '+x.y+')">'+g+'<text y="28" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#17251f" stroke="#fff" stroke-width="3" paint-order="stroke">'+e(x.code)+'</text></g>';
+}
 function drSvg(els,sel,forExport){
   let o='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+VW+' '+VH+'" width="'+VW+'" height="'+VH+'"><rect width="'+VW+'" height="'+VH+'" fill="#fff"/>';
   if(!forExport){o+='<defs><pattern id="pstg" width="'+GRID+'" height="'+GRID+'" patternUnits="userSpaceOnUse"><path d="M'+GRID+' 0H0V'+GRID+'" fill="none" stroke="#e3ebe6" stroke-width="1"/></pattern></defs><rect width="'+VW+'" height="'+VH+'" fill="url(#pstg)"/>'}
@@ -5179,13 +5190,15 @@ function drSvg(els,sel,forExport){
     else if(x.t==='wall')o+='<line x1="'+x.x1+'" y1="'+x.y1+'" x2="'+x.x2+'" y2="'+x.y2+'" stroke="#0d4a36" stroke-width="'+(hl?7:5)+'" stroke-linecap="round"/>';
     else if(x.t==='door')o+='<rect x="'+(x.x-14)+'" y="'+(x.y-6)+'" width="28" height="12" fill="#fff" stroke="#c77700" stroke-width="3"'+hl+'/>';
     else if(x.t==='text')o+='<text x="'+x.x+'" y="'+x.y+'" text-anchor="middle" font-family="Arial" font-size="16" fill="#17251f">'+e(x.s)+'</text>';
+    else if(x.t==='trap'&&!forExport)o+=trapIcon(x,sel===i);
   });
   return o+'</svg>';
 }
 function drOpen(){
   if(!canManage()){alert('Action réservée aux responsables.');return}
   const p=P();
-  dr={els:JSON.parse(JSON.stringify(p.planData||[])),tool:'room',sel:-1,cur:null,hist:[]};
+  dr={els:JSON.parse(JSON.stringify(p.planData||[])).filter(x=>x.t!=='trap'),tool:'room',sel:-1,cur:null,hist:[],ttype:TRAP_TYPES[0],had:[]};
+  p.traps.forEach(t=>{if(t.active!==false&&typeof t.x==='number'){dr.els.push({t:'trap',x:Math.round(t.x/100*VW/GRID)*GRID,y:Math.round(t.y/100*VH/GRID)*GRID,code:t.code,type:t.type,trapId:t.id});dr.had.push(t.id)}});
   const ov=document.createElement('div');ov.id='pst-draw';ov.className='mt-pest-draw';
   ov.innerHTML='<div class="mt-pest-draw-box"><div class="mt-pest-draw-bar"><b>Dessiner le plan des locaux</b><span id="pst-dr-tools"></span></div><div id="pst-dr-hint" class="note"></div><div class="mt-pest-draw-canvas" id="pst-dr-canvas"></div><div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.drSave()">Enregistrer le plan</button><button class="btn" onclick="mtPest.drClose()">Annuler</button></div></div>';
   document.documentElement.appendChild(ov);
@@ -5195,13 +5208,14 @@ function drOpen(){
 }
 function drClose(){const o=$('pst-draw');if(o)o.remove();dr=null}
 function drTools(){
-  const T=[['room','Pièce'],['wall','Mur'],['door','Porte'],['text','Texte'],['erase','Gomme']];
-  const hints={room:'Glissez pour dessiner une pièce rectangulaire, puis donnez-lui un nom.',wall:'Glissez pour tracer un mur.',door:'Touchez pour placer une porte.',text:'Touchez pour ajouter un texte.',erase:'Touchez un élément pour le supprimer.'};
-  $('pst-dr-tools').innerHTML=T.map(t=>'<button type="button" class="mt-pest-chip'+(dr.tool===t[0]?' active':'')+'" onclick="mtPest.drTool(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'<button type="button" class="mt-pest-chip" onclick="mtPest.drUndo()">Annuler le dernier</button>';
+  const T=[['room','Pièce'],['wall','Mur'],['door','Porte'],['text','Texte'],['trap','Piège'],['erase','Gomme']];
+  const hints={room:'Glissez pour dessiner une pièce rectangulaire, puis donnez-lui un nom.',wall:'Glissez pour tracer un mur.',door:'Touchez pour placer une porte.',trap:'Choisissez le type de piège, puis touchez le plan : le piège est ajouté au registre.',text:'Touchez pour ajouter un texte.',erase:'Touchez un élément pour le supprimer.'};
+  $('pst-dr-tools').innerHTML=T.map(t=>'<button type="button" class="mt-pest-chip'+(dr.tool===t[0]?' active':'')+'" onclick="mtPest.drTool(\''+t[0]+'\')">'+t[1]+'</button>').join('')+(dr.tool==='trap'?'<select id="pst-dr-ttype" onchange="mtPest.drType(this.value)">'+optList(TRAP_TYPES,dr.ttype)+'</select>':'')+'<button type="button" class="mt-pest-chip" onclick="mtPest.drUndo()">Annuler le dernier</button>';
   $('pst-dr-hint').textContent=hints[dr.tool];
 }
 function drRefresh(){if(!dr)return;const els=dr.cur?dr.els.concat([dr.cur]):dr.els;$('pst-dr-canvas').innerHTML=drSvg(els,-1,false);drTools()}
 function drTool(t){dr.tool=t;drRefresh()}
+function drType(v){dr.ttype=v}
 function drUndo(){if(dr&&dr.els.length){dr.els.pop();drRefresh()}}
 function drPt(ev){
   const svg=$('pst-dr-canvas').querySelector('svg'),r=svg.getBoundingClientRect();
@@ -5212,13 +5226,19 @@ function drHit(pt){
   for(let i=dr.els.length-1;i>=0;i--){const x=dr.els[i];
     if(x.t==='room'&&pt.x>=x.x-12&&pt.x<=x.x+x.w+12&&pt.y>=x.y-12&&pt.y<=x.y+x.h+12)return i;
     if(x.t==='wall'){const dx=x.x2-x.x1,dy=x.y2-x.y1,l=dx*dx+dy*dy||1;let k=((pt.x-x.x1)*dx+(pt.y-x.y1)*dy)/l;k=Math.max(0,Math.min(1,k));if(Math.hypot(pt.x-(x.x1+k*dx),pt.y-(x.y1+k*dy))<16)return i}
-    if((x.t==='door'||x.t==='text')&&Math.abs(pt.x-x.x)<30&&Math.abs(pt.y-x.y)<20)return i}
+    if((x.t==='door'||x.t==='text')&&Math.abs(pt.x-x.x)<30&&Math.abs(pt.y-x.y)<20)return i
+    if(x.t==='trap'&&Math.abs(pt.x-x.x)<22&&Math.abs(pt.y-x.y)<22)return i}
   return -1;
 }
 function drDown(ev){
   if(!dr)return;ev.preventDefault();const pt=drPt(ev);
   if(dr.tool==='erase'){const i=drHit(pt);if(i>=0){dr.els.splice(i,1);drRefresh()}return}
   if(dr.tool==='door'){dr.els.push({t:'door',x:pt.x,y:pt.y});drRefresh();return}
+  if(dr.tool==='trap'){
+    const ty=dr.ttype||TRAP_TYPES[0],pre=/rongeurs/.test(ty)?'R':/UV/.test(ty)?'U':/phéromones/.test(ty)?'M':/rampants/.test(ty)?'B':'D';
+    const codes=P().traps.map(t=>t.code).concat(dr.els.filter(z=>z.t==='trap').map(z=>z.code));
+    let n=1+codes.filter(c=>String(c).startsWith(pre+'-')).reduce((m,c)=>Math.max(m,Number(String(c).split('-')[1])||0),0);
+    dr.els.push({t:'trap',x:pt.x,y:pt.y,code:pre+'-'+String(n).padStart(2,'0'),type:ty});drRefresh();return}
   if(dr.tool==='text'){const s=prompt('Texte à afficher :');if(s&&s.trim()){dr.els.push({t:'text',x:pt.x,y:pt.y,s:s.trim()});drRefresh()}return}
   dr.start=pt;dr.cur=dr.tool==='room'?{t:'room',x:pt.x,y:pt.y,w:0,h:0}:{t:'wall',x1:pt.x,y1:pt.y,x2:pt.x,y2:pt.y};
   try{$('pst-dr-canvas').setPointerCapture(ev.pointerId)}catch(_){}
@@ -5237,11 +5257,20 @@ function drUp(){
 }
 function drSave(){
   if(!dr||!dr.els.length){alert('Dessinez au moins une pièce ou un mur.');return}
-  const xml=drSvg(dr.els,-1,true),els=dr.els;
+  const xml=drSvg(dr.els,-1,true),els=dr.els.filter(x=>x.t!=='trap'),tels=dr.els.filter(x=>x.t==='trap'),had=dr.had.slice();
+  const rooms=els.filter(x=>x.t==='room');
+  const roomOf=pt=>{const r=rooms.filter(q=>pt.x>=q.x&&pt.x<=q.x+q.w&&pt.y>=q.y&&pt.y<=q.y+q.h).sort((a,b)=>a.w*a.h-b.w*b.h)[0];return r&&r.label?r.label:'Plan des locaux'};
+  const keep=[];
   const im=new Image();
   im.onload=function(){
     const cv=document.createElement('canvas');cv.width=VW;cv.height=VH;const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,VW,VH);c.drawImage(im,0,0,VW,VH);
     const p=P();p.plan=cv.toDataURL('image/webp',.8);p.planData=els;
+    tels.forEach(q=>{
+      let t=q.trapId?p.traps.find(z=>z.id===q.trapId):p.traps.find(z=>z.active!==false&&z.code===q.code);
+      if(!t){t=stamp({id:uid(),code:q.code,type:q.type,location:roomOf(q),freq:/UV/.test(q.type)?30:7,active:true,addedAt:today()});p.traps.push(t);trace('Piège ajouté : '+t.code+' · '+t.location,'',who(),t.type)}
+      t.x=Math.round(q.x/VW*1000)/10;t.y=Math.round(q.y/VH*1000)/10;keep.push(t.id);
+    });
+    had.forEach(id=>{if(keep.indexOf(id)<0){const t=p.traps.find(z=>z.id===id);if(t){delete t.x;delete t.y}}});
     trace('Plan des locaux dessiné','',who(),els.filter(x=>x.t==='room').map(x=>x.label).join(', '));
     persist();drClose();render();
   };
@@ -5249,7 +5278,7 @@ function drSave(){
   im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
 }
 
-window.mtPest={open:open,draw:drOpen,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
+window.mtPest={open:open,draw:drOpen,drType:drType,drClose:drClose,drTool:drTool,drUndo:drUndo,drSave:drSave,tab:setTab,addTrap:addTrap,removeTrap:removeTrap,place:place,cancelPlace:cancelPlace,planClick:planClick,uploadPlan:uploadPlan,removePlan:removePlan,typeChanged:typeChanged,roundChanged:roundChanged,saveRound:saveRound,zoneChanged:zoneChanged,toggleInsp:toggleInsp,saveInspection:saveInspection,saveProvider:saveProvider,saveIntervention:saveIntervention,filter:setFilter,newFiche:newFiche,editFiche:openFiche,closeForm:closeForm,saveFiche:saveFiche,printFiche:printFiche,printRegister:printRegister,pickPhoto:pickPhoto,dropPhoto:dropPhoto,zoom:zoom};
 window.mtPestOpen=open;
 })();
 
