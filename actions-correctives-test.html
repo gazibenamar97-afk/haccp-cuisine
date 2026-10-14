@@ -4292,7 +4292,7 @@ window.mtOpenAudits=function(){
      linkedCount=newActions.length;
      tx.set(doc,{auditsRecords:[...audits,record],correctiveActionsRecords:[...correctives,...newActions]},{merge:true});
     });
-    respond({id:record.id,savedAt,linkedActions:linkedCount});return;
+    respond({id:record.id,savedAt,linkedActions:linkedCount});if(linkedCount>0)setTimeout(()=>{if(typeof window.mtOpenCorrectivesTest==='function'&&document.querySelector('.mt-audits-iframe'))window.mtOpenCorrectivesTest()},900);return;
    }
    throw Error('Action inconnue.');
   }catch(err){respond(null,err&&err.message||'Erreur Firebase inconnue.');}
