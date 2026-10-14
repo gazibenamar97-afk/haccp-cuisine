@@ -1,4 +1,4 @@
-const CACHE='mt-haccp-shell-v196-limite-reactivation-20261014';
+const CACHE='mt-haccp-shell-v197-rubrique-utilisateurs-20261014';
 const CORE=['./index.html','./audits-advanced.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
