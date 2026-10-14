@@ -4725,11 +4725,12 @@ window.addEventListener('message',async e=>{
 })();
 </script>
 <style id="mt-pest-style">
-.mt-pest-draw{position:fixed;inset:0;z-index:99999;background:rgba(10,30,22,.6);display:flex;align-items:center;justify-content:center;padding:10px}
-.mt-pest-draw-box{background:#fff;border-radius:12px;padding:14px;max-width:1040px;width:100%;max-height:96vh;overflow:auto;box-sizing:border-box}
+.mt-pest-draw,.mt-pest-draw *{font-family:"Segoe UI",Inter,Arial,sans-serif}
+.mt-pest-draw{position:fixed;left:0;top:0;width:100vw;height:100vh;zoom:1!important;z-index:99999;background:rgba(10,30,22,.6);display:flex;align-items:center;justify-content:center;padding:10px}
+.mt-pest-draw-box{background:#fff;border-radius:12px;padding:14px;max-width:1040px;width:100%;max-height:calc(100vh - 20px);overflow:auto;box-sizing:border-box}
 .mt-pest-draw-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px}
 .mt-pest-draw-bar span{display:flex;gap:6px;flex-wrap:wrap}
-.mt-pest-draw-canvas{border:1px solid #c5d6cc;border-radius:8px;overflow:hidden;touch-action:none;cursor:crosshair;margin:8px 0}
+.mt-pest-draw-canvas{width:min(100%,calc((100vh - 240px)*1.5625));margin-left:auto!important;margin-right:auto!important;border:1px solid #c5d6cc;border-radius:8px;overflow:hidden;touch-action:none;cursor:crosshair;margin:8px 0}
 .mt-pest-draw-canvas svg{display:block;width:100%;height:auto}
 .mt-pest-view{max-width:1200px;margin:0 auto;padding:6px 4px 40px}
 .mt-pest-view h1{margin:8px 0 14px}
@@ -5187,7 +5188,7 @@ function drOpen(){
   dr={els:JSON.parse(JSON.stringify(p.planData||[])),tool:'room',sel:-1,cur:null,hist:[]};
   const ov=document.createElement('div');ov.id='pst-draw';ov.className='mt-pest-draw';
   ov.innerHTML='<div class="mt-pest-draw-box"><div class="mt-pest-draw-bar"><b>Dessiner le plan des locaux</b><span id="pst-dr-tools"></span></div><div id="pst-dr-hint" class="note"></div><div class="mt-pest-draw-canvas" id="pst-dr-canvas"></div><div class="mt-pest-actions"><button class="btn primary" onclick="mtPest.drSave()">Enregistrer le plan</button><button class="btn" onclick="mtPest.drClose()">Annuler</button></div></div>';
-  document.body.appendChild(ov);
+  document.documentElement.appendChild(ov);
   const c=$('pst-dr-canvas');
   c.addEventListener('pointerdown',drDown);c.addEventListener('pointermove',drMove);c.addEventListener('pointerup',drUp);
   drRefresh();
