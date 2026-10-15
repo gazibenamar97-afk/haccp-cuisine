@@ -1,0 +1,19 @@
+{
+  "name": "M&T HACCP — Laboratoire hors ligne (TEST)",
+  "short_name": "HACCP TEST",
+  "description": "Prototype isolé, données fictives locales uniquement.",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#195c48",
+  "background_color": "#f4f8f5",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
