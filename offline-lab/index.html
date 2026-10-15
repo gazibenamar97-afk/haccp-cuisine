@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#195c48"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HACCP TEST">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>M&T HACCP — Test hors ligne isolé</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1c2f28;background:#f4f8f5;font-size:15px}
+*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}
+header{background:#195c48;color:white;padding:18px max(18px,calc((100% - 920px)/2))}
+header h1{font-size:22px;margin:4px 0}header p{margin:4px 0;color:#e5f5ee}
+main{max-width:920px;margin:0 auto;padding:18px;display:grid;gap:16px}
+.card{background:white;border:1px solid #d0ddd5;border-radius:15px;padding:18px;box-shadow:0 2px 9px #1a3b2a0d}
+h2{font-size:19px;margin:0 0 12px}p{line-height:1.48}.notice{background:#fff5df;border:1px solid #f0d392;border-radius:10px;padding:12px}
+label{display:block;font-weight:650;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #bccfc4;border-radius:9px;background:#fff;font:inherit;color:inherit}
+textarea{min-height:70px}button{cursor:pointer;border:1px solid #195c48;background:#195c48;color:white;padding:11px 15px;border-radius:9px;font:inherit;font-weight:650}
+button.secondary{background:white;color:#195c48}button.danger{border-color:#a22e29;background:#fff;color:#a22e29}
+button:disabled{opacity:.6;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1 1 190px}
+.small{font-size:13px;color:#587166}.muted{color:#587166}.success{color:#11663a}.error{color:#a22e29}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}@media(max-width:630px){.grid{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e3eae5;text-align:left;vertical-align:top}
+th{color:#4b695a}.scroll{overflow-x:auto}.tag{background:#fce8bc;border-radius:6px;padding:3px 6px;font-weight:700}
+#message{font-weight:650}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a5d7b2;outline-offset:2px}
+</style></head><body>
+<header><h1>M&T HACCP — Test du mode hors ligne</h1><p>Laboratoire indépendant · Aucune connexion aux comptes ni aux données réelles</p></header>
+<main>
+<div class="notice"><strong>PROTOTYPE, NON AUTORISÉ POUR L'EXPLOITATION HACCP.</strong> Les relevés sont fictifs, enregistrés sur cet appareil et <strong>jamais transmis à Firebase ou Supabase</strong>. N'utilisez aucune donnée client réelle. Le déverrouillage simule la sécurité locale, mais ne constitue pas encore une autorisation d'appareil par le serveur.</div>
+<div class="card">
+ <div class="row"><strong id="network">Connexion : vérification…</strong><strong id="swstatus">Cache : vérification…</strong></div>
+ <p class="small">La présence du Wi-Fi ne garantit pas l'accès au serveur. Le cache et les données locales peuvent être supprimés par le système ou l'utilisateur.</p>
+</div>
+<div id="setup" class="card" hidden>
+ <h2>1. Préparer l'appareil de test</h2>
+ <p>Créez une phrase secrète <strong>de 12 caractères minimum</strong> pour chiffrer les relevés fictifs. Ce n'est pas votre mot de passe Firebase. Ne l'oubliez pas : il n'existe pas de récupération.</p>
+ <form id="setupform">
+  <label for="device">Nom de l'appareil (fictif)</label><input id="device" maxlength="60" placeholder="iPhone test" required>
+  <label for="setupsecret">Phrase secrète locale</label><input id="setupsecret" type="password" autocomplete="new-password" minlength="12" required>
+  <label for="setupconfirm">Confirmer la phrase secrète</label><input id="setupconfirm" type="password" autocomplete="new-password" minlength="12" required>
+  <p><button type="submit">Créer l'espace local chiffré</button></p>
+ </form>
+</div>
+<div id="unlock" class="card" hidden>
+ <h2>Déverrouillage après réouverture</h2>
+ <p>Entrez la phrase secrète créée lors de la préparation de cet appareil, même sans Internet.</p>
+ <form id="unlockform">
+  <label for="unlocksecret">Phrase secrète locale</label><input id="unlocksecret" type="password" autocomplete="off" required>
+  <p><button type="submit">Déverrouiller hors ligne</button></p>
+ </form>
+</div>
+<div id="workspace" hidden>
+ <div class="card"><div class="row"><div><strong id="deviceview"></strong><p class="small" id="count"></p></div><button type="button" class="secondary" id="lock">Verrouiller maintenant</button></div><p class="notice">État des opérations : <strong>EN ATTENTE — PROTOTYPE LOCAL</strong>. Aucune synchronisation avec un serveur n'est disponible dans cette phase.</p></div>
+ <div class="grid" style="margin-top:16px">
+  <section class="card"><h2>Relevé de température fictif</h2>
+   <form id="tempform"><label for="equipment">Équipement de test</label><select id="equipment"><option value="frigo">Réfrigérateur (0 à 4 °C)</option><option value="freezer">Congélateur (−24 à −18 °C)</option></select>
+   <label for="temp">Température (°C)</label><input id="temp" type="number" min="-100" max="100" step=".1" required>
+   <label for="tempnote">Observation</label><textarea id="tempnote" maxlength="300" placeholder="Observation fictive (optionnel)"></textarea>
+   <p><button type="submit">Enregistrer localement</button></p></form>
+  </section>
+  <section class="card"><h2>Contrôle de nettoyage fictif</h2>
+   <form id="cleanform"><label for="zone">Zone testée</label><input id="zone" maxlength="80" required placeholder="Plan de travail test">
+   <label for="cleanstate">Résultat</label><select id="cleanstate"><option value="Conforme">Conforme</option><option value="Non conforme">Non conforme</option></select>
+   <label for="cleannote">Observation</label><textarea id="cleannote" maxlength="300" placeholder="Observation fictive (optionnel)"></textarea>
+   <p><button type="submit">Enregistrer localement</button></p></form>
+  </section>
+ </div>
+ <section class="card" style="margin-top:16px"><h2>Historique local chiffré</h2><p class="small">Fermez l'application, coupez Internet et rouvrez-la : les lignes doivent rester disponibles après déverrouillage.</p>
+  <div class="scroll"><table><thead><tr><th>Date appareil</th><th>Contrôle</th><th>Résultat</th><th>État</th></tr></thead><tbody id="records"></tbody></table></div>
+  <p><button id="wipe" type="button" class="danger">Effacer définitivement les données de test</button></p>
+ </section>
+</div>
+<p id="message" role="status" aria-live="polite"></p>
+</main>
+<script>
+'use strict';
+/* Démonstration strictement locale et chiffrée : aucune authentification Firebase ni requête distante. */
+const DB_NAME='mt-haccp-offline-lab-v1',DB_STORE='vault',ITERATIONS=310000;
+const $=id=>document.getElementById(id);
+const enc=new TextEncoder(),dec=new TextDecoder();
+let db=null,unlocked=null,aesKey=null,busy=false;
+function say(msg,bad=false){$('message').textContent=msg;$('message').className=bad?'error':'success'}
+function network(){ $('network').textContent=navigator.onLine?'Réseau détecté (serveur non vérifié)':'Appareil hors ligne'; }
+addEventListener('online',network);addEventListener('offline',network);
+function toB64(bytes){let out='';for(let i=0;i<bytes.length;i++)out+=String.fromCharCode(bytes[i]);return btoa(out)}
+function fromB64(value){return Uint8Array.from(atob(value),x=>x.charCodeAt(0))}
+function openDb(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(DB_STORE))req.result.createObjectStore(DB_STORE)};
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error);
+  req.onblocked=()=>reject(Error('Stockage verrouillé par un autre onglet.'));
+ });
+}
+function read(){
+ return new Promise((resolve,reject)=>{
+  const req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get('vault');
+  req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
+ });
+}
+function write(value){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(DB_STORE,'readwrite');
+  tx.objectStore(DB_STORE).put(value,'vault');
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Transaction annulée'));
+ });
+}
+function erase(){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(DB_STORE,'readwrite');
+  tx.objectStore(DB_STORE).delete('vault');
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+ });
+}
+async function derive(secret,salt){
+ const material=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITERATIONS,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function pack(data,key,salt){
+ const iv=crypto.getRandomValues(new Uint8Array(12));
+ const bytes=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
+ return {v:1,iterations:ITERATIONS,salt:toB64(salt),iv:toB64(iv),cipher:toB64(new Uint8Array(bytes))};
+}
+async function unpack(record,key){
+ const bytes=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(record.iv)},key,fromB64(record.cipher));
+ const data=JSON.parse(dec.decode(bytes));
+ if(!data||!Array.isArray(data.events))throw Error('Données incorrectes');
+ return data;
+}
+function screen(name){['setup','unlock','workspace'].forEach(x=>$(x).hidden=x!==name)}
+function lock(){aesKey=null;unlocked=null;$('unlocksecret').value='';$('temp').value='';$('tempnote').value='';$('zone').value='';$('cleannote').value='';screen('unlock');say('Espace verrouillé.')}
+function render(){
+ $('deviceview').textContent='Appareil : '+unlocked.device;
+ $('count').textContent=unlocked.events.length+' opération(s) enregistrée(s) localement — aucune transmise';
+ const body=$('records');body.replaceChildren();
+ if(!unlocked.events.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Aucun contrôle fictif enregistré.';tr.append(td);body.append(tr);return}
+ for(const event of unlocked.events.slice().reverse()){
+  const tr=document.createElement('tr');
+  const cols=[new Date(event.at).toLocaleString('fr-FR'),event.kind==='temp'?'Température — '+event.label:'Nettoyage — '+event.label,event.detail,'En attente'];
+  cols.forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td)});body.append(tr);
+ }
+}
+async function persist(){
+ const current=await read();if(!current)throw Error('Coffre manquant.');
+ await write(await pack(unlocked,aesKey,fromB64(current.salt)));
+}
+function unique(){return crypto.randomUUID?crypto.randomUUID():toB64(crypto.getRandomValues(new Uint8Array(16)))}
+async function addRecord(record){
+ if(busy||!unlocked||!aesKey)return;
+ busy=true;
+ try{
+  const event={id:unique(),at:new Date().toISOString(),...record};
+  unlocked.events.push(event);
+  try{await persist()}catch(error){unlocked.events.pop();throw error}
+  render();say('Contrôle fictif enregistré et chiffré sur cet appareil. Aucun envoi serveur.');
+ }catch(e){say('Échec de stockage : '+e.message,true)}finally{busy=false}
+}
+$('setupform').addEventListener('submit',async e=>{
+ e.preventDefault();if(busy)return;
+ const secret=$('setupsecret').value;
+ if(secret.length<12||secret!==$('setupconfirm').value){say('La phrase secrète doit contenir au moins 12 caractères et les deux saisies doivent être identiques.',true);return}
+ busy=true;
+ try{
+  if(await read())throw Error('Un espace existe déjà.');
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const key=await derive(secret,salt);
+  const data={device:$('device').value.trim().slice(0,60)||'Appareil de test',createdAt:new Date().toISOString(),events:[]};
+  await write(await pack(data,key,salt));unlocked=data;aesKey=key;
+  $('setupsecret').value='';$('setupconfirm').value='';screen('workspace');render();say('Espace local chiffré prêt. Testez la fermeture et la réouverture sans Internet.');
+ }catch(err){say('Activation impossible : '+err.message,true)}finally{busy=false}
+});
+$('unlockform').addEventListener('submit',async e=>{
+ e.preventDefault();if(busy)return;busy=true;
+ try{
+  const record=await read();if(!record)throw Error('Aucun espace local présent.');
+  const key=await derive($('unlocksecret').value,fromB64(record.salt));
+  const data=await unpack(record,key);
+  aesKey=key;unlocked=data;$('unlocksecret').value='';screen('workspace');render();say('Déverrouillage local réussi, sans vérification de connexion Internet.');
+ }catch(err){say('Phrase secrète incorrecte ou stockage illisible.',true)}finally{busy=false}
+});
+$('tempform').addEventListener('submit',async e=>{
+ e.preventDefault();const value=Number($('temp').value);if(!Number.isFinite(value)||value<-100||value>100){say('Température hors des limites du test.',true);return}
+ const freezer=$('equipment').value==='freezer';const min=freezer?-24:0,max=freezer?-18:4;
+ const detail=value+' °C — '+(value>=min&&value<=max?'Conforme':'NON CONFORME')+($('tempnote').value?' · '+$('tempnote').value.slice(0,300):'');
+ await addRecord({kind:'temp',label:freezer?'Congélateur test':'Réfrigérateur test',detail});
+ if(!busy)$('temp').value='';
+});
+$('cleanform').addEventListener('submit',async e=>{
+ e.preventDefault();const zone=$('zone').value.trim();if(!zone){say('Indiquez une zone.',true);return}
+ const detail=$('cleanstate').value+($('cleannote').value?' · '+$('cleannote').value.slice(0,300):'');
+ await addRecord({kind:'clean',label:zone.slice(0,80),detail});
+ if(!busy){$('zone').value='';$('cleannote').value=''}
+});
+$('lock').onclick=lock;
+$('wipe').onclick=async()=>{
+ if(prompt('Pour supprimer les données fictives locales, écrivez EFFACER :')!=='EFFACER')return;
+ try{await erase();aesKey=null;unlocked=null;screen('setup');say('Toutes les données fictives locales ont été effacées.');}catch(e){say('Suppression impossible : '+e.message,true)}
+};
+addEventListener('pagehide',()=>{aesKey=null;unlocked=null;screen('unlock')});
+async function boot(){
+ network();
+ if(!('indexedDB' in window)||!crypto||!crypto.subtle){say('IndexedDB ou chiffrement indisponible sur ce navigateur : test impossible.',true);return}
+ try{db=await openDb();screen(await read()?'unlock':'setup');say('Stockage chiffré local prêt.')}catch(e){say('Stockage non disponible : '+e.message,true)}
+ if('serviceWorker' in navigator){
+  try{
+   await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});
+   await navigator.serviceWorker.ready;
+   $('swstatus').textContent='Cache PWA installé';
+  }catch(e){$('swstatus').textContent='Cache PWA indisponible';say('Installation du cache impossible : '+e.message,true)}
+ }else $('swstatus').textContent='Service Worker non pris en charge';
+}
+boot();
+</script></body></html>
